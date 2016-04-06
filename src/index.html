@@ -1,13 +1,48 @@
 <!doctype html>
 <html>
+
 <head>
-  <meta charset="utf-8">
-  <title>BiblerUi</title>
-  <base href="/">
-  {{content-for 'head'}}
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
-  
-  <!-- Service worker support is disabled by default.
+
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Bibler - Christian Study Tools</title>
+    <meta content="A RESTful bible web service API." name="description">
+    <meta content="Preston Lee" name="author">
+    <link href="/apple-touch-icon-57x57.png" rel="apple-touch-icon" sizes="57x57">
+    <link href="/apple-touch-icon-60x60.png" rel="apple-touch-icon" sizes="60x60">
+    <link href="/apple-touch-icon-72x72.png" rel="apple-touch-icon" sizes="72x72">
+    <link href="/apple-touch-icon-76x76.png" rel="apple-touch-icon" sizes="76x76">
+    <link href="/apple-touch-icon-114x114.png" rel="apple-touch-icon" sizes="114x114">
+    <link href="/apple-touch-icon-120x120.png" rel="apple-touch-icon" sizes="120x120">
+    <link href="/apple-touch-icon-144x144.png" rel="apple-touch-icon" sizes="144x144">
+    <link href="/apple-touch-icon-152x152.png" rel="apple-touch-icon" sizes="152x152">
+    <link href="/apple-touch-icon-180x180.png" rel="apple-touch-icon" sizes="180x180">
+    <link href="/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png">
+    <link href="/android-chrome-192x192.png" rel="icon" sizes="192x192" type="image/png">
+    <link href="/favicon-96x96.png" rel="icon" sizes="96x96" type="image/png">
+    <link href="/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png">
+    <link href="/android-chrome-manifest.json" rel="manifest">
+    <meta content="#da532c" name="msapplication-TileColor">
+    <meta content="/mstile-144x144.png" name="msapplication-TileImage">
+    <meta content="#ffffff" name="theme-color">
+
+
+    <link rel="stylesheet" href="stylesheets/app.css" />
+    <link rel="stylesheet" href="stylesheets/theme.css" />
+
+    <script src="https://code.jquery.com/jquery-2.2.3.min.js" crossorigin="anonymous" />
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+    <!-- Our custom stylesheets -->
+    <!-- <link rel="stylesheet" media="all" href="stylesheets/app.css"> -->
+
+    <base href="/"> {{content-for 'head'}}
+
+    <!-- Service worker support is disabled by default.
        Install the worker script and uncomment to enable.
        Only enable service workers in production.
   <script type="text/javascript">
@@ -19,29 +54,32 @@
   </script>
   -->
 </head>
+
 <body>
-  <bibler-ui-app>Loading...</bibler-ui-app>
+    <bibler-ui-app>Loading...</bibler-ui-app>
 
-  <script src="vendor/es6-shim/es6-shim.js"></script>
-  <script src="vendor/systemjs/dist/system-polyfills.js"></script>
-  <script src="vendor/angular2/bundles/angular2-polyfills.js"></script>
-  <script src="vendor/systemjs/dist/system.src.js"></script>
-  <script src="vendor/rxjs/bundles/Rx.js"></script>
 
-  <script src="vendor/angular2/bundles/angular2.dev.js"></script>
-  <script src="vendor/angular2/bundles/http.dev.js"></script>
-  <script src="vendor/angular2/bundles/router.dev.js"></script>
+    <script src="vendor/es6-shim/es6-shim.js"></script>
+    <script src="vendor/systemjs/dist/system-polyfills.js"></script>
+    <script src="vendor/angular2/bundles/angular2-polyfills.js"></script>
+    <script src="vendor/systemjs/dist/system.src.js"></script>
+    <script src="vendor/rxjs/bundles/Rx.js"></script>
 
-  <script>
-    System.config({
-      packages: {
-        app: {
-          format: 'register',
-          defaultExtension: 'js'
-        }
-      }
-    });
-    System.import('app.js').then(null, console.error.bind(console));
-  </script>
+    <script src="vendor/angular2/bundles/angular2.dev.js"></script>
+    <script src="vendor/angular2/bundles/http.dev.js"></script>
+    <script src="vendor/angular2/bundles/router.dev.js"></script>
+
+    <script>
+        System.config({
+            packages: {
+                app: {
+                    format: 'register',
+                    defaultExtension: 'js'
+                }
+            }
+        });
+        System.import('app.js').then(null, console.error.bind(console));
+    </script>
 </body>
+
 </html>
