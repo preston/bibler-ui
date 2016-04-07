@@ -6,31 +6,22 @@ webpackJsonp([0],{
 	/// <reference path="../node_modules/angular2/typings/browser.d.ts" />
 	"use strict";
 	var browser_1 = __webpack_require__(1);
-	var http_1 = __webpack_require__(226);
-	var router_1 = __webpack_require__(241);
-	var core_1 = __webpack_require__(22);
+	var http_1 = __webpack_require__(228);
+	var router_1 = __webpack_require__(243);
+	var core_1 = __webpack_require__(23);
 	// Custom app stuff.
-	var bibler_ui_1 = __webpack_require__(271);
+	var bibler_ui_1 = __webpack_require__(273);
 	core_1.enableProdMode();
-	browser_1.bootstrap(bibler_ui_1.BiblerUiApp, [http_1.HTTP_PROVIDERS, router_1.ROUTER_PROVIDERS])
-	    .catch(function (err) { return console.error(err); });
-	// import {bootstrap} from 'angular2/platform/browser';
-	// import {BiblerUiApp} from './app/bibler-ui';
-	//
-	// import {ServerService} from './app/services/server.service';
-	// import {ChapterService} from './app/services/chapter.service';
-	// import {BookService} from './app/services/book.service';
-	//
-	// // bootstrap(BiblerUiApp, []);
-	//
-	// // import {Http, ConnectionBackend, RequestOptions} from 'angular2/http';
-	// import {Http} from 'angular2/http';
-	// bootstrap(BiblerUiApp, [Http, ServerService, BookService, ChapterService]);
+	browser_1.bootstrap(bibler_ui_1.BiblerUiApp, [
+	    http_1.HTTP_PROVIDERS,
+	    router_1.ROUTER_PROVIDERS,
+	    core_1.provide(router_1.LocationStrategy, { useClass: router_1.HashLocationStrategy }),
+	]).catch(function (err) { return console.error(err); });
 
 
 /***/ },
 
-/***/ 271:
+/***/ 273:
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -43,25 +34,27 @@ webpackJsonp([0],{
 	var __metadata = (this && this.__metadata) || function (k, v) {
 	    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 	};
-	var core_1 = __webpack_require__(22);
-	var router_1 = __webpack_require__(241);
-	// import {CliRouteConfig} from './route-config';
-	var reader_component_1 = __webpack_require__(272);
-	var comparator_component_1 = __webpack_require__(282);
-	var search_component_1 = __webpack_require__(283);
+	var core_1 = __webpack_require__(23);
+	// import {RouteConfig} from 'angular2/router';
+	var router_1 = __webpack_require__(243);
+	var home_component_1 = __webpack_require__(274);
+	var api_component_1 = __webpack_require__(288);
 	var BiblerUiApp = (function () {
 	    function BiblerUiApp() {
-	        this.tab = 'reader';
 	    }
 	    BiblerUiApp = __decorate([
 	        core_1.Component({
 	            selector: 'bibler-ui-app',
-	            providers: [router_1.ROUTER_PROVIDERS],
 	            templateUrl: 'app/bibler-ui.html',
-	            directives: [router_1.ROUTER_DIRECTIVES, reader_component_1.ReaderComponent, comparator_component_1.ComparatorComponent, search_component_1.SearchComponent],
+	            directives: [router_1.ROUTER_DIRECTIVES],
+	            // directives: [RouterOutlet],
 	            pipes: [],
 	            styleUrls: []
-	        }), 
+	        }),
+	        router_1.RouteConfig([
+	            new router_1.Route({ path: '/home', name: 'Home', component: home_component_1.HomeComponent, useAsDefault: true }),
+	            new router_1.Route({ path: '/api', name: 'Api', component: api_component_1.ApiComponent })
+	        ]), 
 	        __metadata('design:paramtypes', [])
 	    ], BiblerUiApp);
 	    return BiblerUiApp;
@@ -71,7 +64,44 @@ webpackJsonp([0],{
 
 /***/ },
 
-/***/ 272:
+/***/ 274:
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+	    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+	    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+	    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+	    return c > 3 && r && Object.defineProperty(target, key, r), r;
+	};
+	var __metadata = (this && this.__metadata) || function (k, v) {
+	    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+	};
+	var core_1 = __webpack_require__(23);
+	var reader_component_1 = __webpack_require__(275);
+	var comparator_component_1 = __webpack_require__(285);
+	var search_component_1 = __webpack_require__(286);
+	var HomeComponent = (function () {
+	    function HomeComponent() {
+	        this.tab = 'reader';
+	        console.log("HomeComponent has been initialized.");
+	    }
+	    HomeComponent = __decorate([
+	        core_1.Component({
+	            selector: 'home',
+	            templateUrl: 'app/components/home.html',
+	            directives: [reader_component_1.ReaderComponent, comparator_component_1.ComparatorComponent, search_component_1.SearchComponent]
+	        }), 
+	        __metadata('design:paramtypes', [])
+	    ], HomeComponent);
+	    return HomeComponent;
+	}());
+	exports.HomeComponent = HomeComponent;
+
+
+/***/ },
+
+/***/ 275:
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -89,13 +119,13 @@ webpackJsonp([0],{
 	var __metadata = (this && this.__metadata) || function (k, v) {
 	    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 	};
-	var core_1 = __webpack_require__(22);
-	var bibler_service_1 = __webpack_require__(273);
-	var bible_service_1 = __webpack_require__(274);
-	var book_service_1 = __webpack_require__(277);
-	var testament_service_1 = __webpack_require__(278);
-	var verse_service_1 = __webpack_require__(279);
-	var bookBased_component_1 = __webpack_require__(280);
+	var core_1 = __webpack_require__(23);
+	var bibler_service_1 = __webpack_require__(276);
+	var bible_service_1 = __webpack_require__(277);
+	var book_service_1 = __webpack_require__(280);
+	var testament_service_1 = __webpack_require__(281);
+	var verse_service_1 = __webpack_require__(282);
+	var bookBased_component_1 = __webpack_require__(283);
 	var ReaderComponent = (function (_super) {
 	    __extends(ReaderComponent, _super);
 	    function ReaderComponent(biblerService, bibleService, testamentService, bookService, verseService) {
@@ -135,7 +165,7 @@ webpackJsonp([0],{
 
 /***/ },
 
-/***/ 273:
+/***/ 276:
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -148,12 +178,12 @@ webpackJsonp([0],{
 	var __metadata = (this && this.__metadata) || function (k, v) {
 	    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 	};
-	var core_1 = __webpack_require__(22);
+	var core_1 = __webpack_require__(23);
 	var BiblerService = (function () {
 	    function BiblerService() {
-	        this.root = 'http://localhost:3000';
+	        // private root = 'http://localhost:3000';
+	        this.root = 'http://bibler-server.prestonlee.com';
 	    }
-	    // private root = 'http://bibler.prestonlee.com';
 	    BiblerService.prototype.getUrl = function () {
 	        return this.root;
 	    };
@@ -171,7 +201,7 @@ webpackJsonp([0],{
 
 /***/ },
 
-/***/ 274:
+/***/ 277:
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -184,10 +214,10 @@ webpackJsonp([0],{
 	var __metadata = (this && this.__metadata) || function (k, v) {
 	    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 	};
-	var core_1 = __webpack_require__(22);
-	var http_1 = __webpack_require__(226);
-	__webpack_require__(275);
-	var bibler_service_1 = __webpack_require__(273);
+	var core_1 = __webpack_require__(23);
+	var http_1 = __webpack_require__(228);
+	__webpack_require__(278);
+	var bibler_service_1 = __webpack_require__(276);
 	var BibleService = (function () {
 	    // bibles = [
 	    // 	{"id":1,"name":"American Standard-ASV1901","abbreviation":"ASV","slug":"american-standard-asv1901"},
@@ -215,18 +245,18 @@ webpackJsonp([0],{
 
 /***/ },
 
-/***/ 275:
+/***/ 278:
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
-	var Observable_1 = __webpack_require__(52);
-	var map_1 = __webpack_require__(276);
+	var Observable_1 = __webpack_require__(53);
+	var map_1 = __webpack_require__(279);
 	Observable_1.Observable.prototype.map = map_1.map;
 	//# sourceMappingURL=map.js.map
 
 /***/ },
 
-/***/ 276:
+/***/ 279:
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -235,7 +265,7 @@ webpackJsonp([0],{
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	var Subscriber_1 = __webpack_require__(57);
+	var Subscriber_1 = __webpack_require__(58);
 	/**
 	 * Similar to the well known `Array.prototype.map` function, this operator
 	 * applies a projection to each value and emits that projection in the returned observable
@@ -290,7 +320,7 @@ webpackJsonp([0],{
 
 /***/ },
 
-/***/ 277:
+/***/ 280:
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -303,10 +333,10 @@ webpackJsonp([0],{
 	var __metadata = (this && this.__metadata) || function (k, v) {
 	    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 	};
-	var core_1 = __webpack_require__(22);
-	var http_1 = __webpack_require__(226);
-	__webpack_require__(275);
-	var bibler_service_1 = __webpack_require__(273);
+	var core_1 = __webpack_require__(23);
+	var http_1 = __webpack_require__(228);
+	__webpack_require__(278);
+	var bibler_service_1 = __webpack_require__(276);
 	var BookService = (function () {
 	    function BookService(biblerService, http) {
 	        this.biblerService = biblerService;
@@ -335,7 +365,7 @@ webpackJsonp([0],{
 
 /***/ },
 
-/***/ 278:
+/***/ 281:
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -348,10 +378,10 @@ webpackJsonp([0],{
 	var __metadata = (this && this.__metadata) || function (k, v) {
 	    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 	};
-	var core_1 = __webpack_require__(22);
-	var http_1 = __webpack_require__(226);
-	__webpack_require__(275);
-	var bibler_service_1 = __webpack_require__(273);
+	var core_1 = __webpack_require__(23);
+	var http_1 = __webpack_require__(228);
+	__webpack_require__(278);
+	var bibler_service_1 = __webpack_require__(276);
 	var TestamentService = (function () {
 	    function TestamentService(biblerService, http) {
 	        this.biblerService = biblerService;
@@ -380,7 +410,7 @@ webpackJsonp([0],{
 
 /***/ },
 
-/***/ 279:
+/***/ 282:
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -393,10 +423,10 @@ webpackJsonp([0],{
 	var __metadata = (this && this.__metadata) || function (k, v) {
 	    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 	};
-	var core_1 = __webpack_require__(22);
-	var http_1 = __webpack_require__(226);
-	__webpack_require__(275);
-	var bibler_service_1 = __webpack_require__(273);
+	var core_1 = __webpack_require__(23);
+	var http_1 = __webpack_require__(228);
+	__webpack_require__(278);
+	var bibler_service_1 = __webpack_require__(276);
 	var VerseService = (function () {
 	    function VerseService(biblerService, http) {
 	        this.biblerService = biblerService;
@@ -420,7 +450,7 @@ webpackJsonp([0],{
 
 /***/ },
 
-/***/ 280:
+/***/ 283:
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -429,7 +459,7 @@ webpackJsonp([0],{
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	var bibleBased_component_1 = __webpack_require__(281);
+	var bibleBased_component_1 = __webpack_require__(284);
 	var BookBasedComponent = (function (_super) {
 	    __extends(BookBasedComponent, _super);
 	    function BookBasedComponent(biblerService, bibleService, testamentService, bookService, verseService) {
@@ -483,7 +513,7 @@ webpackJsonp([0],{
 
 /***/ },
 
-/***/ 281:
+/***/ 284:
 /***/ function(module, exports) {
 
 	"use strict";
@@ -557,7 +587,7 @@ webpackJsonp([0],{
 
 /***/ },
 
-/***/ 282:
+/***/ 285:
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -575,13 +605,13 @@ webpackJsonp([0],{
 	var __metadata = (this && this.__metadata) || function (k, v) {
 	    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 	};
-	var core_1 = __webpack_require__(22);
-	var bibler_service_1 = __webpack_require__(273);
-	var bible_service_1 = __webpack_require__(274);
-	var book_service_1 = __webpack_require__(277);
-	var testament_service_1 = __webpack_require__(278);
-	var verse_service_1 = __webpack_require__(279);
-	var bookBased_component_1 = __webpack_require__(280);
+	var core_1 = __webpack_require__(23);
+	var bibler_service_1 = __webpack_require__(276);
+	var bible_service_1 = __webpack_require__(277);
+	var book_service_1 = __webpack_require__(280);
+	var testament_service_1 = __webpack_require__(281);
+	var verse_service_1 = __webpack_require__(282);
+	var bookBased_component_1 = __webpack_require__(283);
 	var ComparatorComponent = (function (_super) {
 	    __extends(ComparatorComponent, _super);
 	    function ComparatorComponent(biblerService, bibleService, bookService, testamentService, verseService) {
@@ -639,7 +669,7 @@ webpackJsonp([0],{
 
 /***/ },
 
-/***/ 283:
+/***/ 286:
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -657,14 +687,14 @@ webpackJsonp([0],{
 	var __metadata = (this && this.__metadata) || function (k, v) {
 	    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 	};
-	var core_1 = __webpack_require__(22);
-	var bibleBased_component_1 = __webpack_require__(281);
-	var bibler_service_1 = __webpack_require__(273);
-	var bible_service_1 = __webpack_require__(274);
-	var book_service_1 = __webpack_require__(277);
-	var testament_service_1 = __webpack_require__(278);
-	var verse_service_1 = __webpack_require__(279);
-	var search_service_1 = __webpack_require__(284);
+	var core_1 = __webpack_require__(23);
+	var bibleBased_component_1 = __webpack_require__(284);
+	var bibler_service_1 = __webpack_require__(276);
+	var bible_service_1 = __webpack_require__(277);
+	var book_service_1 = __webpack_require__(280);
+	var testament_service_1 = __webpack_require__(281);
+	var verse_service_1 = __webpack_require__(282);
+	var search_service_1 = __webpack_require__(287);
 	var SearchComponent = (function (_super) {
 	    __extends(SearchComponent, _super);
 	    function SearchComponent(biblerService, bibleService, testamentService, bookService, verseService, searchService) {
@@ -720,7 +750,7 @@ webpackJsonp([0],{
 
 /***/ },
 
-/***/ 284:
+/***/ 287:
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -733,10 +763,10 @@ webpackJsonp([0],{
 	var __metadata = (this && this.__metadata) || function (k, v) {
 	    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 	};
-	var core_1 = __webpack_require__(22);
-	var http_1 = __webpack_require__(226);
-	__webpack_require__(275);
-	var bibler_service_1 = __webpack_require__(273);
+	var core_1 = __webpack_require__(23);
+	var http_1 = __webpack_require__(228);
+	__webpack_require__(278);
+	var bibler_service_1 = __webpack_require__(276);
 	var SearchService = (function () {
 	    // private verses;
 	    function SearchService(biblerService, http) {
@@ -761,6 +791,65 @@ webpackJsonp([0],{
 	    return SearchService;
 	}());
 	exports.SearchService = SearchService;
+
+
+/***/ },
+
+/***/ 288:
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	var __extends = (this && this.__extends) || function (d, b) {
+	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+	    function __() { this.constructor = d; }
+	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+	};
+	var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+	    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+	    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+	    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+	    return c > 3 && r && Object.defineProperty(target, key, r), r;
+	};
+	var __metadata = (this && this.__metadata) || function (k, v) {
+	    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+	};
+	var core_1 = __webpack_require__(23);
+	var bookBased_component_1 = __webpack_require__(283);
+	var bibler_service_1 = __webpack_require__(276);
+	var bible_service_1 = __webpack_require__(277);
+	var book_service_1 = __webpack_require__(280);
+	var testament_service_1 = __webpack_require__(281);
+	var verse_service_1 = __webpack_require__(282);
+	var search_service_1 = __webpack_require__(287);
+	var ApiComponent = (function (_super) {
+	    __extends(ApiComponent, _super);
+	    function ApiComponent(biblerService, bibleService, testamentService, bookService, verseService) {
+	        _super.call(this, biblerService, bibleService, testamentService, bookService, verseService);
+	        this.verses = [];
+	        console.log("ApiComponent has been initialized.");
+	    }
+	    ApiComponent.prototype.selectChapter = function (n) {
+	        var _this = this;
+	        console.log("Updating verses for chapter " + n);
+	        this.chapter = n;
+	        this.verseService.index(this.bible, this.book, this.chapter).subscribe(function (d) {
+	            _this.verses = d;
+	        });
+	    };
+	    ApiComponent.prototype.stringify = function (obj) {
+	        return JSON.stringify(obj, null, "\t").trim();
+	    };
+	    ApiComponent = __decorate([
+	        core_1.Component({
+	            selector: 'api',
+	            templateUrl: 'app/components/api.html',
+	            providers: [bibler_service_1.BiblerService, bible_service_1.BibleService, book_service_1.BookService, testament_service_1.TestamentService, verse_service_1.VerseService, search_service_1.SearchService]
+	        }), 
+	        __metadata('design:paramtypes', [bibler_service_1.BiblerService, bible_service_1.BibleService, testament_service_1.TestamentService, book_service_1.BookService, verse_service_1.VerseService])
+	    ], ApiComponent);
+	    return ApiComponent;
+	}(bookBased_component_1.BookBasedComponent));
+	exports.ApiComponent = ApiComponent;
 
 
 /***/ }

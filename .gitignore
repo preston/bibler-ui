@@ -6,7 +6,7 @@
 
 #Exclude bower components and fonts
 src/bower_components
-#src/app/scripts
+src/app/scripts
 
 #Exclude npm modules
 node_modules

@@ -6,6 +6,8 @@ module.exports = function (grunt) {
 
 	'use strict';
 
+	// grunt.loadNpmTasks('grunt-contrib-jade');
+
 	// Load all grunt tasks in package.json
 	require('load-grunt-tasks')(grunt, {
 		scope: 'devDependencies'

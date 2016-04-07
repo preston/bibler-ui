@@ -26,8 +26,6 @@ export class ReaderComponent extends BookBasedComponent {
         console.log("ReaderComponent created!");
     }
 
-
-
     selectChapter(n: number) {
         console.log("Updating verses for chapter " + n);
         this.chapter = n;
