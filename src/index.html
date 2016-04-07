@@ -26,21 +26,24 @@
     <meta content="/mstile-144x144.png" name="msapplication-TileImage">
     <meta content="#ffffff" name="theme-color">
 
+    <!-- Font links -->
+	<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
 
-    <link rel="stylesheet" href="stylesheets/app.css" />
-    <link rel="stylesheet" href="stylesheets/theme.css" />
+	<!-- Vendor css and fonts -->
+	<link rel="stylesheet" href="./app/styles/vendor/css/vendor.min.css" />
 
-    <script src="https://code.jquery.com/jquery-2.2.3.min.js" crossorigin="anonymous" />
+	<!-- App css and fonts -->
+	<link rel="stylesheet" href="./app/styles/main.min.css" />
 
-    <!-- Latest compiled and minified CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+    <!-- <link rel="stylesheet" href="./app/styles/vendor.min.css" />
+    <link rel="stylesheet" href="./app/styles/main.min.css" />
 
-    <!-- Latest compiled and minified JavaScript -->
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
-    <!-- Our custom stylesheets -->
-    <!-- <link rel="stylesheet" media="all" href="stylesheets/app.css"> -->
+    <script src="./app/scripts/vendor.bundle.js"></script>
+    <script src="./app/scripts/bundle.js"></script> -->
 
-    <base href="/"> {{content-for 'head'}}
+    <!-- <base href="/"> -->
+
+    <!-- <script src="//localhost:9001/livereload.js"></script> -->
 
     <!-- Service worker support is disabled by default.
        Install the worker script and uncomment to enable.
@@ -56,20 +59,14 @@
 </head>
 
 <body>
-    <bibler-ui-app>Loading...</bibler-ui-app>
+    <bibler-ui-app>
+        <!-- <span class="glyphicon glyphicon-cloud-download"></span> Loading the things! -->
+    </bibler-ui-app>
+    <script src="./app/scripts/vendor.min.js"></script>
+	<script src="./app/scripts/vendor.bundle.js"></script>
+	<script src="./app/scripts/bundle.js"></script>
 
-
-    <script src="vendor/es6-shim/es6-shim.js"></script>
-    <script src="vendor/systemjs/dist/system-polyfills.js"></script>
-    <script src="vendor/angular2/bundles/angular2-polyfills.js"></script>
-    <script src="vendor/systemjs/dist/system.src.js"></script>
-    <script src="vendor/rxjs/bundles/Rx.js"></script>
-
-    <script src="vendor/angular2/bundles/angular2.dev.js"></script>
-    <script src="vendor/angular2/bundles/http.dev.js"></script>
-    <script src="vendor/angular2/bundles/router.dev.js"></script>
-
-    <script>
+    <!-- <script>
         System.config({
             packages: {
                 app: {
@@ -79,7 +76,7 @@
             }
         });
         System.import('app.js').then(null, console.error.bind(console));
-    </script>
+    </script> -->
 </body>
 
 </html>

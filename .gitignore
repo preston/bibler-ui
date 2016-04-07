@@ -1,26 +1,24 @@
-# See http://help.github.com/ignore-files/ for more about ignoring files.
+#Files
+.DS_Store
+*.css
+*.zip
+*.tar.gz
 
-# compiled output
-/dist
-/tmp
+#Exclude bower components and fonts
+src/bower_components
+#src/app/scripts
 
-# dependencies
-/node_modules
-/bower_components
+#Exclude npm modules
+node_modules
 
-# IDEs and editors
-/.idea
+#Exclude build, dist, and temp
+build
+dist
+temp
 
-# misc
-/.sass-cache
-/connect.lock
-/coverage/*
-/libpeerconnection.log
+
+#Exclude docs
+doc
+
+#Exclude logs
 npm-debug.log
-testem.log
-/typings
-
-# e2e
-/e2e/*.js
-/e2e/*.map
-

@@ -1,54 +1,46 @@
 <div class="container-fluid">
 	<br>
-	<p>TODO Comparator</p>
-	<!-- <div class="well">
+	<div class="well">
 		<form id="search_form" role="form">
 			<div class="row">
 				<div class="col-sm-6 form-group">
 					<div class="form-group">
 						<label for="bible_select_left"><span class="glyphicon glyphicon-book"></span> Bible (Left)</label>
-						<select class="form-control ng-pristine ng-untouched ng-valid" id="bible_select_left" ng-change="selecteibleLeft()" ng-model="selectedBibleLeft" ng-options="bible.slug as bible.name for bible in bibles">
-							<option *ngFor="bible of bibles" [label]="name" [value]="id">{{bible.name}}</option>
+						<select class="form-control" id="bible_select_left" (change)="selectBible($event.target.value)">
+							<option *ngFor="#b of bibles" [label]="b.name" [value]="b.slug" [selected]="b.slug == bible.slug">{{b.name}}</option>
 						</select>
 					</div>
 					<div class="form-group">
 						<label for="book_select"><span class="glyphicon glyphicon-user"></span> Book</label>
-						<select class="form-control ng-pristine ng-untouched ng-valid" id="book_select" ng-change="updateChapters()" ng-model="selectedBook" ng-options="book.slug as book.name for book in books">
-							<option label="Genesis" value="string:genesis" selected="selected">Genesis</option>
-							<option label="Exodus" value="string:exodus">Exodus</option>
-							<option label="Leviticus" value="string:leviticus">Leviticus</option>
+						<select class="form-control" id="book_select" (change)="selectBook($event.target.value)">
+							<option *ngFor="#b of books" [label]="b.name" [value]="b.slug" [selected]="b.slug == book.slug">{{b.name}}</option>
 
 						</select>
 					</div>
-					<div class="form-group" ng-show="chapters.length > 0" style="">
+					<div class="form-group" *ngIf="chapters.length > 0" style="">
 						<label for="chapter_select"><span class="glyphicon glyphicon-bookmark"></span> Chapter</label>
-						<select class="form-control ng-pristine ng-untouched ng-valid" id="book_select" ng-change="selectChapter()" ng-model="selectedChapter" ng-options="chapter for chapter in chapters">
-							<option label="1" value="number:1" selected="selected">1</option>
-							<option label="2" value="number:2">2</option>
-							<option label="3" value="number:3">3</option>
-
+						<select class="form-control" id="chapter_select" (change)="selectChapter($event.target.value)" >
+							<option *ngFor="#c of chapters" [label]="c"  [selected]="c == chapter">{{c}}</option>
 						</select>
 					</div>
 				</div>
 				<div class="col-sm-6">
 					<div class="form-group">
 						<label for="bible_select_right"><span class="glyphicon glyphicon-book"></span> Bible (Right)</label>
-						<select class="form-control ng-pristine ng-untouched ng-valid" id="bible_select_right" ng-change="selectBibleRight()" ng-model="selectedBibleRight" ng-options="bible.slug as bible.name for bible in bibles">
-							<option label="American Standard-ASV1901" value="string:american-standard-asv1901">American Standard-ASV1901</option>
-							<option label="Bible in Basic English" value="string:bible-in-basic-english" selected="selected">Bible in Basic English</option>
-							<option label="Darby English Bible" value="string:darby-english-bible">Darby English Bible</option>
-							<option label="King James Version" value="string:king-james-version">King James Version</option>
-							<option label="World English Bible" value="string:world-english-bible">World English Bible</option>
-							<option label="Young's Literal Translation" value="string:young-s-literal-translation">Young's Literal Translation</option>
+						<select class="form-control" id="bible_select_right" (change)="selectBibleRight($event.target.value)">
+							<option *ngFor="#b of bibles" [label]="b.name" [value]="b.slug" [selected]="b.slug == bibleRight.slug">{{b.name}}</option>
 						</select>
 					</div>
 					<div class="form-group">
 						<label><span class="glyphicon glyphicon-search"></span> Text Highlighter</label>
-						<input autofocus="true" class="form-control ng-pristine ng-untouched ng-valid" ng-model="search.text" type="search">
+						<input autofocus="true" class="form-control" [(ngModel)]="searchText" (keyup)="updateHighlights()">
 					</div>
 					<h3><span class="glyphicon glyphicon-adjust"></span> What is this for?</h3>
-					<p class="help-block">The translation comparator allows you to read side-by-side versions of the same passage from multiple translation sources. This is useful for studying semantics than can be lost or misinterpreted in translation.</p><span ng-show="verses.length > 0"
-									class="ng-hide"><i>Verses: </i><span class="badge ng-binding" ng-bind="verses.length"></span></span>
+					<p class="help-block">The translation comparator allows you to read side-by-side versions of the same passage from multiple translation sources. This is useful for studying semantics than can be lost or misinterpreted in translation.</p>
+					<span *ngIf="versesLeft.length > 0" >
+						<i>Verses: </i>
+						<span class="badge" *ngIf="versesLeft.length"></span>
+					</span>
 				</div>
 			</div>
 		</form>
@@ -59,14 +51,14 @@
 				<table class="table table-condensed table-striped">
 					<thead>
 						<tr>
-							<th class="col-sm-1"><a ng-click="reverse = !reverse; predicate = 'ordinal'; ">Verse <span class="badge ng-binding"></span></a></th>
-							<th class="col-sm-8"><a ng-bind="bibleForSlug(selectedBibleLeft).name" ng-click="reverse = !reverse; predicate = 'text'; " class="ng-binding">American Standard-ASV1901</a></th>
+							<th class="col-sm-1">Verse</th>
+							<th class="col-sm-8">{{bible.name}}</th>
 						</tr>
 					</thead>
 					<tbody>
-						<tr ng-repeat="v in versesLeft | filter:search.text | orderBy:predicate:reverse" class="ng-scope" style="">
-							<td ng-bind="v.ordinal" class="ng-binding">1</td>
-							<td ng-bind-html="v.text | highlight:search.text" class="ng-binding">In the beginning God created the heavens and the earth.</td>
+						<tr *ngFor="#v of versesLeft">
+							<td>{{v.ordinal}}</td>
+							<td [innerHTML]="v.highlightedText"></td>
 						</tr>
 					</tbody>
 				</table>
@@ -75,18 +67,18 @@
 				<table class="table table-condensed table-striped">
 					<thead>
 						<tr>
-							<th class="col-sm-1"><a ng-click="reverse = !reverse; predicate = 'ordinal'; ">Verse</a></th>
-							<th class="col-sm-8"><a ng-bind="bibleForSlug(selectedBibleRight).name" ng-click="reverse = !reverse; predicate = 'text'; " class="ng-binding">Bible in Basic English</a></th>
+							<th class="col-sm-1">Verse</th>
+							<th class="col-sm-8">{{bibleRight.name}}</th>
 						</tr>
 					</thead>
 					<tbody>
-						<tr ng-repeat="v in versesRight | filter:search.text | orderBy:predicate:reverse" class="ng-scope" style="">
-							<td ng-bind="v.ordinal" class="ng-binding">1</td>
-							<td ng-bind-html="v.text | highlight:search.text" class="ng-binding">At the first God made the heaven and the earth.</td>
+						<tr *ngFor="#v of versesRight">
+							<td>{{v.ordinal}}</td>
+							<td [innerHTML]="v.highlightedText"></td>
 						</tr>
 					</tbody>
 				</table>
 			</div>
 		</div>
-	</div> -->
+	</div>
 </div>

@@ -1,12 +1,12 @@
 import {Component} from 'angular2/core';
 
-import {ServerService} from '../services/server.service';
+import {BiblerService} from '../services/bibler.service';
 import {BibleService} from '../services/bible.service';
 
 @Component({
 	selector: 'bibler-verse',
 	templateUrl: './verse.html',
-	providers: [ServerService, BibleService]
+	providers: [BiblerService, BibleService]
 })
 export class VerseComponent {
 

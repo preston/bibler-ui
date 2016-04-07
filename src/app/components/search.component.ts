@@ -1,40 +1,66 @@
 import {Component} from 'angular2/core';
 
-import {ServerService} from '../services/server.service';
+
+import {BibleBasedComponent} from './bibleBased.component';
+
+import {BiblerService} from '../services/bibler.service';
 import {BibleService} from '../services/bible.service';
+import {BookService} from '../services/book.service';
+import {TestamentService} from '../services/testament.service';
+import {VerseService} from '../services/verse.service';
+import {SearchService} from '../services/search.service';
 
 @Component({
-	selector: 'search',
-	templateUrl: 'app/components/search.html',
-	providers: [ServerService, BibleService]
+    selector: 'search',
+    templateUrl: 'app/components/search.html',
+    providers: [BiblerService, BibleService, BookService, TestamentService, VerseService, SearchService]
 })
+export class SearchComponent extends BibleBasedComponent {
 
-export class SearchComponent {
+    verses: Object[] = [];
 
-	constructor(private bibleService: BibleService) {
-		console.log("SearchComponent has been initialized.");
-	}
+    ascending = true;
+
+    constructor(
+        biblerService: BiblerService,
+        bibleService: BibleService,
+        testamentService: TestamentService,
+        protected bookService: BookService,
+        protected verseService: VerseService,
+        protected searchService: SearchService) {
+        super(biblerService, bibleService, testamentService);
+        console.log("SearchComponent has been initialized.");
+    }
+
+    resort() {
+        this.ascending = !this.ascending;
+        if (this.ascending) {
+            this.verses = this.verses.sort((a, b) => b['book']['name'].localeCompare(a['book']['name']));
+        } else {
+            this.verses = this.verses.sort((a, b) => a['book']['name'].localeCompare(b['book']['name']));
+        }
+    }
+
+    afterBibleSelect() { this.search(); }
+
+    search() {
+        console.log("Searching...");
+        if (this.validSearch()) {
+            var obs = this.searchService.search(this.bible['slug'], this.searchText);
+            obs.subscribe(d => {
+                this.verses = d;
+                for (var i = 0; i < this.verses.length; i++) {
+                    this.verses[i]['highlightedText'] = this.highlighted(this.searchText, this.verses[i]['text']);
+                }
+                this.resort();
+                // console.log(d);
+            });
+        }
+        return false;
+    }
+
+    validSearch() {
+        return this.bible != null && this.searchText != null && this.searchText.length >= 3
+    }
+
 }
-
-	// Restangular.all('bibles').getList().then(function(bibles) {
-	// 	$scope.bibles = bibles;
-	// 	$scope.selectedBible = bibles[0].slug;
-	// 	console.log("Loaded " + bibles.length + " bibles.");
-	// });
-	//
-	// $scope.search = function() {
-	// 	var bible = $scope.selectedBible;
-	// 	var text = $scope.search.text;
-	// 	if($scope.validSearch()) {
-	// 		Restangular.all(bible + '/search').post({'text' : $scope.search.text}).then(function(verses) {
-	// 			$scope.verses = verses;
-	// 		});
-	//
-	// 	} else {
-	// 		$scope.verses = [];
-	// 	}
-	// }
-	//
-	// $scope.validSearch = function() {
-	// 	return $scope.selectedBible != null && $scope.search.text != null && $scope.search.text.length >= 3
-	// }

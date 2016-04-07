@@ -1,23 +1,29 @@
 import {Component, Injectable} from 'angular2/core';
+import {Http} from 'angular2/http';
+import 'rxjs/add/operator/map';
 
-import {ChapterService} from './chapter.service';
+import {BiblerService} from './bibler.service';
 
 @Injectable()
 @Component({
-	providers: [ChapterService]
+	providers: [Http, BiblerService]
 })
 export class BookService {
 
-	books: Object[] = [
-		{"id":1,"name":"Genesis","ordinal":1,"slug":"genesis","testament":{"slug":"old","path":"/testaments/old.json"}},
-		{"id":2,"name":"Exodus","ordinal":2,"slug":"exodus","testament":{"slug":"old","path":"/testaments/old.json"}}
-	];
+	private path = '/books';
 
-	// constructor(private chapterService: ChapterService) {
-	//
-	// }
-	getBooks() {
-		return this.books;
+
+	constructor(private biblerService: BiblerService, private http: Http) {
+	}
+
+	index() {
+		var url = this.biblerService.getUrl() + this.path + '.json';
+		return this.http.get(url).map(res => res.json());
+	}
+
+	chaptersFor(bible: Object, book: Object) {
+		var url = this.biblerService.getUrl() + '/' + bible['slug'] + '/' + book['slug'] + '.json';
+		return this.http.get(url).map(res => res.json());
 	}
 
 }

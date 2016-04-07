@@ -1,74 +1,68 @@
 import {Component} from 'angular2/core';
 
-import {ServerService} from '../services/server.service';
+import {BiblerService} from '../services/bibler.service';
 import {BibleService} from '../services/bible.service';
+import {BookService} from '../services/book.service';
+import {TestamentService} from '../services/testament.service';
+import {VerseService} from '../services/verse.service';
+import {BookBasedComponent} from './bookBased.component';
 
 @Component({
-	selector: 'comparator',
-	templateUrl: 'app/components/comparator.html',
-	providers: [ServerService, BibleService]
+    selector: 'comparator',
+    templateUrl: 'app/components/comparator.html',
+    providers: [BiblerService, BibleService, BookService, TestamentService, VerseService]
 })
-export class ComparatorComponent {
+export class ComparatorComponent extends BookBasedComponent {
 
-	constructor() {
-		console.log("ComparatorComponent has been initialized.");
-	}
+    bibleRight: Object = null;
+    versesLeft: Object[] = [];
+    versesRight: Object[] = [];
+
+    constructor(
+        biblerService: BiblerService,
+        bibleService: BibleService,
+        bookService: BookService,
+        testamentService: TestamentService,
+        verseService: VerseService) {
+        super(biblerService, bibleService, testamentService, bookService, verseService);
+        console.log("ComparatorComponent has been initialized.");
+    }
+
+    afterBibleLoad() {
+        super.afterBibleLoad();
+        if (this.bibleRight == null && this.bibles.length > 1)
+            this.selectBibleRight(this.bibles[1]['slug']);
+    }
+
+    selectChapter(n: number) {
+        console.log("Updating verses for chapter " + n);
+        this.chapter = n;
+        if (this.bible && this.bibleRight) {
+            this.verseService.index(this.bible, this.book, this.chapter).subscribe(d => {
+                this.versesLeft = d;
+                this.verseService.index(this.bibleRight, this.book, this.chapter).subscribe(d => {
+                    this.versesRight = d;
+                    this.updateHighlights();
+                });
+            });
+        }
+    }
+
+    updateHighlights() {
+        console.log("Updating highlights for both bibles...");
+        for (var i = 0; i < this.versesLeft.length; i++) {
+            this.versesLeft[i]['highlightedText'] = this.highlighted(this.searchText, this.versesLeft[i]['text']);
+        }
+        for (var i = 0; i < this.versesRight.length; i++) {
+            this.versesRight[i]['highlightedText'] = this.highlighted(this.searchText, this.versesRight[i]['text']);
+        }
+    }
+
+    selectBibleRight(slug: string) {
+        console.log("Changing right bible to " + slug);
+        this.bibleRight = this.bibleForSlug(slug);
+        this.afterBibleSelect();
+    }
+
+
 }
-
-	// Restangular.all('bibles').getList().then(function(bibles) {
-	// 	$scope.bibles = bibles;
-	// 	$scope.selectedBibleLeft = bibles[0].slug;
-	// 	$scope.selectedBibleRight = bibles[1].slug;
-	// 	console.log("Loaded " + bibles.length + " bibles.");
-	// 	$scope.updateChapters();
-	// });
-	//
-	// Restangular.all('books').getList().then(function(books) {
-	// 	$scope.books = books;
-	// 	$scope.selectedBook = books[0].slug;
-	// 	console.log("Loaded " + books.length + " books.");
-	// 	$scope.updateChapters();
-	// });
-	//
-	// $scope.selectChapter = function() {
-	// 	console.log("Fetching verses...");
-	// 	var book = $scope.selectedBook;
-	// 	var chapter = $scope.selectedChapter;
-	// 	Restangular.all($scope.selectedBibleLeft + '/' + book + '/' + chapter).getList().then(function(verses) {
-	// 		$scope.versesLeft = verses;
-	// 	});
-	// 	Restangular.all($scope.selectedBibleRight + '/' + book + '/' + chapter).getList().then(function(verses) {
-	// 		$scope.versesRight = verses;
-	// 	});
-	// };
-	//
-	// $scope.selectBibleLeft = function() { $scope.updateChapters(); }
-	// $scope.selectBibleRight = function() {
-	// 	$scope.selectChapter();
-	// }
-	//
-	// $scope.bibleForSlug = function(slug) {
-	// 	if($scope.bibles == null) {
-	// 		return null;
-	// 	}
-	// 	for(var i = 0; i < $scope.bibles.length; i++) {
-	// 		if($scope.bibles[i].slug == slug) {
-	// 			return $scope.bibles[i];
-	// 		}
-	// 	}
-	// };
-	//
-	// $scope.updateChapters = function() {
-	// 	var bible = $scope.selectedBibleLeft;
-	// 	var book = $scope.selectedBook;
-	// 	if(bible != null && book != null) {
-	// 		console.log("Updating chapter list.");
-	// 		Restangular.all(bible + '/' + book).getList().then(function(chapters) {
-	// 			$scope.chapters = chapters;
-	// 			$scope.selectedChapter = chapters[0];
-	// 			$scope.selectChapter();
-	// 		});
-	// 	} else {
-	// 		console.log("Bible and book must be selected to update chapter counts.");
-	// 	}
-	// }

@@ -33,15 +33,9 @@
                     </li>
                 </ul>
                 <div class="tab-content">
-                    <!-- <div id="reader" > -->
-                        <reader class="tab-pane" role="tabpanel" [class.active]="tab == 'reader'"></reader>
-                    <!-- </div> -->
-                    <div id="comparator" class="tab-pane" role="tabpanel" [class.active]="tab == 'comparator'">
-                        <comparator></comparator>
-                    </div>
-                    <div id="search" class="tab-pane" role="tabpanel" [class.active]="tab == 'search'">
-                        <search></search>
-                    </div>
+                    <reader class="tab-pane" role="tabpanel" [class.active]="tab == 'reader'"></reader>
+                    <comparator class="tab-pane" role="tabpanel" [class.active]="tab == 'comparator'"></comparator>
+                    <search class="tab-pane" role="tabpanel" [class.active]="tab == 'search'"></search>
                 </div>
             </div>
         </div>

@@ -1,8 +1,8 @@
-import {describe, it, expect, beforeEachProviders, inject} from 'angular2/testing';
-import {BiblerUiApp} from '../app/bibler-ui';
-
-beforeEachProviders(() => [BiblerUiApp]);
-
+// import {describe, it, expect, beforeEachProviders, inject} from 'angular2/testing';
+// import {BiblerUiApp} from '../app/bibler-ui';
+//
+// beforeEachProviders(() => [BiblerUiApp]);
+//
 // describe('App: BiblerUi', () => {
 //   it('should have the `defaultMeaning` as 42', inject([BiblerUiApp], (app: BiblerUiApp) => {
 //     expect(app.defaultMeaning).toBe(42);
@@ -14,5 +14,4 @@ beforeEachProviders(() => [BiblerUiApp]);
 //       expect(app.meaningOfLife(22)).toBe('The meaning of life is 22');
 //     }));
 //   });
-
 // });

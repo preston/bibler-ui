@@ -1,27 +1,28 @@
 import {Component, Injectable} from 'angular2/core';
 import {Http} from 'angular2/http';
+import 'rxjs/add/operator/map';
 
-import {BookService} from './book.service';
+import {BiblerService} from './bibler.service';
 
 @Injectable()
 @Component({
-	providers: [Http]
+	providers: [Http, BiblerService]
 })
 export class BibleService {
 
-	bibles = [
-		{"id":1,"name":"American Standard-ASV1901","abbreviation":"ASV","slug":"american-standard-asv1901"},
-		{"id":2,"name":"Bible in Basic English","abbreviation":"BBE","slug":"bible-in-basic-english"}];
+	private path = '/bibles.json';
+	private bibles;
 
-	constructor(private bookService: BookService, private http: Http) {
+	// bibles = [
+	// 	{"id":1,"name":"American Standard-ASV1901","abbreviation":"ASV","slug":"american-standard-asv1901"},
+	// 	{"id":2,"name":"Bible in Basic English","abbreviation":"BBE","slug":"bible-in-basic-english"}];
 
+	constructor(private biblerService: BiblerService, private http: Http) {
 	}
 
-	getBibles() : Object[] {
-		var url = 'http://bibler.prestonlee.com/bibles.json'
-		// var result = this.http.get(url);
-		// console.log(result);
-		return this.bibles;
+	index() {
+		var url = this.biblerService.getUrl() + this.path;
+		return this.http.get(url).map(res => res.json());
 	}
 
 }
