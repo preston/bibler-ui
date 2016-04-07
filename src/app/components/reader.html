@@ -9,15 +9,15 @@
 							<span class="glyphicon glyphicon-book"></span> Bible
 						</label>
 						<select class="form-control" id="bible_select" (change)="selectBible($event.target.value)">
-							<option *ngFor="#b of bibles" [label]="b.name" [value]="b.slug" [selected]="b.slug == bible.slug">{{b.name}}</option>
+							<option *ngFor="#b of bibles" [value]="b.slug" [selected]="b.slug == bible.slug">{{b.name}}</option>
 						</select>
 					</div>
-					<div class="form-group" ng-show="chapters.length > 0" style="">
+					<div class="form-group" *ngIf="chapters.length > 0" style="">
 						<label for="chapter_select">
 							<span class="glyphicon glyphicon-bookmark"></span> Chapter
 						</label>
 						<select class="form-control" id="chapter_select" (change)="selectChapter($event.target.value)">
-							<option *ngFor="#c of chapters" [label]="c" [selected]="c == chapter">{{c}}</option>
+							<option *ngFor="#c of chapters" [selected]="c == chapter">{{c}}</option>
 						</select>
 					</div>
 				</div>
@@ -27,11 +27,11 @@
 							<span class="glyphicon glyphicon-user"></span> Book
 						</label>
 						<select class="form-control" id="book_select" (change)="selectBook($event.target.value)">
-							<option *ngFor="#b of books" [label]="b.name" [value]="b.slug" [selected]="b.slug == book.slug">{{b.name}}</option>
+							<option *ngFor="#b of books" [value]="b.slug" [selected]="b.slug == book.slug">{{b.name}}</option>
 						</select>
 
 					</div>
-					<div class="form-group" ng-show="verses.length > 0" style="">
+					<div class="form-group" *ngIf="verses.length > 0" style="">
 						<label for="verse_filter">
 							<span class="glyphicon glyphicon-search"></span> Text Highlighter
 						</label>
@@ -41,7 +41,7 @@
 				<div class="col-sm-4">
 					<h3><span class="glyphicon glyphicon-list"></span> What is this?</h3>
 					<p class="help-block">The reader is for general verse lookup, as well as providing permanent links that you may use in your documents and emails. </p>
-					<span ng-show="verses.length > 0">
+					<span *ngIf="verses.length > 0">
 						 <i>Verses: </i>
 						 <span class="badge">{{verses.length}}</span>
 					</span>
@@ -49,7 +49,7 @@
 			</div>
 		</form>
 	</div>
-	<div id="results" ng-show="verses.length > 0" class="" style="">
+	<div id="results" *ngIf="verses.length > 0" class="" style="">
 		<table class="table table-condensed table-striped">
 			<thead>
 				<tr>

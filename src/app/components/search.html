@@ -7,7 +7,7 @@
 				<div class="form-group">
 					<label for="bible_select"><span class="glyphicon glyphicon-book"></span> Bible</label>
 					<select class="form-control" id="bible_select" (change)="selectBible($event.target.value)">
-						<option *ngFor="#b of bibles, #i = index" [label]="b.name" [value]="b.slug" [selected]="b.slug == bible.slug">{{b.name}}</option>
+						<option *ngFor="#b of bibles, #i = index" [value]="b.slug" [selected]="b.slug == bible.slug">{{b.name}}</option>
 					</select>
 				</div>
 				<div class="form-group">

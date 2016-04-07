@@ -38,23 +38,21 @@ export class ComparatorComponent extends BookBasedComponent {
         console.log("Updating verses for chapter " + n);
         this.chapter = n;
         if (this.bible && this.bibleRight) {
-            this.verseService.index(this.bible, this.book, this.chapter).subscribe(d => {
-                this.versesLeft = d;
-                this.verseService.index(this.bibleRight, this.book, this.chapter).subscribe(d => {
-                    this.versesRight = d;
-                    this.updateHighlights();
+            this.verseService.index(this.bible, this.book, this.chapter).subscribe(left => {
+                this.updateHighlights(left);
+                this.versesLeft = left;
+                this.verseService.index(this.bibleRight, this.book, this.chapter).subscribe(right => {
+                    this.updateHighlights(right);
+                    this.versesRight = right;
                 });
             });
         }
     }
 
-    updateHighlights() {
+    updateHighlights(data: Object[]) {
         console.log("Updating highlights for both bibles...");
-        for (var i = 0; i < this.versesLeft.length; i++) {
-            this.versesLeft[i]['highlightedText'] = this.highlighted(this.searchText, this.versesLeft[i]['text']);
-        }
-        for (var i = 0; i < this.versesRight.length; i++) {
-            this.versesRight[i]['highlightedText'] = this.highlighted(this.searchText, this.versesRight[i]['text']);
+        for (var i = 0; i < data.length; i++) {
+            data[i]['highlightedText'] = this.highlighted(this.searchText, data[i]['text']);
         }
     }
 

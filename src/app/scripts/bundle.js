@@ -631,22 +631,20 @@ webpackJsonp([0],{
 	        console.log("Updating verses for chapter " + n);
 	        this.chapter = n;
 	        if (this.bible && this.bibleRight) {
-	            this.verseService.index(this.bible, this.book, this.chapter).subscribe(function (d) {
-	                _this.versesLeft = d;
-	                _this.verseService.index(_this.bibleRight, _this.book, _this.chapter).subscribe(function (d) {
-	                    _this.versesRight = d;
-	                    _this.updateHighlights();
+	            this.verseService.index(this.bible, this.book, this.chapter).subscribe(function (left) {
+	                _this.updateHighlights(left);
+	                _this.versesLeft = left;
+	                _this.verseService.index(_this.bibleRight, _this.book, _this.chapter).subscribe(function (right) {
+	                    _this.updateHighlights(right);
+	                    _this.versesRight = right;
 	                });
 	            });
 	        }
 	    };
-	    ComparatorComponent.prototype.updateHighlights = function () {
+	    ComparatorComponent.prototype.updateHighlights = function (data) {
 	        console.log("Updating highlights for both bibles...");
-	        for (var i = 0; i < this.versesLeft.length; i++) {
-	            this.versesLeft[i]['highlightedText'] = this.highlighted(this.searchText, this.versesLeft[i]['text']);
-	        }
-	        for (var i = 0; i < this.versesRight.length; i++) {
-	            this.versesRight[i]['highlightedText'] = this.highlighted(this.searchText, this.versesRight[i]['text']);
+	        for (var i = 0; i < data.length; i++) {
+	            data[i]['highlightedText'] = this.highlighted(this.searchText, data[i]['text']);
 	        }
 	    };
 	    ComparatorComponent.prototype.selectBibleRight = function (slug) {
