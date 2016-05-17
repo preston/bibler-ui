@@ -1,10 +1,10 @@
-import {OnInit} from 'angular2/core';
+import {OnInit} from '@angular/core';
 
 import {BiblerService} from '../services/bibler.service';
 import {BibleService} from '../services/bible.service';
 import {TestamentService} from '../services/testament.service';
 
-export abstract class BibleBasedComponent  implements OnInit {
+export abstract class BibleBasedComponent implements OnInit {
 
 	searchText = '';
 

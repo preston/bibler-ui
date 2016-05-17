@@ -1,4 +1,4 @@
-// import {describe, it, expect, beforeEachProviders, inject} from 'angular2/testing';
+// import {describe, it, expect, beforeEachProviders, inject} from '@angular/testing';
 // import {BiblerUiApp} from '../app/bibler-ui';
 //
 // beforeEachProviders(() => [BiblerUiApp]);

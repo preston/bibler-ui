@@ -1,6 +1,5 @@
-import {Component} from 'angular2/core';
-// import {RouteConfig} from 'angular2/router';
-import {RouteConfig, Route, ROUTER_DIRECTIVES} from 'angular2/router';
+import {Component} from '@angular/core';
+import {Routes, Route, ROUTER_DIRECTIVES} from '@angular/router';
 
 import {HomeComponent} from './components/home.component';
 import {ApiComponent} from './components/api.component';
@@ -15,10 +14,9 @@ import {ApiComponent} from './components/api.component';
         // 'app/bibler-ui.css'
     ]
 })
-@RouteConfig([
-    new Route({path: '/home', name: 'Home', component: HomeComponent, useAsDefault: true}),
-    new Route({path: '/api', name: 'Api', component: ApiComponent})
-    // new Route({path: '/*', name: 'Other', redirectTo: ['Home']})
+@Routes([
+    {path: '/', component: HomeComponent},
+    {path: '/api', component: ApiComponent}
 ])
 export class BiblerUiApp {
 }

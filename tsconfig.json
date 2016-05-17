@@ -1,16 +1,47 @@
 {
     "compilerOptions": {
-        "module": "commonjs",
         "target": "es5",
-        "noImplicitAny": false,
-        "outDir": "dist",
-        "rootDir": ".",
-        "sourceMap": false,
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "sourceMap": true,
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
-        "moduleResolution": "node"
+        "removeComments": false,
+        "noImplicitAny": false,
+        "outDir": "dist",
+        "rootDir": "."
     },
     "exclude": [
         "node_modules"
+    ],
+    "filesGlob": [
+        "src/**/*.ts"
+    ],
+    "atom": {
+        "rewriteTsconfig": true
+    },
+    "files": [
+        "src/app/bibler-ui.spec.ts",
+        "src/app/bibler-ui.ts",
+        "src/app/components/api.component.ts",
+        "src/app/components/bibleBased.component.ts",
+        "src/app/components/bookBased.component.ts",
+        "src/app/components/comparator.component.ts",
+        "src/app/components/home.component.ts",
+        "src/app/components/reader.component.ts",
+        "src/app/components/search.component.ts",
+        "src/app/components/verse.component.ts",
+        "src/app/directives/auto-grow.directive.ts",
+        "src/app/directives/highlight.directive.ts",
+        "src/app/models/bible.model.ts",
+        "src/app/pipes/humanizeBytes.pipe.ts",
+        "src/app/services/bible.service.ts",
+        "src/app/services/bibler.service.ts",
+        "src/app/services/book.service.ts",
+        "src/app/services/search.service.ts",
+        "src/app/services/testament.service.ts",
+        "src/app/services/verse.service.ts",
+        "src/main.ts",
+        "src/vendor.ts"
     ]
 }

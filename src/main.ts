@@ -1,9 +1,15 @@
-/// <reference path="../node_modules/angular2/typings/browser.d.ts" />
+/// <reference path="../typings/index.d.ts" />
 
-import {bootstrap} from 'angular2/platform/browser';
-import {HTTP_PROVIDERS} from 'angular2/http';
-import {ROUTER_PROVIDERS, LocationStrategy, HashLocationStrategy} from 'angular2/router';
-import {enableProdMode, provide} from 'angular2/core';
+import 'core-js';
+require('zone.js/dist/zone');
+require('zone.js/dist/long-stack-trace-zone');
+import 'reflect-metadata'
+
+import {bootstrap} from '@angular/platform-browser-dynamic';
+import {HTTP_PROVIDERS} from '@angular/http';
+import {LocationStrategy, HashLocationStrategy} from '@angular/common';
+import {ROUTER_PROVIDERS} from '@angular/router';
+import {enableProdMode, provide} from '@angular/core';
 
 // Custom app stuff.
 import {BiblerUiApp} from './app/bibler-ui';

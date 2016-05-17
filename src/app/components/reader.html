@@ -9,7 +9,7 @@
 							<span class="glyphicon glyphicon-book"></span> Bible
 						</label>
 						<select class="form-control" id="bible_select" (change)="selectBible($event.target.value)">
-							<option *ngFor="#b of bibles" [value]="b.slug" [selected]="b.slug == bible.slug">{{b.name}}</option>
+							<option *ngFor="let b of bibles" [value]="b.slug" [selected]="b.slug == bible.slug">{{b.name}}</option>
 						</select>
 					</div>
 					<div class="form-group" *ngIf="chapters.length > 0" style="">
@@ -17,7 +17,7 @@
 							<span class="glyphicon glyphicon-bookmark"></span> Chapter
 						</label>
 						<select class="form-control" id="chapter_select" (change)="selectChapter($event.target.value)">
-							<option *ngFor="#c of chapters" [selected]="c == chapter">{{c}}</option>
+							<option *ngFor="let c of chapters" [selected]="c == chapter">{{c}}</option>
 						</select>
 					</div>
 				</div>
@@ -27,7 +27,7 @@
 							<span class="glyphicon glyphicon-user"></span> Book
 						</label>
 						<select class="form-control" id="book_select" (change)="selectBook($event.target.value)">
-							<option *ngFor="#b of books" [value]="b.slug" [selected]="b.slug == book.slug">{{b.name}}</option>
+							<option *ngFor="let b of books" [value]="b.slug" [selected]="b.slug == book.slug">{{b.name}}</option>
 						</select>
 
 					</div>
@@ -59,7 +59,7 @@
 				</tr>
 			</thead>
 			<tbody>
-				<tr *ngFor="#v of verses">
+				<tr *ngFor="let v of verses">
 					<td>{{v.ordinal}}</td>
 					<!-- <td highlight [highlightText]="search.text">{{v.text}}</td> -->
 					<td [innerHTML]="v.highlightedText"></td>

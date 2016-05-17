@@ -1,5 +1,5 @@
-import {Component, Injectable} from 'angular2/core';
-import {Http, Headers} from 'angular2/http';
+import {Component, Injectable} from '@angular/core';
+import {Http, Headers} from '@angular/http';
 import 'rxjs/add/operator/map';
 
 import {BiblerService} from './bibler.service';

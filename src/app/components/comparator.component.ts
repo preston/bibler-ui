@@ -1,4 +1,4 @@
-import {Component} from 'angular2/core';
+import {Component} from '@angular/core';
 
 import {BiblerService} from '../services/bibler.service';
 import {BibleService} from '../services/bible.service';

@@ -1,6 +1,4 @@
-import {Component} from 'angular2/core';
-
-
+import {Component} from '@angular/core';
 
 import {ReaderComponent} from './reader.component';
 import {ComparatorComponent} from './comparator.component';

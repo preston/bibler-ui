@@ -4,17 +4,17 @@
             <div id="tabs" role="tabpanel">
                 <ul class="nav nav-tabs" role="tablist">
                     <li role="presentation" [class.active]="tab == 'reader'">
-                        <a aria-controls="reader" data-toggle="tab" (click)="tab = 'reader'" role="tab" aria-expanded="true">
+                        <a id="reader_tab_link" aria-controls="reader" data-toggle="tab" (click)="tab = 'reader'" role="tab" aria-expanded="true">
                             <span class="glyphicon glyphicon-list"></span> Reader
                         </a>
                     </li>
                     <li role="presentation" [class.active]="tab == 'comparator'">
-                        <a aria-controls="comparator" data-toggle="tab" (click)="tab = 'comparator'" role="tab" aria-expanded="false">
+                        <a id="comparator_tab_link" aria-controls="comparator" data-toggle="tab" (click)="tab = 'comparator'" role="tab" aria-expanded="false">
                             <span class="glyphicon glyphicon-adjust"></span> Translation Comparator
                         </a>
                     </li>
                     <li role="presentation" [class.active]="tab == 'search'">
-                        <a aria-controls="search" data-toggle="tab" (click)="tab = 'search'" role="tab" aria-expanded="false">
+                        <a id="search_tab_link" aria-controls="search" data-toggle="tab" (click)="tab = 'search'" role="tab" aria-expanded="false">
                             <span class="glyphicon glyphicon-search"></span> Text Search
                         </a>
                     </li>
