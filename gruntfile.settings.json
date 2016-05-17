@@ -21,7 +21,7 @@
         ]
     },
     "package": {
-        "name": "nova",
+        "name": "bibler-ui",
         "mode": "tgz",
         "extension": "tar.gz"
     },
