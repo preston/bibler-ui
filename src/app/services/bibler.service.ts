@@ -4,7 +4,7 @@ import {Component, Injectable} from '@angular/core';
 export class BiblerService {
 
 	// private root = 'http://localhost:3000';
-	private root = 'http://bibler-server.prestonlee.com';
+	private root = 'https://bibler-server.prestonlee.com';
 
 	getUrl(): string {
 		return this.root;
