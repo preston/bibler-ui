@@ -13,6 +13,7 @@ webpackJsonp([0],[
 	var common_1 = __webpack_require__(514);
 	var router_1 = __webpack_require__(634);
 	var core_1 = __webpack_require__(340);
+	var common_2 = __webpack_require__(514);
 	// Custom app stuff.
 	var bibler_ui_1 = __webpack_require__(656);
 	core_1.enableProdMode();
@@ -20,6 +21,7 @@ webpackJsonp([0],[
 	    http_1.HTTP_PROVIDERS,
 	    router_1.ROUTER_PROVIDERS,
 	    core_1.provide(common_1.LocationStrategy, { useClass: common_1.HashLocationStrategy }),
+	    core_1.provide(common_2.APP_BASE_HREF, { useValue: '/' })
 	]).catch(function (err) { return console.error(err); });
 
 
@@ -9191,9 +9193,9 @@ webpackJsonp([0],[
 	See the Apache Version 2.0 License for specific language governing permissions
 	and limitations under the License.
 	***************************************************************************** */
-	"use strict";
 	var Reflect;
 	(function (Reflect) {
+	    "use strict";
 	    // Load global or shim versions of Map, Set, and WeakMap
 	    var functionPrototype = Object.getPrototypeOf(Function);
 	    var _Map = typeof Map === "function" ? Map : CreateMapPolyfill();
@@ -9331,7 +9333,7 @@ webpackJsonp([0],[
 	                if (!IsConstructor(target)) {
 	                    throw new TypeError();
 	                }
-	                OrdinaryDefineOwnMetadata(metadataKey, metadataValue, target, undefined);
+	                OrdinaryDefineOwnMetadata(metadataKey, metadataValue, target, /*targetKey*/ undefined);
 	            }
 	        }
 	        return decorator;
@@ -9690,7 +9692,7 @@ webpackJsonp([0],[
 	            targetKey = ToPropertyKey(targetKey);
 	        }
 	        // https://github.com/jonathandturner/decorators/blob/master/specs/metadata.md#deletemetadata-metadatakey-p-
-	        var metadataMap = GetOrCreateMetadataMap(target, targetKey, false);
+	        var metadataMap = GetOrCreateMetadataMap(target, targetKey, /*create*/ false);
 	        if (IsUndefined(metadataMap)) {
 	            return false;
 	        }
@@ -9775,7 +9777,7 @@ webpackJsonp([0],[
 	    }
 	    // https://github.com/jonathandturner/decorators/blob/master/specs/metadata.md#ordinaryhasownmetadata--metadatakey-o-p-
 	    function OrdinaryHasOwnMetadata(MetadataKey, O, P) {
-	        var metadataMap = GetOrCreateMetadataMap(O, P, false);
+	        var metadataMap = GetOrCreateMetadataMap(O, P, /*create*/ false);
 	        if (metadataMap === undefined) {
 	            return false;
 	        }
@@ -9795,7 +9797,7 @@ webpackJsonp([0],[
 	    }
 	    // https://github.com/jonathandturner/decorators/blob/master/specs/metadata.md#ordinarygetownmetadata--metadatakey-o-p-
 	    function OrdinaryGetOwnMetadata(MetadataKey, O, P) {
-	        var metadataMap = GetOrCreateMetadataMap(O, P, false);
+	        var metadataMap = GetOrCreateMetadataMap(O, P, /*create*/ false);
 	        if (metadataMap === undefined) {
 	            return undefined;
 	        }
@@ -9803,7 +9805,7 @@ webpackJsonp([0],[
 	    }
 	    // https://github.com/jonathandturner/decorators/blob/master/specs/metadata.md#ordinarydefineownmetadata--metadatakey-metadatavalue-o-p-
 	    function OrdinaryDefineOwnMetadata(MetadataKey, MetadataValue, O, P) {
-	        var metadataMap = GetOrCreateMetadataMap(O, P, true);
+	        var metadataMap = GetOrCreateMetadataMap(O, P, /*create*/ true);
 	        metadataMap.set(MetadataKey, MetadataValue);
 	    }
 	    // https://github.com/jonathandturner/decorators/blob/master/specs/metadata.md#ordinarymetadatakeys--o-p-
@@ -9842,7 +9844,7 @@ webpackJsonp([0],[
 	    }
 	    // https://github.com/jonathandturner/decorators/blob/master/specs/metadata.md#ordinaryownmetadatakeys--o-p-
 	    function OrdinaryOwnMetadataKeys(target, targetKey) {
-	        var metadataMap = GetOrCreateMetadataMap(target, targetKey, false);
+	        var metadataMap = GetOrCreateMetadataMap(target, targetKey, /*create*/ false);
 	        var keys = [];
 	        if (metadataMap) {
 	            metadataMap.forEach(function (_, key) { return keys.push(key); });
@@ -10025,26 +10027,26 @@ webpackJsonp([0],[
 	        }
 	        WeakMap.prototype = {
 	            has: function (target) {
-	                var table = GetOrCreateWeakMapTable(target, false);
+	                var table = GetOrCreateWeakMapTable(target, /*create*/ false);
 	                if (table) {
 	                    return this._key in table;
 	                }
 	                return false;
 	            },
 	            get: function (target) {
-	                var table = GetOrCreateWeakMapTable(target, false);
+	                var table = GetOrCreateWeakMapTable(target, /*create*/ false);
 	                if (table) {
 	                    return table[this._key];
 	                }
 	                return undefined;
 	            },
 	            set: function (target, value) {
-	                var table = GetOrCreateWeakMapTable(target, true);
+	                var table = GetOrCreateWeakMapTable(target, /*create*/ true);
 	                table[this._key] = value;
 	                return this;
 	            },
 	            delete: function (target) {
-	                var table = GetOrCreateWeakMapTable(target, false);
+	                var table = GetOrCreateWeakMapTable(target, /*create*/ false);
 	                if (table && this._key in table) {
 	                    return delete table[this._key];
 	                }
