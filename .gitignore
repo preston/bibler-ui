@@ -12,10 +12,6 @@ src/app/scripts
 node_modules
 
 #Exclude build, dist, and temp
-build
-dist
-temp
-
 
 #Exclude docs
 doc

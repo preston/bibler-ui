@@ -7,41 +7,38 @@
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
         "removeComments": false,
-        "noImplicitAny": false,
-        "outDir": "dist",
-        "rootDir": "."
+        "noImplicitAny": false
     },
     "exclude": [
         "node_modules"
     ],
     "filesGlob": [
-        "src/**/*.ts"
+        "app/**/*.ts"
     ],
     "atom": {
         "rewriteTsconfig": true
     },
     "files": [
-        "src/app/bibler-ui.spec.ts",
-        "src/app/bibler-ui.ts",
-        "src/app/components/api.component.ts",
-        "src/app/components/bibleBased.component.ts",
-        "src/app/components/bookBased.component.ts",
-        "src/app/components/comparator.component.ts",
-        "src/app/components/home.component.ts",
-        "src/app/components/reader.component.ts",
-        "src/app/components/search.component.ts",
-        "src/app/components/verse.component.ts",
-        "src/app/directives/auto-grow.directive.ts",
-        "src/app/directives/highlight.directive.ts",
-        "src/app/models/bible.model.ts",
-        "src/app/pipes/humanizeBytes.pipe.ts",
-        "src/app/services/bible.service.ts",
-        "src/app/services/bibler.service.ts",
-        "src/app/services/book.service.ts",
-        "src/app/services/search.service.ts",
-        "src/app/services/testament.service.ts",
-        "src/app/services/verse.service.ts",
-        "src/main.ts",
-        "src/vendor.ts"
+        "app/app.module.ts",
+        "app/components/api.component.ts",
+        "app/components/app.component.ts",
+        "app/components/bibleBased.component.ts",
+        "app/components/bookBased.component.ts",
+        "app/components/comparator.component.ts",
+        "app/components/home.component.ts",
+        "app/components/reader.component.ts",
+        "app/components/search.component.ts",
+        "app/components/verse.component.ts",
+        "app/directives/auto-grow.directive.ts",
+        "app/directives/highlight.directive.ts",
+        "app/main.ts",
+        "app/models/bible.model.ts",
+        "app/pipes/humanizeBytes.pipe.ts",
+        "app/services/bible.service.ts",
+        "app/services/bibler.service.ts",
+        "app/services/book.service.ts",
+        "app/services/search.service.ts",
+        "app/services/testament.service.ts",
+        "app/services/verse.service.ts"
     ]
 }

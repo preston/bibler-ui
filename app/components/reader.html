@@ -1,0 +1,86 @@
+<div class="container-fluid">
+	<br>
+	<div class="well">
+		<form id="search_form" role="form">
+			<div class="row">
+				<div class="col-sm-4">
+					<div class="form-group">
+						<label for="bible_select">
+							<span class="glyphicon glyphicon-book"></span> Bible
+						</label>
+						<select class="form-control" id="bible_select" (change)="selectBible($event.target.value)">
+							<option *ngFor="let b of bibles" [value]="b.slug" [selected]="b.slug == bible.slug">{{b.name}}</option>
+						</select>
+					</div>
+					<div class="form-group" *ngIf="chapters.length > 0" style="">
+						<label for="chapter_select">
+							<span class="glyphicon glyphicon-bookmark"></span> Chapter
+						</label>
+						<select class="form-control" id="chapter_select" (change)="selectChapter($event.target.value)">
+							<option *ngFor="let c of chapters" [selected]="c == chapter">{{c}}</option>
+						</select>
+					</div>
+				</div>
+				<div class="col-sm-4">
+					<div class="form-group">
+						<label for="book_select">
+							<span class="glyphicon glyphicon-user"></span> Book
+						</label>
+						<select class="form-control" id="book_select" (change)="selectBook($event.target.value)">
+							<option *ngFor="let b of books" [value]="b.slug" [selected]="b.slug == book.slug">{{b.name}}</option>
+						</select>
+
+					</div>
+					<div class="form-group" *ngIf="verses.length > 0" style="">
+						<label for="verse_filter">
+							<span class="glyphicon glyphicon-search"></span> Text Highlighter
+						</label>
+						<input name="text" autofocus="true" class="form-control" [(ngModel)]="searchText" (keyup)="updateHighlights()">
+					</div>
+				</div>
+				<div class="col-sm-4">
+					<h3><span class="glyphicon glyphicon-list"></span> What is this?</h3>
+					<p class="help-block">The reader is for general verse lookup, as well as providing permanent links that you may use in your documents and emails. </p>
+					<span *ngIf="verses.length > 0">
+						 <i>Verses: </i>
+						 <span class="badge">{{verses.length}}</span>
+					</span>
+				</div>
+			</div>
+		</form>
+	</div>
+	<div id="results" *ngIf="verses.length > 0" class="" style="">
+		<table class="table table-condensed table-striped">
+			<thead>
+				<tr>
+					<th class="col-sm-1">Verse</th>
+					<th class="col-sm-8">Text</th>
+					<th class="col-sm-3">Links &amp; API</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr *ngFor="let v of verses">
+					<td>{{v.ordinal}}</td>
+					<!-- <td highlight [highlightText]="search.text">{{v.text}}</td> -->
+					<td [innerHTML]="v.highlightedText"></td>
+					<td>
+						<!-- <div class="btn-group"> -->
+							<!-- <a class="btn btn-sm btn-default" href="/{{bible.slug}}/{{book.slug}}/{{chapter}}/{{verse}}.html">
+								<span class="glyphicon glyphicon-link"></span> Web
+							</a> -->
+							<a class="" href="mailto:?subject={{book.name}}%201:1%20-%20{{bible.name}}&amp;body=%22{{v.text}}%0D%0A%0D%0A--%0D%0APowered by Bibler.">
+								<span class="glyphicon glyphicon-send"></span>&nbsp;Email
+							</a> |
+							<a class="" href="{{verseDataPermalink(v, 'json')}}">
+								<small>JSON</small>
+							</a> |
+							<a class="" href="{{verseDataPermalink(v, 'xml')}}">
+								<small>XML</small>
+							</a>
+						<!-- </div> -->
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+</div>
