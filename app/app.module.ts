@@ -1,4 +1,4 @@
-import {ModuleWithProviders} from '@angular/core';
+import {ModuleWithProviders, enableProdMode} from '@angular/core';
 import {Routes, RouterModule} from '@angular/router';
 
 import {ApiComponent} from './components/api.component';
@@ -17,11 +17,7 @@ import {TestamentService} from './services/testament.service';
 import {VerseService} from './services/verse.service';
 
 
-// @Component({
-//     selector: 'bibler-ui-app',
-//     templateUrl: 'app/bibler-ui.html',
-//     pipes: []
-// })]
+enableProdMode();
 
 
 import { NgModule }      from '@angular/core';

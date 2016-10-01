@@ -8,6 +8,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var core_1 = require('@angular/core');
 var router_1 = require('@angular/router');
 var api_component_1 = require('./components/api.component');
 var app_component_1 = require('./components/app.component');
@@ -22,12 +23,8 @@ var book_service_1 = require('./services/book.service');
 var search_service_1 = require('./services/search.service');
 var testament_service_1 = require('./services/testament.service');
 var verse_service_1 = require('./services/verse.service');
-// @Component({
-//     selector: 'bibler-ui-app',
-//     templateUrl: 'app/bibler-ui.html',
-//     pipes: []
-// })]
-var core_1 = require('@angular/core');
+core_1.enableProdMode();
+var core_2 = require('@angular/core');
 var platform_browser_1 = require('@angular/platform-browser');
 var forms_1 = require('@angular/forms');
 var http_1 = require('@angular/http');
@@ -41,7 +38,7 @@ var AppModule = (function () {
     function AppModule() {
     }
     AppModule = __decorate([
-        core_1.NgModule({
+        core_2.NgModule({
             imports: [
                 platform_browser_1.BrowserModule,
                 routing,
