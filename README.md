@@ -1,0 +1,1 @@
+docker build -t p3000/bibler-ui .
