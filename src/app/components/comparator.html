@@ -6,19 +6,19 @@
                 <div class="col-sm-6 form-group">
                     <div class="form-group" *ngIf="bible">
                         <label for="bible_select_left"><span class="glyphicon glyphicon-book"></span> Bible (Left)</label>
-                        <select class="form-control" id="bible_select_left" (change)="selectBible($event.target.value)">
+                        <select #bible_select_left id="bible_select_left" class="form-control" (change)="selectBible(bible_select_left.value)">
 							<option *ngFor="let b of bibles" [value]="b.slug" [selected]="b.slug == bible.slug">{{b.name}}</option>
 						</select>
                     </div>
                     <div class="form-group" *ngIf="book">
                         <label for="book_select"><span class="glyphicon glyphicon-user"></span> Book</label>
-                        <select class="form-control" id="book_select" (change)="selectBook($event.target.value)">
+                        <select #book_select id="book_select" class="form-control" (change)="selectBook(book_select.value)">
 							<option *ngFor="let b of books" [value]="b.slug" [selected]="b.slug == book.slug">{{b.name}}</option>
 						</select>
                     </div>
                     <div class="form-group" *ngIf="chapter && chapters.length > 0">
                         <label for="chapter_select"><span class="glyphicon glyphicon-bookmark"></span> Chapter</label>
-                        <select class="form-control" id="chapter_select" (change)="selectChapter($event.target.value)">
+                        <select #chapter_select id="chapter_select" class="form-control" (change)="selectChapterString(chapter_select.value)">
 							<option *ngFor="let c of chapters" [selected]="c == chapter">{{c}}</option>
 						</select>
                     </div>
@@ -26,7 +26,7 @@
                 <div class="col-sm-6">
                     <div class="form-group" *ngIf="bibleRight">
                         <label for="bible_select_right"><span class="glyphicon glyphicon-book"></span> Bible (Right)</label>
-                        <select class="form-control" id="bible_select_right" (change)="selectBibleRight($event.target.value)">
+                        <select #bible_select_right id="bible_select_right" class="form-control" (change)="selectBibleRight(bible_select_right.value)">
 							<option *ngFor="let b of bibles" [value]="b.slug" [selected]="b.slug == bibleRight.slug">{{b.name}}</option>
 						</select>
                     </div>

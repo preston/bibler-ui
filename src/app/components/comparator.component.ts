@@ -37,6 +37,9 @@ export class ComparatorComponent extends BookBasedComponent {
             this.selectBibleRight(this.bibles[1]['slug']);
     }
 
+    selectChapterString(s: string) {
+ this.selectChapter(parseInt(s));
+    }
     selectChapter(n: number) {
         console.log("Updating verses for chapter " + n);
         this.chapter = n;

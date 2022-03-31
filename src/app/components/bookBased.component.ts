@@ -38,9 +38,11 @@ export abstract class BookBasedComponent extends BibleBasedComponent {
 
 
     selectBook(slug: string) {
-        console.log("Changing book to " + slug);
-        this.book = this.bookForSlug(slug);
-        this.afterBibleSelect();
+        if (slug) {
+            console.log("Changing book to " + slug);
+            this.book = this.bookForSlug(slug);
+            this.afterBibleSelect();
+        }
     }
 
     afterBibleSelect() {
