@@ -1,1 +1,1 @@
-docker build -t p3000/bibler-ui .
+docker build --platform linux/amd64 -t p3000/bibler-ui .
