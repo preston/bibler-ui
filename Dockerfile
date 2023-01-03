@@ -15,6 +15,9 @@ WORKDIR /usr/share/nginx/html
 # Remove any default nginx content
 RUN rm -rf *
 
+# We need to make a few changes to the default configuration file.
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
 ## Copy build from "builder" stage, as well as runtime configuration script public folder
 COPY --from=builder /app/dist/bibler-ui .
 COPY --from=builder /app/configure-from-environment.sh .
