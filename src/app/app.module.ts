@@ -1,3 +1,5 @@
+// Author: Preston Lee
+
 import { ApiComponent } from './components/api.component';
 import { AppComponent } from './components/app.component';
 import { ComparatorComponent } from './components/comparator.component';

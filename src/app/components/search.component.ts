@@ -1,3 +1,5 @@
+// Author: Preston Lee
+
 import {Component} from '@angular/core';
 
 
@@ -39,6 +41,10 @@ export class SearchComponent extends BibleBasedComponent {
         } else {
             this.verses = this.verses.sort((a, b) => a.book.name.localeCompare(b.book.name));
         }
+    }
+
+    afterBibleLoad(): void {
+        // Meh
     }
 
     afterBibleSelect() { this.search(); }

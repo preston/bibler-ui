@@ -17,7 +17,7 @@ export abstract class BibleBasedComponent implements OnInit {
     testaments: Object[] = [];
 
     constructor(
-        public biblerService: BiblerService,
+        protected biblerService: BiblerService,
         protected bibleService: BibleService,
         protected testamentService: TestamentService) { }
 
@@ -34,8 +34,8 @@ export abstract class BibleBasedComponent implements OnInit {
         console.log("BibleBasedComponent initialized!");
     }
 
-    afterBibleLoad() { }
-    afterBibleSelect() { }
+    abstract afterBibleLoad(): void;
+    abstract afterBibleSelect(): void;
 
     selectBible(slug: string) {
         console.log("Changing bible to " + slug);
@@ -56,7 +56,7 @@ export abstract class BibleBasedComponent implements OnInit {
             var regex = new RegExp('(' + terms.join('|') + ')', 'gi');
             var result = inText.replace(regex, '<span class="highlight">$&</span>');
         }
-        return result
+        return result;
     }
 
     verseMailTo(verse: Verse) {

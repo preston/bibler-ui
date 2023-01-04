@@ -21,7 +21,7 @@ export class ApiComponent extends BookBasedComponent {
     verses: Verse[] = [];
 
     constructor(
-        public biblerService: BiblerService,
+        biblerService: BiblerService,
         bibleService: BibleService,
         testamentService: TestamentService,
         bookService: BookService,

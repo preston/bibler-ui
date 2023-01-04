@@ -7,9 +7,9 @@
     "author": "Preston Lee",
     "scripts": {
         "ng": "ng",
-        "start": "ng serve",
+        "start": "envsubst < src/assets/configuration.template.js > src/assets/configuration.js && ng serve",
         "build": "ng build",
-        "watch": "ng build --watch --configuration development",
+        "watch": "envsubst < src/assets/configuration.template.js > src/assets/configuration.js && ng build --watch --configuration development",
         "test": "ng test"
     },
     "private": true,

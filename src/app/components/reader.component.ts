@@ -1,3 +1,5 @@
+// Author: Preston Lee
+
 import { Component } from '@angular/core';
 
 import { BiblerService } from '../services/bibler.service';

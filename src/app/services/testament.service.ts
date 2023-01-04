@@ -1,4 +1,6 @@
-import { Component, OnInit, Injectable } from '@angular/core';
+// Author: Preston Lee
+
+import { OnInit, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Testament } from '../models/testament';
 

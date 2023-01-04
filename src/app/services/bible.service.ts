@@ -1,7 +1,9 @@
-import {Component, Injectable} from '@angular/core';
-import {HttpClient} from '@angular/common/http';
+// Autho: Preston Lee
 
-import {BiblerService} from './bibler.service';
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+
+import { BiblerService } from './bibler.service';
 import { Bible } from '../models/bible';
 
 @Injectable()

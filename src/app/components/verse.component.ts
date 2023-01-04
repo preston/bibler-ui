@@ -1,7 +1,6 @@
-import {Component} from '@angular/core';
+// Author: Preston Lee
 
-import {BiblerService} from '../services/bibler.service';
-import {BibleService} from '../services/bible.service';
+import {Component} from '@angular/core';
 
 @Component({
 	selector: 'bibler-verse',

@@ -1,3 +1,5 @@
+// Author: Preston Lee
+
 import { Component } from '@angular/core';
 
 import { BiblerService } from '../services/bibler.service';
@@ -31,7 +33,7 @@ export class ComparatorComponent extends BookBasedComponent {
         console.log("ComparatorComponent has been initialized.");
     }
 
-    afterBibleLoad() {
+    override afterBibleLoad() {
         super.afterBibleLoad();
         if (this.bibleRight == null && this.bibles.length > 1)
             this.selectBibleRight(this.bibles[1]['slug']);

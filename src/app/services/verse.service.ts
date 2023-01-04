@@ -1,4 +1,6 @@
-import {Component, Injectable} from '@angular/core'
+// Author: Preston Lee
+
+import {Injectable} from '@angular/core'
 import {HttpClient} from '@angular/common/http';
 
 import {BiblerService} from './bibler.service';
