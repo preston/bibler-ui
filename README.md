@@ -20,7 +20,7 @@ To build with [Docker](https://www.docker.com) and [nginx](http://nginx.org), us
 	docker buildx build --platform linux/arm64/v8,linux/amd64 -t p3000/bibler-ui:latest . --push
 
     # Test your image with your own configuration similar to:
-    docker run -it -p 4200:80 --restart unless-stopped --rm -e "BIBLER_SERVER_URL=https://bibler-server.prestonlee.com" p3000/bibler-ui:latest # or your tag
+    docker run -it -p 4200:80 --rm -e "BIBLER_SERVER_URL=https://bibler-server.prestonlee.com" p3000/bibler-ui:latest # or your tag
 ```
 
 ## Production Deployment
