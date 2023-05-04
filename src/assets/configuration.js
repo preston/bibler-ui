@@ -1,4 +1,4 @@
 (function(window) {
     // Environment variables
-    window["BIBLER_SERVER_URL"] = "https://bibler-server.prestonlee.com";
+    window["BIBLER_SERVER_URL"] = "http://localhost:3000";
 })(this);
