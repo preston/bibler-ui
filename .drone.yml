@@ -1,18 +1,37 @@
 ---
 kind: pipeline
+name: latest-amd64
 type: docker
+platform:
+  arch: amd64
+  os: linux
 steps:
-  # - name: build_project
-  #   image: node:20-alpine
-  #   commands:
-  #     - npm install
-  #     - npm run build
   - name: publish
     image: plugins/docker
     settings:
       repo:
-        from_secret:  docker_repository
-      tags: [latest]
+        from_secret: docker_repository
+      tags: [latest, latest-amd64]
+      # auto_tag: true
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+---
+kind: pipeline
+name: latest-arm64
+type: docker
+platform:
+  arch: arm64
+  os: linux
+steps:
+  - name: publish
+    image: plugins/docker
+    settings:
+      repo:
+        from_secret: docker_repository
+      tags: [latest-arm64]
+      # auto_tag: true
       username:
         from_secret: docker_username
       password:
