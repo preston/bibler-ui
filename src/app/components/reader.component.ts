@@ -9,10 +9,14 @@ import { TestamentService } from '../services/testament.service';
 import { VerseService } from '../services/verse.service';
 import { BookBasedComponent } from './bookBased.component';
 import { Verse } from '../models/verse';
+import { NgFor, NgIf } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 @Component({
     selector: 'reader',
-    templateUrl: 'reader.html'
+    templateUrl: 'reader.html',
+    standalone: true,
+    imports: [FormsModule, NgFor, NgIf]
 })
 export class ReaderComponent extends BookBasedComponent {
 

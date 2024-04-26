@@ -10,10 +10,13 @@ import { TestamentService } from '../services/testament.service';
 import { VerseService } from '../services/verse.service';
 import { SearchService } from '../services/search.service';
 import { Verse } from '../models/verse';
+import { NgIf } from '@angular/common';
 
 @Component({
     selector: 'api',
-    templateUrl: 'api.html'
+    templateUrl: 'api.html',
+    standalone: true,
+    imports: [NgIf]
 })
 export class ApiComponent extends BookBasedComponent {
 

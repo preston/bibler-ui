@@ -12,10 +12,14 @@ import {TestamentService} from '../services/testament.service';
 import {VerseService} from '../services/verse.service';
 import {SearchService} from '../services/search.service';
 import { Verse } from '../models/verse';
+import { NgFor, NgIf } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 @Component({
     selector: 'search',
-    templateUrl: 'search.html'
+    templateUrl: 'search.html',
+    standalone: true,
+    imports: [FormsModule, NgFor, NgIf]
 })
 export class SearchComponent extends BibleBasedComponent {
 

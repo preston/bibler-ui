@@ -3,9 +3,9 @@
 import {Component} from '@angular/core';
 
 @Component({
-	selector: 'bibler-verse',
-	templateUrl: 'verse.html'
-	// providers: [BiblerService, BibleService]
+    selector: 'bibler-verse',
+    templateUrl: 'verse.html',
+    standalone: true
 })
 export class VerseComponent {
 

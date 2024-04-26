@@ -10,12 +10,17 @@ import { VerseService } from '../services/verse.service';
 import { BookBasedComponent } from './bookBased.component';
 import { Verse } from '../models/verse';
 import { Bible } from '../models/bible';
+import { NgIf, NgFor } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 @Component({
     selector: 'comparator',
     templateUrl: 'comparator.html'
     // ,
     // providers: [BiblerService, BibleService, BookService, TestamentService, VerseService]
+    ,
+    standalone: true,
+    imports: [FormsModule, NgIf, NgFor]
 })
 export class ComparatorComponent extends BookBasedComponent {
 
@@ -40,8 +45,9 @@ export class ComparatorComponent extends BookBasedComponent {
     }
 
     selectChapterString(s: string) {
- this.selectChapter(parseInt(s));
+        this.selectChapter(parseInt(s));
     }
+    
     selectChapter(n: number) {
         console.log("Updating verses for chapter " + n);
         this.chapter = n;
