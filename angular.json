@@ -69,14 +69,14 @@
                 "serve": {
                     "builder": "@angular-devkit/build-angular:dev-server",
                     "options": {
-                        "browserTarget": "bibler-ui:build"
+                        "buildTarget": "bibler-ui:build"
                     },
                     "configurations": {
                         "production": {
-                            "browserTarget": "bibler-ui:build:production"
+                            "buildTarget": "bibler-ui:build:production"
                         },
                         "development": {
-                            "browserTarget": "bibler-ui:build:development"
+                            "buildTarget": "bibler-ui:build:development"
                         }
                     },
                     "defaultConfiguration": "development"
@@ -84,7 +84,7 @@
                 "extract-i18n": {
                     "builder": "@angular-devkit/build-angular:extract-i18n",
                     "options": {
-                        "browserTarget": "bibler-ui:build"
+                        "buildTarget": "bibler-ui:build"
                     }
                 },
                 "test": {
