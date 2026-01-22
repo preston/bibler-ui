@@ -1,6 +1,7 @@
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
 import { BookBasedComponent } from './bookBased.component';
 import { Verse } from '../models/verse';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
     selector: 'api',
@@ -12,22 +13,32 @@ import { Verse } from '../models/verse';
 export class ApiComponent extends BookBasedComponent {
 
     verses = signal<Verse[]>([]);
+    selectedVerse = signal<Verse | null>(null);
 
     constructor() {
         super();
         console.log("ApiComponent has been initialized.");
     }
 
-    selectChapter(n: number) {
+    override selectChapter(n: number) {
         console.log("Updating verses for chapter " + n);
         this.chapter.set(n);
         const bible = this.bible();
         const book = this.book();
         if (bible && book) {
-            this.verseService.index(bible, book, n).subscribe((d: Verse[]) => {
-                this.verses.set(d);
-            });
+            this.verseService.index(bible, book, n)
+                .pipe(takeUntilDestroyed(this.destroyRef))
+                .subscribe((d: Verse[]) => {
+                    this.verses.set(d);
+                    if (d.length > 0) {
+                        this.selectedVerse.set(d[0]);
+                    }
+                });
         }
+    }
+
+    selectVerse(verse: Verse) {
+        this.selectedVerse.set(verse);
     }
 
     stringify(obj: any): string {

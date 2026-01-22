@@ -17,8 +17,15 @@ export class BookService {
 	constructor(private biblerService: BiblerService, private http: HttpClient) {
 	}
 
-	index() {
-		const url = this.biblerService.getUrl() + this.path + '.json';
+	index(bible?: Bible) {
+		let url: string;
+		if (bible) {
+			// Use nested route: /bibles/:bible_slug/books.json
+			url = this.biblerService.getUrl() + '/bibles/' + bible.slug + '/books.json';
+		} else {
+			// Fallback to old route for backward compatibility
+			url = this.biblerService.getUrl() + this.path + '.json';
+		}
 		return this.http.get<Book[]>(url);
 	}
 

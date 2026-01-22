@@ -5,57 +5,58 @@
             <form id="search_form" role="form">
                 <div class="row">
                     <div class="col-sm-4">
-                        <div class="form-group">
-                            <label for="bible_select">
-								<span class="bi bi-book"></span> Bible
-							</label>
-                            <select class="form-control" id="bible_select" (change)="selectBible($any($event.target).value)">
+                        <div class="form-floating mb-3">
+                            <select class="form-select" id="bible_select" (change)="selectBible($any($event.target).value)">
                                 @for (b of bibles(); track b.slug) {
                                     <option [value]="b.slug" [selected]="b.slug == bible()?.slug">{{b.name}}</option>
                                 }
 							</select>
+                            <label for="bible_select">
+								<span class="bi bi-book"></span> Bible
+							</label>
                         </div>
                                 @if (chapters().length > 0) {
-                            <div class="form-group" style="">
-                                <label for="chapter_select">
-                                    <span class="bi bi-bookmark"></span> Chapter
-                                </label>
-                                <select class="form-control" id="chapter_select" (change)="selectChapter($any($event.target).value)">
+                            <div class="form-floating mb-3">
+                                <select class="form-select" id="chapter_select" (change)="selectChapter($any($event.target).value)">
                                     @for (c of chapters(); track c) {
                                         <option [selected]="c == chapter()">{{c}}</option>
                                     }
                                 </select>
+                                <label for="chapter_select">
+                                    <span class="bi bi-bookmark"></span> Chapter
+                                </label>
                             </div>
                         }
                     </div>
                     <div class="col-sm-4">
-                        <div class="form-group">
-                            <label for="book_select">
-								<span class="bi bi-person"></span> Book
-							</label>
-                            <select class="form-control" id="book_select" (change)="selectBook($any($event.target).value)">
+                        <div class="form-floating mb-3">
+                            <select class="form-select" id="book_select" (change)="selectBook($any($event.target).value)">
+                                @if (books().length === 0) {
+                                    <option value="">Loading books...</option>
+                                }
                                 @for (b of books(); track b.slug) {
                                     <option [value]="b.slug" [selected]="b.slug == book()?.slug">{{b.name}}</option>
                                 }
 							</select>
-
+                            <label for="book_select">
+								<span class="bi bi-person"></span> Book
+							</label>
                         </div>
                         @if (verses().length > 0) {
-                            <div class="form-group" style="">
+                            <div class="form-floating mb-3">
+                                <input name="text" id="verse_filter" autofocus="true" class="form-control" [ngModel]="searchText()" (ngModelChange)="searchText.set($event)" type="text" placeholder=" ">
                                 <label for="verse_filter">
                                     <span class="bi bi-search"></span> Text Highlighter
                                 </label>
-                                <input name="text" autofocus="true" class="form-control" [ngModel]="searchText()" (ngModelChange)="searchText.set($event)">
                             </div>
                         }
                     </div>
                     <div class="col-sm-4">
-                        <h3><span class="bi bi-list"></span> What is this?</h3>
+                        <!-- <h3><span class="bi bi-list"></span> What is this?</h3> -->
                         <p class="form-text text-muted">The reader is for general verse lookup, as well as providing permanent links that you may use in your documents and emails. </p>
                         @if (verses().length > 0) {
                             <span>
-                                <i>Verses: </i>
-                                <span class="badge">{{verses().length}}</span>
+                                <span class="badge bg-primary">{{verses().length}}</span> Verses
                             </span>
                         }
                     </div>
@@ -64,7 +65,7 @@
         </div>
     </div>
     @if (highlightedVerses().length > 0) {
-        <div id="results" class="" style="">
+        <div id="results">
             <table class="table table-sm table-striped">
                 <thead>
                     <tr>
@@ -84,11 +85,11 @@
                                 <!-- <a class="btn btn-sm btn-secondary" href="/{{bible.slug}}/{{book.slug}}/{{chapter}}/{{verse}}.html">
                                         <span class="bi bi-link"></span> Web
                                     </a> -->
-                                <a class="" [href]="verseMailTo(v)">
-                                    <span class="bi bi-envelope"></span>&nbsp;Email
-                                </a> |
-                                <a class="" [href]="verseDataPermalink(v, 'json')">
-                                    <small>JSON</small>
+                                <a class="" [href]="verseMailTo(v)" title="Email">
+                                    <span class="bi bi-envelope"></span>
+                                </a>
+                                <a class="ms-2" [href]="verseDataPermalink(v, 'json')" title="JSON">
+                                    <span class="bi bi-code"></span>
                                 </a>
                                 <!-- <a class="" href="{{verseDataPermalink(v, 'xml')}}">
                                     <small>XML</small>

@@ -16,6 +16,7 @@ alwaysApply: true
 - Use Angular CLI for all operations (generate, build, serve)
 - Follow Angular style guide: components, services, models in separate directories
 - Use TypeScript strict mode and proper typing
+- For form inputs, prefer Bootstrap "floating" style for labels
 - Prefer Angular services for data fetching over direct HTTP calls in components
 - Use Angular routing for navigation
 - Avoid jQuery when Angular alternatives exist (use Angular directives/event binding)

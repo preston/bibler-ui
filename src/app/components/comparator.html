@@ -4,53 +4,63 @@
         <div class="card-body">
             <form id="search_form" role="form">
                 <div class="row">
-                    <div class="col-sm-6 form-group">
+                    <div class="col-sm-6">
                         @if (bible()) {
-                            <div class="form-group">
-                                <label for="bible_select_left"><span class="bi bi-book"></span> Bible (Left)</label>
-                                <select #bible_select_left id="bible_select_left" class="form-control" (change)="selectBible(bible_select_left.value)">
+                            <div class="form-floating mb-3">
+                                <select #bible_select_left id="bible_select_left" class="form-select" (change)="selectBible(bible_select_left.value)">
                                     @for (b of bibles(); track b.slug) {
                                         <option [value]="b.slug" [selected]="b.slug == bible()!.slug">{{b.name}}</option>
                                     }
                                 </select>
+                                <label for="bible_select_left"><span class="bi bi-book"></span> Bible (Left)</label>
                             </div>
                         }
                         @if (book()) {
-                            <div class="form-group">
-                                <label for="book_select"><span class="bi bi-person"></span> Book</label>
-                                <select #book_select id="book_select" class="form-control" (change)="selectBook(book_select.value)">
+                            <div class="form-floating mb-3">
+                                <select #book_select id="book_select" class="form-select" (change)="selectBook(book_select.value)">
                                     @for (b of books(); track b.slug) {
                                         <option [value]="b.slug" [selected]="b.slug == book()!.slug">{{b.name}}</option>
                                     }
                                 </select>
+                                <label for="book_select"><span class="bi bi-person"></span> Book</label>
                             </div>
                         }
                         @if (chapter() && chapters().length > 0) {
-                            <div class="form-group">
-                                <label for="chapter_select"><span class="bi bi-bookmark"></span> Chapter</label>
-                                <select #chapter_select id="chapter_select" class="form-control" (change)="selectChapterString(chapter_select.value)">
+                            <div class="form-floating mb-3">
+                                <select #chapter_select id="chapter_select" class="form-select" (change)="selectChapterString(chapter_select.value)">
                                     @for (c of chapters(); track c) {
                                         <option [selected]="c == chapter()">{{c}}</option>
                                     }
                                 </select>
+                                <label for="chapter_select"><span class="bi bi-bookmark"></span> Chapter</label>
                             </div>
                         }
                     </div>
                     <div class="col-sm-6">
                         @if (bibleRight()) {
-                            <div class="form-group">
-                                <label for="bible_select_right"><span class="bi bi-book"></span> Bible (Right)</label>
-                                <select #bible_select_right id="bible_select_right" class="form-control" (change)="selectBibleRight(bible_select_right.value)">
+                            <div class="form-floating mb-3">
+                                <select #bible_select_right id="bible_select_right" class="form-select" (change)="selectBibleRight(bible_select_right.value)">
                                     @for (b of bibles(); track b.slug) {
                                         <option [value]="b.slug" [selected]="b.slug == bibleRight()!.slug">{{b.name}}</option>
                                     }
                                 </select>
+                                <label for="bible_select_right"><span class="bi bi-book"></span> Bible (Right)</label>
+                            </div>
+                        }
+                        @if (bookRight()) {
+                            <div class="form-floating mb-3">
+                                <select #book_select_right id="book_select_right" class="form-select" (change)="selectBookRight(book_select_right.value)">
+                                    @for (b of booksRight(); track b.slug) {
+                                        <option [value]="b.slug" [selected]="b.slug == bookRight()!.slug">{{b.name}}</option>
+                                    }
+                                </select>
+                                <label for="book_select_right"><span class="bi bi-person"></span> Book (Right)</label>
                             </div>
                         }
                         @if (chapter()) {
-                            <div class="form-group">
-                                <label><span class="bi bi-search"></span> Text Highlighter</label>
-                                <input name="text" autofocus="true" class="form-control" [ngModel]="searchText()" (ngModelChange)="searchText.set($event)">
+                            <div class="form-floating mb-3">
+                                <input name="text" id="text_highlighter" autofocus="true" class="form-control" [ngModel]="searchText()" (ngModelChange)="searchText.set($event)" type="text" placeholder=" ">
+                                <label for="text_highlighter"><span class="bi bi-search"></span> Text Highlighter</label>
                             </div>
                         }
                         <h3><span class="bi bi-arrow-left-right"></span> What is this for?</h3>
@@ -58,7 +68,7 @@
                         @if (versesLeft().length > 0) {
                             <span>
                                 <i>Verses: </i>
-                                <span class="badge"></span>
+                                <span class="badge bg-primary">{{versesLeft().length}}</span>
                             </span>
                         }
                     </div>

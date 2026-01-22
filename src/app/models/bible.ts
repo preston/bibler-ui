@@ -6,6 +6,8 @@ export class Bible implements Sluggable{
 	name!: string;
 	abbreviation!: string;
 	slug!: string;
+	language?: string;
+	license?: string;
 	created_at!: string;
 	updated_at!: string;
 
