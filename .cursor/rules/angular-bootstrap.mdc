@@ -1,0 +1,54 @@
+---
+description: Angular and Bootstrap best practices with minimal custom CSS
+alwaysApply: true
+---
+
+# Angular & Bootstrap Best Practices
+
+## Project Context
+
+- **Frontend**: Angular with Bootstrap
+- **Server**: Backend code located at `../bibler-server`
+- **Goal**: Maintainable, simple, dependency-light codebase
+
+## Angular Best Practices
+
+- Use Angular CLI for all operations (generate, build, serve)
+- Follow Angular style guide: components, services, models in separate directories
+- Use TypeScript strict mode and proper typing
+- Prefer Angular services for data fetching over direct HTTP calls in components
+- Use Angular routing for navigation
+- Avoid jQuery when Angular alternatives exist (use Angular directives/event binding)
+
+## Bootstrap-First Approach
+
+- **Always use Bootstrap classes** before writing custom CSS
+- Leverage Bootstrap utilities: spacing (`mb-3`, `p-4`), display (`d-flex`, `d-none`), colors (`text-primary`, `bg-light`)
+- Use Bootstrap components: `nav`, `card`, `btn`, `form-control`, `table`, etc.
+- Only add custom CSS when Bootstrap cannot achieve the desired result
+- Prefer Bootstrap Icons over custom icon solutions
+
+## Minimal Custom CSS
+
+- Keep `styles.scss` minimal - most styling should come from Bootstrap classes
+- Custom CSS should be:
+  - Utility classes that Bootstrap doesn't provide
+  - Component-specific overrides only when necessary
+  - Commented-out code should be removed, not left in place
+- Avoid vendor prefixes - use standard CSS properties (Angular handles autoprefixing)
+
+## Minimal Dependencies
+
+- Avoid adding new npm packages unless absolutely necessary
+- Prefer Angular built-ins and Bootstrap over third-party libraries
+- Review existing dependencies before adding new ones
+- Keep `package.json` lean and well-documented
+
+## Maintenance Focus
+
+- Write clear, readable code over clever solutions
+- Use meaningful variable and function names
+- Keep components small and focused
+- Extract reusable logic into services
+- Document non-obvious code decisions
+- Remove dead/commented code regularly
