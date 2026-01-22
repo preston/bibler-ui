@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
 import { BookBasedComponent } from './bookBased.component';
 import { Verse } from '../models/verse';
 
@@ -6,7 +6,8 @@ import { Verse } from '../models/verse';
     selector: 'api',
     templateUrl: 'api.html',
     standalone: true,
-    imports: []
+    imports: [],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ApiComponent extends BookBasedComponent {
 

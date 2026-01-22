@@ -1,6 +1,6 @@
 // Author: Preston Lee
 
-import { Component, signal, computed, effect } from '@angular/core';
+import { Component, signal, computed, effect, ChangeDetectionStrategy } from '@angular/core';
 import { BookBasedComponent } from './bookBased.component';
 import { Verse } from '../models/verse';
 import { FormsModule } from '@angular/forms';
@@ -9,7 +9,8 @@ import { FormsModule } from '@angular/forms';
     selector: 'reader',
     templateUrl: 'reader.html',
     standalone: true,
-    imports: [FormsModule]
+    imports: [FormsModule],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ReaderComponent extends BookBasedComponent {
 

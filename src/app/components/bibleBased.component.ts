@@ -1,4 +1,4 @@
-import { Component, Injectable, OnInit, signal, computed, effect, inject } from '@angular/core';
+import { Component, Injectable, signal, computed, effect, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 
 import { BiblerService } from '../services/bibler.service';
@@ -10,7 +10,7 @@ import { Sluggable } from '../models/sluggable';
 import { Verse } from '../models/verse';
 
 @Injectable()
-export abstract class BibleBasedComponent implements OnInit {
+export abstract class BibleBasedComponent {
 
     protected biblerService = inject(BiblerService);
     protected bibleService = inject(BibleService);
@@ -58,10 +58,6 @@ export abstract class BibleBasedComponent implements OnInit {
         });
 
         console.log("BibleBasedComponent initialized!");
-    }
-
-    ngOnInit() {
-        // Initialization logic moved to constructor with effects
     }
 
     abstract afterBibleLoad(): void;

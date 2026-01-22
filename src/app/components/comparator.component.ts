@@ -1,6 +1,6 @@
 // Author: Preston Lee
 
-import { Component, signal, computed, effect } from '@angular/core';
+import { Component, signal, computed, effect, ChangeDetectionStrategy } from '@angular/core';
 import { BookBasedComponent } from './bookBased.component';
 import { Verse } from '../models/verse';
 import { Bible } from '../models/bible';
@@ -10,7 +10,8 @@ import { FormsModule } from '@angular/forms';
     selector: 'comparator',
     templateUrl: 'comparator.html',
     standalone: true,
-    imports: [FormsModule]
+    imports: [FormsModule],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ComparatorComponent extends BookBasedComponent {
 

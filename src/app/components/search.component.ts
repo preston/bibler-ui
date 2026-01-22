@@ -1,6 +1,6 @@
 // Author: Preston Lee
 
-import {Component, signal, computed, inject} from '@angular/core';
+import {Component, signal, computed, inject, ChangeDetectionStrategy} from '@angular/core';
 import {BibleBasedComponent} from './bibleBased.component';
 import {SearchService} from '../services/search.service';
 import { Verse } from '../models/verse';
@@ -10,7 +10,8 @@ import { FormsModule } from '@angular/forms';
     selector: 'search',
     templateUrl: 'search.html',
     standalone: true,
-    imports: [FormsModule]
+    imports: [FormsModule],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SearchComponent extends BibleBasedComponent {
 
