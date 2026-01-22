@@ -12,14 +12,13 @@ import {TestamentService} from '../services/testament.service';
 import {VerseService} from '../services/verse.service';
 import {SearchService} from '../services/search.service';
 import { Verse } from '../models/verse';
-import { NgFor, NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 @Component({
     selector: 'search',
     templateUrl: 'search.html',
     standalone: true,
-    imports: [FormsModule, NgFor, NgIf]
+    imports: [FormsModule]
 })
 export class SearchComponent extends BibleBasedComponent {
 
@@ -57,7 +56,7 @@ export class SearchComponent extends BibleBasedComponent {
         console.log("Searching...");
         if (this.validSearch() && this.bible) {
             var obs = this.searchService.search(this.bible.slug, this.searchText);
-            obs.subscribe(d => {
+            obs.subscribe((d: any) => {
                 this.verses = <Verse[]>d;
                 for (var i = 0; i < this.verses.length; i++) {
                     this.verses[i]['highlightedText'] = this.highlighted(this.searchText, this.verses[i]['text']);

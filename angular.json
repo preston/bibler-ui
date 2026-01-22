@@ -36,13 +36,21 @@
                             "src/assets"
                         ],
                         "styles": [
-                            "src/styles.scss"
+                            "src/styles.scss",
+                            "node_modules/bootstrap-icons/font/bootstrap-icons.css",
+                            "src/sandstone.min.css"
+
                         ],
-                        "scripts": []
+                        "scripts": [
+                            "node_modules/jquery/dist/jquery.min.js",
+                            "node_modules/@popperjs/core/dist/umd/popper.js",
+                            "node_modules/bootstrap/dist/js/bootstrap.min.js"
+                        ]
                     },
                     "configurations": {
                         "production": {
-                            "budgets": [{
+                            "budgets": [
+                                {
                                     "type": "initial",
                                     "maximumWarning": "1mb",
                                     "maximumError": "5mb"

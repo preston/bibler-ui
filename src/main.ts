@@ -1,13 +1,10 @@
 import { enableProdMode, importProvidersFrom } from '@angular/core';
-import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
-
-
 import { environment } from './environments/environment';
 import { AppComponent } from './app/components/app.component';
 import { FormsModule } from '@angular/forms';
 import { AppRoutingModule } from './app/app-routing.module';
 import { BrowserModule, bootstrapApplication } from '@angular/platform-browser';
-import { HttpClient, withInterceptorsFromDi, provideHttpClient } from '@angular/common/http';
+import { withInterceptorsFromDi, provideHttpClient } from '@angular/common/http';
 import { VerseService } from './app/services/verse.service';
 import { TestamentService } from './app/services/testament.service';
 import { SearchService } from './app/services/search.service';
@@ -28,7 +25,6 @@ bootstrapApplication(AppComponent, {
         SearchService,
         TestamentService,
         VerseService,
-        HttpClient,
         provideHttpClient(withInterceptorsFromDi())
     ]
 })

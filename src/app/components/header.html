@@ -1,0 +1,39 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+	<div class="container-fluid">
+		<a class="navbar-brand" routerLink="/" routerLinkActive="active">
+			<span class="bi bi-book"></span> Bible<span class="text-info">r</span>
+			<small class="text-muted">
+				<b>/ˈbaɪblər/</b>
+			</small>
+		</a>
+		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon"></span>
+		</button>
+		<div class="collapse navbar-collapse" id="navbarNav">
+			<ul class="navbar-nav me-auto">
+				<li class="nav-item">
+					<a id="reader_nav_link" class="nav-link" routerLink="/reader" routerLinkActive="active" [routerLinkActiveOptions]="{exact: false}">
+						<span class="bi bi-list"></span> Reader
+					</a>
+				</li>
+				<li class="nav-item">
+					<a id="comparator_nav_link" class="nav-link" routerLink="/comparator" routerLinkActive="active" [routerLinkActiveOptions]="{exact: false}">
+						<span class="bi bi-arrow-left-right"></span> Translation Comparator
+					</a>
+				</li>
+				<li class="nav-item">
+					<a id="search_nav_link" class="nav-link" routerLink="/search" routerLinkActive="active" [routerLinkActiveOptions]="{exact: false}">
+						<span class="bi bi-search"></span> Text Search
+					</a>
+				</li>
+			</ul>
+			<ul class="navbar-nav">
+				<li class="nav-item">
+					<a id="api_page_link" class="nav-link" routerLink="/api" routerLinkActive="active">
+						<span class="bi bi-arrow-left-right"></span> API
+					</a>
+				</li>
+			</ul>
+		</div>
+	</div>
+</nav>

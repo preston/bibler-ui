@@ -22,13 +22,13 @@ export abstract class BibleBasedComponent implements OnInit {
         protected testamentService: TestamentService) { }
 
     ngOnInit() {
-        this.bibleService.index().subscribe(d => {
+        this.bibleService.index().subscribe((d: Bible[]) => {
             this.bibles = d;
             if (this.bible == null && this.bibles.length > 0)
                 this.selectBible(this.bibles[0]['slug']);
             this.afterBibleLoad();
         });
-        this.testamentService.index().subscribe(d => {
+        this.testamentService.index().subscribe((d: Object[]) => {
             this.testaments = d;
         });
         console.log("BibleBasedComponent initialized!");

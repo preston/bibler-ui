@@ -10,13 +10,12 @@ import { TestamentService } from '../services/testament.service';
 import { VerseService } from '../services/verse.service';
 import { SearchService } from '../services/search.service';
 import { Verse } from '../models/verse';
-import { NgIf } from '@angular/common';
 
 @Component({
     selector: 'api',
     templateUrl: 'api.html',
     standalone: true,
-    imports: [NgIf]
+    imports: []
 })
 export class ApiComponent extends BookBasedComponent {
 
@@ -37,7 +36,7 @@ export class ApiComponent extends BookBasedComponent {
         console.log("Updating verses for chapter " + n);
         this.chapter = n;
         if (this.bible && this.book) {
-            this.verseService.index(this.bible, this.book, this.chapter).subscribe(d => {
+            this.verseService.index(this.bible, this.book, this.chapter).subscribe((d: Verse[]) => {
                 this.verses = d;
             });
         }

@@ -9,14 +9,13 @@ import { TestamentService } from '../services/testament.service';
 import { VerseService } from '../services/verse.service';
 import { BookBasedComponent } from './bookBased.component';
 import { Verse } from '../models/verse';
-import { NgFor, NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 @Component({
     selector: 'reader',
     templateUrl: 'reader.html',
     standalone: true,
-    imports: [FormsModule, NgFor, NgIf]
+    imports: [FormsModule]
 })
 export class ReaderComponent extends BookBasedComponent {
 
@@ -36,7 +35,7 @@ export class ReaderComponent extends BookBasedComponent {
         console.log("Updating verses for chapter " + n);
         this.chapter = n;
         if (this.bible && this.book) {
-            this.verseService.index(this.bible, this.book, this.chapter).subscribe(d => {
+            this.verseService.index(this.bible, this.book, this.chapter).subscribe((d: Verse[]) => {
                 this.verses = d;
                 this.updateHighlights();
             });

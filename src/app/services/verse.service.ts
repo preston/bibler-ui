@@ -8,7 +8,9 @@ import { Book } from '../models/book';
 import { Bible } from '../models/bible';
 import { Verse } from '../models/verse';
 
-@Injectable()
+@Injectable({
+	providedIn: 'root'
+})
 export class VerseService {
 
 	constructor(private biblerService: BiblerService, private http: HttpClient) {

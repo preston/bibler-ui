@@ -10,7 +10,6 @@ import { VerseService } from '../services/verse.service';
 import { BookBasedComponent } from './bookBased.component';
 import { Verse } from '../models/verse';
 import { Bible } from '../models/bible';
-import { NgIf, NgFor } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 @Component({
@@ -20,7 +19,7 @@ import { FormsModule } from '@angular/forms';
     // providers: [BiblerService, BibleService, BookService, TestamentService, VerseService]
     ,
     standalone: true,
-    imports: [FormsModule, NgIf, NgFor]
+    imports: [FormsModule]
 })
 export class ComparatorComponent extends BookBasedComponent {
 
@@ -52,11 +51,11 @@ export class ComparatorComponent extends BookBasedComponent {
         console.log("Updating verses for chapter " + n);
         this.chapter = n;
         if (this.bible && this.bibleRight && this.book) {
-            this.verseService.index(this.bible, this.book, this.chapter).subscribe(left => {
+            this.verseService.index(this.bible, this.book, this.chapter).subscribe((left: Verse[]) => {
                 this.updateHighlights(left);
                 this.versesLeft = left;
                 if (this.bibleRight && this.book && this.chapter) {
-                    this.verseService.index(this.bibleRight, this.book, this.chapter).subscribe(right => {
+                    this.verseService.index(this.bibleRight, this.book, this.chapter).subscribe((right: Verse[]) => {
                         this.updateHighlights(right);
                         this.versesRight = right;
                     });

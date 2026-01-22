@@ -7,7 +7,9 @@ import {BiblerService} from './bibler.service';
 import { Book } from '../models/book';
 import { Bible } from '../models/bible';
 
-@Injectable()
+@Injectable({
+	providedIn: 'root'
+})
 export class BookService {
 
 	private path = '/books';

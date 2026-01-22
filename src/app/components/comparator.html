@@ -1,83 +1,113 @@
 <div class="container-fluid">
     <br>
-    <div class="well">
-        <form id="search_form" role="form">
-            <div class="row">
-                <div class="col-sm-6 form-group">
-                    <div class="form-group" *ngIf="bible">
-                        <label for="bible_select_left"><span class="glyphicon glyphicon-book"></span> Bible (Left)</label>
-                        <select #bible_select_left id="bible_select_left" class="form-control" (change)="selectBible(bible_select_left.value)">
-							<option *ngFor="let b of bibles" [value]="b.slug" [selected]="b.slug == bible.slug">{{b.name}}</option>
-						</select>
+    <div class="card bg-light mb-3">
+        <div class="card-body">
+            <form id="search_form" role="form">
+                <div class="row">
+                    <div class="col-sm-6 form-group">
+                        @if (bible) {
+                            <div class="form-group">
+                                <label for="bible_select_left"><span class="bi bi-book"></span> Bible (Left)</label>
+                                <select #bible_select_left id="bible_select_left" class="form-control" (change)="selectBible(bible_select_left.value)">
+                                    @for (b of bibles; track b.slug) {
+                                        <option [value]="b.slug" [selected]="b.slug == bible.slug">{{b.name}}</option>
+                                    }
+                                </select>
+                            </div>
+                        }
+                        @if (book) {
+                            <div class="form-group">
+                                <label for="book_select"><span class="bi bi-person"></span> Book</label>
+                                <select #book_select id="book_select" class="form-control" (change)="selectBook(book_select.value)">
+                                    @for (b of books; track b.slug) {
+                                        <option [value]="b.slug" [selected]="b.slug == book.slug">{{b.name}}</option>
+                                    }
+                                </select>
+                            </div>
+                        }
+                        @if (chapter && chapters.length > 0) {
+                            <div class="form-group">
+                                <label for="chapter_select"><span class="bi bi-bookmark"></span> Chapter</label>
+                                <select #chapter_select id="chapter_select" class="form-control" (change)="selectChapterString(chapter_select.value)">
+                                    @for (c of chapters; track c) {
+                                        <option [selected]="c == chapter">{{c}}</option>
+                                    }
+                                </select>
+                            </div>
+                        }
                     </div>
-                    <div class="form-group" *ngIf="book">
-                        <label for="book_select"><span class="glyphicon glyphicon-user"></span> Book</label>
-                        <select #book_select id="book_select" class="form-control" (change)="selectBook(book_select.value)">
-							<option *ngFor="let b of books" [value]="b.slug" [selected]="b.slug == book.slug">{{b.name}}</option>
-						</select>
-                    </div>
-                    <div class="form-group" *ngIf="chapter && chapters.length > 0">
-                        <label for="chapter_select"><span class="glyphicon glyphicon-bookmark"></span> Chapter</label>
-                        <select #chapter_select id="chapter_select" class="form-control" (change)="selectChapterString(chapter_select.value)">
-							<option *ngFor="let c of chapters" [selected]="c == chapter">{{c}}</option>
-						</select>
+                    <div class="col-sm-6">
+                        @if (bibleRight) {
+                            <div class="form-group">
+                                <label for="bible_select_right"><span class="bi bi-book"></span> Bible (Right)</label>
+                                <select #bible_select_right id="bible_select_right" class="form-control" (change)="selectBibleRight(bible_select_right.value)">
+                                    @for (b of bibles; track b.slug) {
+                                        <option [value]="b.slug" [selected]="b.slug == bibleRight.slug">{{b.name}}</option>
+                                    }
+                                </select>
+                            </div>
+                        }
+                        @if (chapter) {
+                            <div class="form-group">
+                                <label><span class="bi bi-search"></span> Text Highlighter</label>
+                                <input name="text" autofocus="true" class="form-control" [(ngModel)]="searchText" (keyup)="updateAllHighlights()">
+                            </div>
+                        }
+                        <h3><span class="bi bi-arrow-left-right"></span> What is this for?</h3>
+                        <p class="form-text text-muted">The translation comparator allows you to read side-by-side versions of the same passage from multiple translation sources. This is useful for studying semantics than can be lost or misinterpreted in translation.</p>
+                        @if (versesLeft.length > 0) {
+                            <span>
+                                <i>Verses: </i>
+                                <span class="badge"></span>
+                            </span>
+                        }
                     </div>
                 </div>
-                <div class="col-sm-6">
-                    <div class="form-group" *ngIf="bibleRight">
-                        <label for="bible_select_right"><span class="glyphicon glyphicon-book"></span> Bible (Right)</label>
-                        <select #bible_select_right id="bible_select_right" class="form-control" (change)="selectBibleRight(bible_select_right.value)">
-							<option *ngFor="let b of bibles" [value]="b.slug" [selected]="b.slug == bibleRight.slug">{{b.name}}</option>
-						</select>
-                    </div>
-                    <div class="form-group" *ngIf="chapter">
-                        <label><span class="glyphicon glyphicon-search"></span> Text Highlighter</label>
-                        <input name="text" autofocus="true" class="form-control" [(ngModel)]="searchText" (keyup)="updateAllHighlights()">
-                    </div>
-                    <h3><span class="glyphicon glyphicon-adjust"></span> What is this for?</h3>
-                    <p class="help-block">The translation comparator allows you to read side-by-side versions of the same passage from multiple translation sources. This is useful for studying semantics than can be lost or misinterpreted in translation.</p>
-                    <span *ngIf="versesLeft.length > 0">
-						<i>Verses: </i>
-						<span class="badge" *ngIf="versesLeft.length"></span>
-                    </span>
-                </div>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
     <div id="sideBySide">
         <div class="row">
-            <div class="col-sm-6" *ngIf="versesLeft.length > 0">
-                <table class="table table-condensed table-striped">
-                    <thead>
-                        <tr>
-                            <th class="col-sm-1">Verse</th>
-                            <th class="col-sm-8">{{bible?.name}}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr *ngFor="let v of versesLeft">
-                            <td>{{v.ordinal}}</td>
-                            <td [innerHTML]="v.highlightedText"></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div class="col-sm-6" *ngIf="versesRight.length > 0">
-                <table class="table table-condensed table-striped">
-                    <thead>
-                        <tr>
-                            <th class="col-sm-1">Verse</th>
-                            <th class="col-sm-8">{{bibleRight?.name}}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr *ngFor="let v of versesRight">
-                            <td>{{v.ordinal}}</td>
-                            <td [innerHTML]="v.highlightedText"></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+            @if (versesLeft.length > 0) {
+                <div class="col-sm-6">
+                    <table class="table table-sm table-striped">
+                        <thead>
+                            <tr>
+                                <th class="col-sm-1">Verse</th>
+                                <th class="col-sm-8">{{bible?.name}}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (v of versesLeft; track v.ordinal) {
+                                <tr>
+                                    <td>{{v.ordinal}}</td>
+                                    <td [innerHTML]="v.highlightedText"></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            @if (versesRight.length > 0) {
+                <div class="col-sm-6">
+                    <table class="table table-sm table-striped">
+                        <thead>
+                            <tr>
+                                <th class="col-sm-1">Verse</th>
+                                <th class="col-sm-8">{{bibleRight?.name}}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (v of versesRight; track v.ordinal) {
+                                <tr>
+                                    <td>{{v.ordinal}}</td>
+                                    <td [innerHTML]="v.highlightedText"></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
         </div>
     </div>
 </div>

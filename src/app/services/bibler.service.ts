@@ -2,7 +2,9 @@
 
 import { Component, Injectable } from '@angular/core';
 
-@Injectable()
+@Injectable({
+	providedIn: 'root'
+})
 export class BiblerService {
 
 	private root: string;

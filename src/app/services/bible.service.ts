@@ -6,7 +6,9 @@ import { HttpClient } from '@angular/common/http';
 import { BiblerService } from './bibler.service';
 import { Bible } from '../models/bible';
 
-@Injectable()
+@Injectable({
+	providedIn: 'root'
+})
 export class BibleService {
 
 	private path = '/bibles.json';

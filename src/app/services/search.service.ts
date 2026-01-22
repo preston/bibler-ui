@@ -5,7 +5,9 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 import { BiblerService } from './bibler.service';
 
-@Injectable()
+@Injectable({
+	providedIn: 'root'
+})
 export class SearchService {
 
     // private verses;

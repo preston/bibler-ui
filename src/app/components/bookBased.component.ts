@@ -28,7 +28,7 @@ export abstract class BookBasedComponent extends BibleBasedComponent {
     }
 
     afterBibleLoad() {
-        this.bookService.index().subscribe(d => {
+        this.bookService.index().subscribe((d: Book[]) => {
             this.books = d;
             if (this.book == null && this.books.length > 0)
                 this.selectBook(this.books[0].slug);
@@ -50,7 +50,7 @@ export abstract class BookBasedComponent extends BibleBasedComponent {
         var book = this.book;
         if (this.bible != null && this.book != null) {
             console.log("Updating chapter list.");
-            this.bookService.chaptersFor(this.bible, this.book).subscribe(d => {
+            this.bookService.chaptersFor(this.bible, this.book).subscribe((d: number[]) => {
                 this.chapters = d;
                 this.selectChapter(this.chapters[0]);
             });

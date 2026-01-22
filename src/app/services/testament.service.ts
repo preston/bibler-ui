@@ -6,7 +6,9 @@ import { Testament } from '../models/testament';
 
 import { BiblerService } from './bibler.service';
 
-@Injectable()
+@Injectable({
+	providedIn: 'root'
+})
 export class TestamentService implements OnInit {
 
 	private path = '/testaments';
