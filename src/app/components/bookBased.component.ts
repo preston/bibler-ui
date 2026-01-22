@@ -1,9 +1,8 @@
 // Author: Preston Lee
 
-import { BiblerService } from '../services/bibler.service';
-import { BibleService } from '../services/bible.service';
+import { signal, computed, effect, inject, DestroyRef } from '@angular/core';
+import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BookService } from '../services/book.service';
-import { TestamentService } from '../services/testament.service';
 import { VerseService } from '../services/verse.service';
 import { BibleBasedComponent } from './bibleBased.component';
 import { Book } from '../models/book';
@@ -11,64 +10,83 @@ import { Verse } from '../models/verse';
 
 export abstract class BookBasedComponent extends BibleBasedComponent {
 
-    books: Book[] = [];
-    chapters: number[] = [];
+    protected bookService = inject(BookService);
+    protected verseService = inject(VerseService);
+    private destroyRef = inject(DestroyRef);
 
-    book: Book | null = null;
-    chapter: number | null = null;
+    private booksSignal = toSignal(this.bookService.index(), { initialValue: [] as Book[] });
+    books = computed(() => this.booksSignal() ?? []);
 
-    constructor(
-        biblerService: BiblerService,
-        bibleService: BibleService,
-        testamentService: TestamentService,
-        protected bookService: BookService,
-        protected verseService: VerseService) {
-        super(biblerService, bibleService, testamentService);
+    selectedBookSlug = signal<string | null>(null);
+    book = computed(() => {
+        const slug = this.selectedBookSlug();
+        if (!slug) return null;
+        return this.bookForSlug(slug);
+    });
+
+    chapters = signal<number[]>([]);
+    chapter = signal<number | null>(null);
+
+    constructor() {
+        super();
         console.log("BookBasedComponent created!");
+
+        // Auto-select first book when books load
+        effect(() => {
+            const books = this.books();
+            const currentSlug = this.selectedBookSlug();
+            if (books.length > 0 && !currentSlug) {
+                this.selectBook(books[0].slug);
+            }
+        });
+
+        // Update chapters when bible or book changes
+        effect(() => {
+            const bible = this.bible();
+            const book = this.book();
+            if (bible && book) {
+                console.log("Updating chapter list.");
+                this.bookService.chaptersFor(bible, book)
+                    .pipe(takeUntilDestroyed(this.destroyRef))
+                    .subscribe((d: number[]) => {
+                        this.chapters.set(d);
+                        if (d.length > 0) {
+                            this.selectChapter(d[0]);
+                        }
+                    });
+            } else {
+                console.log("Bible and book must be selected to update chapter counts.");
+            }
+        });
     }
 
     afterBibleLoad() {
-        this.bookService.index().subscribe((d: Book[]) => {
-            this.books = d;
-            if (this.book == null && this.books.length > 0)
-                this.selectBook(this.books[0].slug);
-        });
         console.log("afterBibleLoad");
     }
-
 
     selectBook(slug: string) {
         if (slug) {
             console.log("Changing book to " + slug);
-            this.book = this.bookForSlug(slug);
-            this.afterBibleSelect();
+            this.selectedBookSlug.set(slug);
         }
     }
 
     afterBibleSelect() {
-        var bible = this.bible;
-        var book = this.book;
-        if (this.bible != null && this.book != null) {
-            console.log("Updating chapter list.");
-            this.bookService.chaptersFor(this.bible, this.book).subscribe((d: number[]) => {
-                this.chapters = d;
-                this.selectChapter(this.chapters[0]);
-            });
-        } else {
-            console.log("Bible and book must be selected to update chapter counts.");
-        }
+        // Handled by effect in constructor
     }
 
     abstract selectChapter(n: number): any;
 
-
     verseDataPermalink(verse: Verse, format: string) {
-        return this.biblerService.getUrl() + '/' + this.bible?.slug + '/' + this.book?.slug + '/' + this.chapter + '/' + verse['ordinal'] + '.' + format
+        const bible = this.bible();
+        const book = this.book();
+        const chapter = this.chapter();
+        if (!bible || !book || chapter === null) return '';
+        return this.biblerService.getUrl() + '/' + bible.slug + '/' + book.slug + '/' + chapter + '/' + verse.ordinal + '.' + format;
     }
 
-
     protected bookForSlug(slug: string): Book | null {
-        return this.objectForSlug<Book>(this.books, slug);
+        return this.objectForSlug<Book>(this.books(), slug);
     }
 
 }

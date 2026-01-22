@@ -19,7 +19,7 @@
 						<span class="bi bi-eye"></span> Show Result
 					</button>
 					<pre class="collapse" id="bibles_result">
-						<small>{{stringify(bibles)}}</small>
+						<small>{{stringify(bibles())}}</small>
 					</pre>
 				</div>
 			</div>
@@ -35,50 +35,50 @@
 						<span class="bi bi-eye"></span> Show Result
 					</button>
 					<pre class="collapse" id="books_result">
-						<small>{{stringify(books)}}</small>
+						<small>{{stringify(books())}}</small>
 					</pre>
 				</div>
 			</div>
-			@if (bible && book && chapters) {
+			@if (bible() && book() && chapters()) {
 				<div class="card bg-light mb-3" id="chapters">
 					<div class="card-body">
 						<h4><small>GET </small> chapter list for a bible book</h4>
 						<p>
-							<a [href]="biblerService.getUrl() + '/' + bible.slug + '/' + book.slug + '.json'">
-								{{biblerService.getUrl()}}/{{bible.slug}}/{{book.slug}}.json
-							</a>
+						<a [href]="biblerService.getUrl() + '/' + bible()!.slug + '/' + book()!.slug + '.json'">
+							{{biblerService.getUrl()}}/{{bible()!.slug}}/{{book()!.slug}}.json
+						</a>
 						</p>
 						<button aria-controls="chapters_result" aria-expanded="false" class="btn btn-primary" data-bs-target="#chapters_result" data-bs-toggle="collapse" type="button">
 							<span class="bi bi-eye"></span> Show Result
-						</button><pre class="collapse" id="chapters_result">
-							<small>{{stringify(chapters)}}</small>
+						</button>						<pre class="collapse" id="chapters_result">
+							<small>{{stringify(chapters())}}</small>
 						</pre>
 					</div>
 				</div>
 			}
-			@if (bible && book && chapter) {
+			@if (bible() && book() && chapter()) {
 				<div class="card bg-light mb-3" id="verses">
 					<div class="card-body">
 						<h4><small>GET </small> all verses of a bible book</h4>
 						<p>
-							<a [href]="biblerService.getUrl() + '/' + bible.slug + '/' + book.slug + '/' + chapter + '.json'">
-								{{biblerService.getUrl()}}/{{bible.slug}}/{{book.slug}}/{{chapter}}.json
-							</a>
+						<a [href]="biblerService.getUrl() + '/' + bible()!.slug + '/' + book()!.slug + '/' + chapter() + '.json'">
+							{{biblerService.getUrl()}}/{{bible()!.slug}}/{{book()!.slug}}/{{chapter()}}.json
+						</a>
 						</p>
 						<button aria-controls="verses_result" aria-expanded="false" class="btn btn-primary" data-bs-target="#verses_result" data-bs-toggle="collapse" type="button">
 							<span class="bi bi-eye"></span> Show Result
 						</button>
 						<pre class="collapse" id="verses_result">
-							<small>{{stringify(verses)}}</small>
+							<small>{{stringify(verses())}}</small>
 						</pre>
 					</div>
 				</div>
 			}
-			@if (bible) {
+			@if (bible()) {
 				<div class="card bg-light mb-3" id="search">
 					<div class="card-body">
 						<h4><small>POST</small> a full text bible search</h4>
-						<p>{{biblerService.getUrl()}}/{{bible.slug}}/search.json</p>
+						<p>{{biblerService.getUrl()}}/{{bible()!.slug}}/search.json</p>
 						<h6>parameters</h6>
 						<pre>{{'{'}}text: 'jesus christ{{'}'}} // required</pre>
 					</div>

@@ -1,37 +1,67 @@
-import { Component, Injectable, OnInit } from '@angular/core';
+import { Component, Injectable, OnInit, signal, computed, effect, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 import { BiblerService } from '../services/bibler.service';
 import { BibleService } from '../services/bible.service';
 import { TestamentService } from '../services/testament.service';
 import { Bible } from '../models/bible';
+import { Testament } from '../models/testament';
 import { Sluggable } from '../models/sluggable';
 import { Verse } from '../models/verse';
 
 @Injectable()
 export abstract class BibleBasedComponent implements OnInit {
 
-    searchText = '';
+    protected biblerService = inject(BiblerService);
+    protected bibleService = inject(BibleService);
+    protected testamentService = inject(TestamentService);
 
-    bibles: Bible[] = [];
-    bible: Bible | null = null;
-    testaments: Object[] = [];
+    searchText = signal('');
 
-    constructor(
-        protected biblerService: BiblerService,
-        protected bibleService: BibleService,
-        protected testamentService: TestamentService) { }
+    private biblesSignal = toSignal(this.bibleService.index(), { initialValue: [] as Bible[] });
+    bibles = computed(() => this.biblesSignal() ?? []);
+
+    selectedBibleSlug = signal<string | null>(null);
+    bible = computed(() => {
+        const slug = this.selectedBibleSlug();
+        if (!slug) return null;
+        return this.bibleForSlug(slug);
+    });
+
+    private testamentsSignal = toSignal(this.testamentService.index(), { initialValue: [] as Testament[] });
+    testaments = computed(() => this.testamentsSignal() ?? []);
+
+    constructor() {
+        // Use effect to auto-select first bible when bibles load
+        effect(() => {
+            const bibles = this.bibles();
+            const currentSlug = this.selectedBibleSlug();
+            if (bibles.length > 0 && !currentSlug) {
+                this.selectBible(bibles[0].slug);
+            }
+        });
+
+        // Call afterBibleLoad when bibles are loaded
+        effect(() => {
+            const bibles = this.bibles();
+            if (bibles.length > 0) {
+                this.afterBibleLoad();
+            }
+        });
+
+        // Call afterBibleSelect when bible changes
+        effect(() => {
+            const bible = this.bible();
+            if (bible) {
+                this.afterBibleSelect();
+            }
+        });
+
+        console.log("BibleBasedComponent initialized!");
+    }
 
     ngOnInit() {
-        this.bibleService.index().subscribe((d: Bible[]) => {
-            this.bibles = d;
-            if (this.bible == null && this.bibles.length > 0)
-                this.selectBible(this.bibles[0]['slug']);
-            this.afterBibleLoad();
-        });
-        this.testamentService.index().subscribe((d: Object[]) => {
-            this.testaments = d;
-        });
-        console.log("BibleBasedComponent initialized!");
+        // Initialization logic moved to constructor with effects
     }
 
     abstract afterBibleLoad(): void;
@@ -39,45 +69,45 @@ export abstract class BibleBasedComponent implements OnInit {
 
     selectBible(slug: string) {
         console.log("Changing bible to " + slug);
-        this.bible = this.bibleForSlug(slug);
-        this.afterBibleSelect();
+        this.selectedBibleSlug.set(slug);
     }
 
     highlighted(words: string, inText: string): string {
-        var s = words.trim();
-        var result = inText;
+        const s = words.trim();
+        let result = inText;
         if (s.length > 0) {
-            var terms = s.split(/\s+/);
+            const terms = s.split(/\s+/);
             // Sort terms by length
             terms.sort(function (a, b) {
                 return b.length - a.length;
             });
             // Regex to simultaneously replace terms
-            var regex = new RegExp('(' + terms.join('|') + ')', 'gi');
-            var result = inText.replace(regex, '<span class="highlight">$&</span>');
+            const regex = new RegExp('(' + terms.join('|') + ')', 'gi');
+            result = inText.replace(regex, '<span class="highlight">$&</span>');
         }
         return result;
     }
 
     verseMailTo(verse: Verse) {
-        return "mailto:?subject=" + verse.book.name + '%20' + verse.chapter + ':' + verse.ordinal
-            + '%20-%20' + this.bible?.name
+        const bible = this.bible();
+        const bookName = verse.book?.name ?? 'Unknown';
+        return "mailto:?subject=" + bookName + '%20' + verse.chapter + ':' + verse.ordinal
+            + '%20-%20' + (bible?.name ?? '')
             + '&body=%22' + verse.text
-            // + "%22%0D%0A%0D%0A%20%20%20%20" + this.versePermalink(verse, 'html')
             + '%0D%0A%0D%0A--%0D%0APowered by Bibler.';
     }
 
     protected bibleForSlug(slug: string): Bible | null {
-        return this.objectForSlug(this.bibles, slug);
-    };
+        return this.objectForSlug(this.bibles(), slug);
+    }
 
     protected objectForSlug<T extends Sluggable>(array: Array<T>, slug: string): T | null {
-        for (var i = 0; i < array.length; i++) {
+        for (let i = 0; i < array.length; i++) {
             if (array[i].slug == slug) {
                 return array[i];
             }
         }
         return null;
-    };
+    }
 
 }

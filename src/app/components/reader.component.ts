@@ -1,12 +1,6 @@
 // Author: Preston Lee
 
-import { Component } from '@angular/core';
-
-import { BiblerService } from '../services/bibler.service';
-import { BibleService } from '../services/bible.service';
-import { BookService } from '../services/book.service';
-import { TestamentService } from '../services/testament.service';
-import { VerseService } from '../services/verse.service';
+import { Component, signal, computed, effect } from '@angular/core';
 import { BookBasedComponent } from './bookBased.component';
 import { Verse } from '../models/verse';
 import { FormsModule } from '@angular/forms';
@@ -19,36 +13,39 @@ import { FormsModule } from '@angular/forms';
 })
 export class ReaderComponent extends BookBasedComponent {
 
-    verses: Verse[] = [];
+    verses = signal<Verse[]>([]);
 
-    constructor(
-        biblerService: BiblerService,
-        bibleService: BibleService,
-        testamentService: TestamentService,
-        bookService: BookService,
-        verseService: VerseService) {
-        super(biblerService, bibleService, testamentService, bookService, verseService);
+    highlightedVerses = computed(() => {
+        const verses = this.verses();
+        const searchText = this.searchText();
+        return verses.map(verse => {
+            // Ensure we preserve all properties including book
+            const highlightedVerse = { ...verse };
+            highlightedVerse.highlightedText = this.highlighted(searchText, verse.text);
+            return highlightedVerse;
+        });
+    });
+
+    constructor() {
+        super();
         console.log("ReaderComponent created!");
     }
 
     selectChapter(n: number) {
         console.log("Updating verses for chapter " + n);
-        this.chapter = n;
-        if (this.bible && this.book) {
-            this.verseService.index(this.bible, this.book, this.chapter).subscribe((d: Verse[]) => {
-                this.verses = d;
-                this.updateHighlights();
+        this.chapter.set(n);
+        const bible = this.bible();
+        const book = this.book();
+        if (bible && book) {
+            this.verseService.index(bible, book, n).subscribe((d: Verse[]) => {
+                this.verses.set(d);
             });
         }
     }
 
     updateHighlights() {
         console.log("Updating highlights...");
-        // console.log(s);
-        for (var i = 0; i < this.verses.length; i++) {
-            // console.log(this.verses[i]['text']);
-            this.verses[i]['highlightedText'] = this.highlighted(this.searchText, this.verses[i]['text']);
-        }
+        // Highlights are now computed automatically via highlightedVerses
     }
 
 }

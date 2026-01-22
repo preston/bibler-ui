@@ -8,24 +8,24 @@
                         <div class="form-group">
                             <label for="bible_select"><span class="bi bi-book"></span> Bible</label>
                             <select class="form-control" id="bible_select" (change)="selectBible($any($event.target).value)">
-                                @for (b of bibles; track b.slug; let i = $index) {
-                                    <option [value]="b.slug" [selected]="b.slug == bible?.slug">{{b.name}}</option>
+                                @for (b of bibles(); track b.slug; let i = $index) {
+                                    <option [value]="b.slug" [selected]="b.slug == bible()?.slug">{{b.name}}</option>
                                 }
 						</select>
                         </div>
                         <div class="form-group">
                             <label for="bible_search_text"><span class="bi bi-search"></span> Full Text Search</label>
                             <div class="input-group">
-                                <input autofocus="true" name="text" class="form-control" (keyup.enter)="search()" [(ngModel)]="searchText" type="search">
+                                <input autofocus="true" name="text" class="form-control" (keyup.enter)="search()" [ngModel]="searchText()" (ngModelChange)="searchText.set($event)" type="search">
                                 <button class="btn btn-primary" [disabled]="!validSearch()" type="submit">
 									<span class="bi bi-search"></span> Search
                                 </button>
                             </div>
                             <span class="text-muted">Queries must be at least 3 characters.</span>
-                            @if (validSearch() && verses.length > 0) {
+                            @if (validSearch() && sortedVerses().length > 0) {
                                 <span class="text-end d-block">
-                                    <span class="badge">{{verses.length}} results</span>
-                                    @if (verses.length >= 100) {
+                                    <span class="badge">{{sortedVerses().length}} results</span>
+                                    @if (sortedVerses().length >= 100) {
                                         <i class="text-danger"> (limited)</i>
                                     }
                                 </span>
@@ -40,7 +40,7 @@
             </div>
         </div>
     </div>
-    @if (verses.length > 0) {
+    @if (sortedVerses().length > 0) {
         <div>
             <table class="table table-sm table-striped">
                 <thead>
@@ -53,7 +53,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @for (v of verses; track v.ordinal) {
+                    @for (v of sortedVerses(); track v.ordinal) {
                         <tr>
                             <td>{{v.book.name}}</td>
                             <td>{{v.chapter}}</td>

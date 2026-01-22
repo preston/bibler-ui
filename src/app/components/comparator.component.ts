@@ -1,12 +1,6 @@
 // Author: Preston Lee
 
-import { Component } from '@angular/core';
-
-import { BiblerService } from '../services/bibler.service';
-import { BibleService } from '../services/bible.service';
-import { BookService } from '../services/book.service';
-import { TestamentService } from '../services/testament.service';
-import { VerseService } from '../services/verse.service';
+import { Component, signal, computed, effect } from '@angular/core';
 import { BookBasedComponent } from './bookBased.component';
 import { Verse } from '../models/verse';
 import { Bible } from '../models/bible';
@@ -14,33 +8,51 @@ import { FormsModule } from '@angular/forms';
 
 @Component({
     selector: 'comparator',
-    templateUrl: 'comparator.html'
-    // ,
-    // providers: [BiblerService, BibleService, BookService, TestamentService, VerseService]
-    ,
+    templateUrl: 'comparator.html',
     standalone: true,
     imports: [FormsModule]
 })
 export class ComparatorComponent extends BookBasedComponent {
 
-    bibleRight: Bible | null = null;
-    versesLeft: Verse[] = [];
-    versesRight: Verse[] = [];
+    selectedBibleRightSlug = signal<string | null>(null);
+    bibleRight = computed(() => {
+        const slug = this.selectedBibleRightSlug();
+        if (!slug) return null;
+        return this.bibleForSlug(slug);
+    });
 
-    constructor(
-        biblerService: BiblerService,
-        bibleService: BibleService,
-        bookService: BookService,
-        testamentService: TestamentService,
-        verseService: VerseService) {
-        super(biblerService, bibleService, testamentService, bookService, verseService);
+    versesLeft = signal<Verse[]>([]);
+    versesRight = signal<Verse[]>([]);
+
+    highlightedVersesLeft = computed(() => {
+        const verses = this.versesLeft();
+        const searchText = this.searchText();
+        return verses.map(verse => ({
+            ...verse,
+            highlightedText: this.highlighted(searchText, verse.text)
+        }));
+    });
+
+    highlightedVersesRight = computed(() => {
+        const verses = this.versesRight();
+        const searchText = this.searchText();
+        return verses.map(verse => ({
+            ...verse,
+            highlightedText: this.highlighted(searchText, verse.text)
+        }));
+    });
+
+    constructor() {
+        super();
         console.log("ComparatorComponent has been initialized.");
     }
 
     override afterBibleLoad() {
         super.afterBibleLoad();
-        if (this.bibleRight == null && this.bibles.length > 1)
-            this.selectBibleRight(this.bibles[1]['slug']);
+        const bibles = this.bibles();
+        if (!this.selectedBibleRightSlug() && bibles.length > 1) {
+            this.selectBibleRight(bibles[1].slug);
+        }
     }
 
     selectChapterString(s: string) {
@@ -49,15 +61,16 @@ export class ComparatorComponent extends BookBasedComponent {
     
     selectChapter(n: number) {
         console.log("Updating verses for chapter " + n);
-        this.chapter = n;
-        if (this.bible && this.bibleRight && this.book) {
-            this.verseService.index(this.bible, this.book, this.chapter).subscribe((left: Verse[]) => {
-                this.updateHighlights(left);
-                this.versesLeft = left;
-                if (this.bibleRight && this.book && this.chapter) {
-                    this.verseService.index(this.bibleRight, this.book, this.chapter).subscribe((right: Verse[]) => {
-                        this.updateHighlights(right);
-                        this.versesRight = right;
+        this.chapter.set(n);
+        const bible = this.bible();
+        const bibleRight = this.bibleRight();
+        const book = this.book();
+        if (bible && bibleRight && book) {
+            this.verseService.index(bible, book, n).subscribe((left: Verse[]) => {
+                this.versesLeft.set(left);
+                if (bibleRight && book && n !== null) {
+                    this.verseService.index(bibleRight, book, n).subscribe((right: Verse[]) => {
+                        this.versesRight.set(right);
                     });
                 }
             });
@@ -65,21 +78,18 @@ export class ComparatorComponent extends BookBasedComponent {
     }
 
     updateAllHighlights() {
-        this.updateHighlights(this.versesLeft);
-        this.updateHighlights(this.versesRight);
+        // Highlights are now computed automatically
     }
+
     updateHighlights(verses: Verse[]) {
         console.log("Updating highlights for both bibles...");
-        for (var i = 0; i < verses.length; i++) {
-            verses[i]['highlightedText'] = this.highlighted(this.searchText, verses[i]['text']);
-        }
+        // Highlights are now computed automatically via computed signals
     }
 
     selectBibleRight(slug: string) {
         console.log("Changing right bible to " + slug);
-        this.bibleRight = this.bibleForSlug(slug);
+        this.selectedBibleRightSlug.set(slug);
         this.afterBibleSelect();
     }
-
 
 }

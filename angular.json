@@ -38,7 +38,7 @@
                         "styles": [
                             "src/styles.scss",
                             "node_modules/bootstrap-icons/font/bootstrap-icons.css",
-                            "src/sandstone.min.css"
+                            "src/litera.min.css"
 
                         ],
                         "scripts": [

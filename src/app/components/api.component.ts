@@ -1,14 +1,5 @@
-import { Component } from '@angular/core';
-
-
+import { Component, signal } from '@angular/core';
 import { BookBasedComponent } from './bookBased.component';
-
-import { BiblerService } from '../services/bibler.service';
-import { BibleService } from '../services/bible.service';
-import { BookService } from '../services/book.service';
-import { TestamentService } from '../services/testament.service';
-import { VerseService } from '../services/verse.service';
-import { SearchService } from '../services/search.service';
 import { Verse } from '../models/verse';
 
 @Component({
@@ -19,25 +10,21 @@ import { Verse } from '../models/verse';
 })
 export class ApiComponent extends BookBasedComponent {
 
+    verses = signal<Verse[]>([]);
 
-    verses: Verse[] = [];
-
-    constructor(
-        biblerService: BiblerService,
-        bibleService: BibleService,
-        testamentService: TestamentService,
-        bookService: BookService,
-        verseService: VerseService) {
-        super(biblerService, bibleService, testamentService, bookService, verseService);
+    constructor() {
+        super();
         console.log("ApiComponent has been initialized.");
     }
 
     selectChapter(n: number) {
         console.log("Updating verses for chapter " + n);
-        this.chapter = n;
-        if (this.bible && this.book) {
-            this.verseService.index(this.bible, this.book, this.chapter).subscribe((d: Verse[]) => {
-                this.verses = d;
+        this.chapter.set(n);
+        const bible = this.bible();
+        const book = this.book();
+        if (bible && book) {
+            this.verseService.index(bible, book, n).subscribe((d: Verse[]) => {
+                this.verses.set(d);
             });
         }
     }

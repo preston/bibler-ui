@@ -10,19 +10,19 @@
 								<span class="bi bi-book"></span> Bible
 							</label>
                             <select class="form-control" id="bible_select" (change)="selectBible($any($event.target).value)">
-                                @for (b of bibles; track b.slug) {
-                                    <option [value]="b.slug" [selected]="b.slug == bible?.slug">{{b.name}}</option>
+                                @for (b of bibles(); track b.slug) {
+                                    <option [value]="b.slug" [selected]="b.slug == bible()?.slug">{{b.name}}</option>
                                 }
 							</select>
                         </div>
-                        @if (chapters.length > 0) {
+                                @if (chapters().length > 0) {
                             <div class="form-group" style="">
                                 <label for="chapter_select">
                                     <span class="bi bi-bookmark"></span> Chapter
                                 </label>
                                 <select class="form-control" id="chapter_select" (change)="selectChapter($any($event.target).value)">
-                                    @for (c of chapters; track c) {
-                                        <option [selected]="c == chapter">{{c}}</option>
+                                    @for (c of chapters(); track c) {
+                                        <option [selected]="c == chapter()">{{c}}</option>
                                     }
                                 </select>
                             </div>
@@ -34,28 +34,28 @@
 								<span class="bi bi-person"></span> Book
 							</label>
                             <select class="form-control" id="book_select" (change)="selectBook($any($event.target).value)">
-                                @for (b of books; track b.slug) {
-                                    <option [value]="b.slug" [selected]="b.slug == book?.slug">{{b.name}}</option>
+                                @for (b of books(); track b.slug) {
+                                    <option [value]="b.slug" [selected]="b.slug == book()?.slug">{{b.name}}</option>
                                 }
 							</select>
 
                         </div>
-                        @if (verses.length > 0) {
+                        @if (verses().length > 0) {
                             <div class="form-group" style="">
                                 <label for="verse_filter">
                                     <span class="bi bi-search"></span> Text Highlighter
                                 </label>
-                                <input name="text" autofocus="true" class="form-control" [(ngModel)]="searchText" (keyup)="updateHighlights()">
+                                <input name="text" autofocus="true" class="form-control" [ngModel]="searchText()" (ngModelChange)="searchText.set($event)">
                             </div>
                         }
                     </div>
                     <div class="col-sm-4">
                         <h3><span class="bi bi-list"></span> What is this?</h3>
                         <p class="form-text text-muted">The reader is for general verse lookup, as well as providing permanent links that you may use in your documents and emails. </p>
-                        @if (verses.length > 0) {
+                        @if (verses().length > 0) {
                             <span>
                                 <i>Verses: </i>
-                                <span class="badge">{{verses.length}}</span>
+                                <span class="badge">{{verses().length}}</span>
                             </span>
                         }
                     </div>
@@ -63,7 +63,7 @@
             </form>
         </div>
     </div>
-    @if (verses.length > 0) {
+    @if (highlightedVerses().length > 0) {
         <div id="results" class="" style="">
             <table class="table table-sm table-striped">
                 <thead>
@@ -74,7 +74,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @for (v of verses; track v.ordinal) {
+                    @for (v of highlightedVerses(); track v.ordinal) {
                         <tr>
                             <td>{{v.ordinal}}</td>
                             <!-- <td highlight [highlightText]="search.text">{{v.text}}</td> -->
@@ -84,10 +84,10 @@
                                 <!-- <a class="btn btn-sm btn-secondary" href="/{{bible.slug}}/{{book.slug}}/{{chapter}}/{{verse}}.html">
                                         <span class="bi bi-link"></span> Web
                                     </a> -->
-                                <a class="" href="mailto:?subject={{book?.name}}%201:1%20-%20{{bible?.name}}&amp;body=%22{{v.text}}%0D%0A%0D%0A--%0D%0APowered by Bibler.">
+                                <a class="" [href]="verseMailTo(v)">
                                     <span class="bi bi-envelope"></span>&nbsp;Email
                                 </a> |
-                                <a class="" href="{{verseDataPermalink(v, 'json')}}">
+                                <a class="" [href]="verseDataPermalink(v, 'json')">
                                     <small>JSON</small>
                                 </a>
                                 <!-- <a class="" href="{{verseDataPermalink(v, 'xml')}}">

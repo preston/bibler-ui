@@ -1,15 +1,7 @@
 // Author: Preston Lee
 
-import {Component} from '@angular/core';
-
-
+import {Component, signal, computed, inject} from '@angular/core';
 import {BibleBasedComponent} from './bibleBased.component';
-
-import {BiblerService} from '../services/bibler.service';
-import {BibleService} from '../services/bible.service';
-import {BookService} from '../services/book.service';
-import {TestamentService} from '../services/testament.service';
-import {VerseService} from '../services/verse.service';
 import {SearchService} from '../services/search.service';
 import { Verse } from '../models/verse';
 import { FormsModule } from '@angular/forms';
@@ -22,54 +14,59 @@ import { FormsModule } from '@angular/forms';
 })
 export class SearchComponent extends BibleBasedComponent {
 
-    verses: Verse[] = [];
+    protected searchService = inject(SearchService);
 
-    ascending = true;
+    verses = signal<Verse[]>([]);
+    ascending = signal(true);
 
-    constructor(
-        biblerService: BiblerService,
-        bibleService: BibleService,
-        testamentService: TestamentService,
-        protected bookService: BookService,
-        protected verseService: VerseService,
-        protected searchService: SearchService) {
-        super(biblerService, bibleService, testamentService);
+    sortedVerses = computed(() => {
+        const verses = this.verses();
+        const isAscending = this.ascending();
+        const sorted = [...verses];
+        if (isAscending) {
+            return sorted.sort((a, b) => a.book.name.localeCompare(b.book.name));
+        } else {
+            return sorted.sort((a, b) => b.book.name.localeCompare(a.book.name));
+        }
+    });
+
+    constructor() {
+        super();
         console.log("SearchComponent has been initialized.");
     }
 
     resort() {
-        this.ascending = !this.ascending;
-        if (this.ascending) {
-            this.verses = this.verses.sort((a, b) => b.book.name.localeCompare(a.book.name));
-        } else {
-            this.verses = this.verses.sort((a, b) => a.book.name.localeCompare(b.book.name));
-        }
+        this.ascending.update(asc => !asc);
     }
 
     afterBibleLoad(): void {
         // Meh
     }
 
-    afterBibleSelect() { this.search(); }
+    afterBibleSelect() { 
+        this.search(); 
+    }
 
     search() {
         console.log("Searching...");
-        if (this.validSearch() && this.bible) {
-            var obs = this.searchService.search(this.bible.slug, this.searchText);
-            obs.subscribe((d: any) => {
-                this.verses = <Verse[]>d;
-                for (var i = 0; i < this.verses.length; i++) {
-                    this.verses[i]['highlightedText'] = this.highlighted(this.searchText, this.verses[i]['text']);
+        const bible = this.bible();
+        const searchText = this.searchText();
+        if (this.validSearch() && bible) {
+            this.searchService.search(bible.slug, searchText).subscribe((d: any) => {
+                const verses = <Verse[]>d;
+                // Update highlighted text
+                for (let i = 0; i < verses.length; i++) {
+                    verses[i]['highlightedText'] = this.highlighted(searchText, verses[i]['text']);
                 }
-                this.resort();
-                // console.log(d);
+                this.verses.set(verses);
             });
         }
-        // return false;
     }
 
     validSearch() {
-        return this.bible != null && this.searchText != null && this.searchText.length >= 3
+        const bible = this.bible();
+        const searchText = this.searchText();
+        return bible != null && searchText != null && searchText.length >= 3;
     }
 
 }
