@@ -70,20 +70,18 @@ export class ComparatorComponent extends BookBasedComponent {
                     .pipe(takeUntilDestroyed(this.destroyRef))
                     .subscribe((books: Book[]) => {
                         this.booksRightSignal.set(books);
-                        // Try to match the left book in the right bible
+                        // Match left book when possible; otherwise first book so right column can load.
+                        // (Right books often finish before the left book is selected — do not leave slug unset.)
                         const leftBook = this.book();
-                        if (leftBook) {
+                        if (books.length === 0) {
+                            this.selectedBookRightSlug.set(null);
+                        } else if (leftBook) {
                             const matchingBook = this.objectForSlug<Book>(books, leftBook.slug);
-                            if (matchingBook) {
-                                this.selectedBookRightSlug.set(matchingBook.slug);
-                            } else {
-                                // If no match, select first book
-                                if (books.length > 0) {
-                                    this.selectedBookRightSlug.set(books[0].slug);
-                                } else {
-                                    this.selectedBookRightSlug.set(null);
-                                }
-                            }
+                            this.selectedBookRightSlug.set(
+                                matchingBook ? matchingBook.slug : books[0].slug
+                            );
+                        } else {
+                            this.selectedBookRightSlug.set(books[0].slug);
                         }
                     });
             } else {
@@ -108,15 +106,32 @@ export class ComparatorComponent extends BookBasedComponent {
             }
         });
 
-        // When left book changes, try to match it in right bible
+        // When left book changes, sync the right book (match by slug, else first book in right bible).
         effect(() => {
             const leftBook = this.book();
             const booksRight = this.booksRight();
             if (leftBook && booksRight.length > 0) {
                 const matchingBook = this.objectForSlug<Book>(booksRight, leftBook.slug);
-                if (matchingBook) {
-                    this.selectedBookRightSlug.set(matchingBook.slug);
-                }
+                this.selectedBookRightSlug.set(
+                    matchingBook ? matchingBook.slug : booksRight[0].slug
+                );
+            }
+        });
+
+        // Load right-column verses whenever right bible, right book, and chapter are ready.
+        // (selectChapter often runs before right books finish loading, so right verses were never fetched.)
+        effect((onCleanup) => {
+            const bibleRight = this.bibleRight();
+            const bookRight = this.bookRight();
+            const n = this.chapter();
+            if (bibleRight && bookRight && n !== null) {
+                const sub = this.verseService.index(bibleRight, bookRight, n).subscribe((right: Verse[]) => {
+                    this.versesRight.set(right);
+                    this.cdr.markForCheck();
+                });
+                onCleanup(() => sub.unsubscribe());
+            } else {
+                this.versesRight.set([]);
             }
         });
     }
@@ -124,8 +139,9 @@ export class ComparatorComponent extends BookBasedComponent {
     override afterBibleLoad() {
         super.afterBibleLoad();
         const bibles = this.bibles();
-        if (!this.selectedBibleRightSlug() && bibles.length > 1) {
-            this.selectBibleRight(bibles[1].slug);
+        if (!this.selectedBibleRightSlug() && bibles.length > 0) {
+            // Prefer a second translation when available; otherwise use the same bible so the right column can still load.
+            this.selectBibleRight(bibles.length > 1 ? bibles[1].slug : bibles[0].slug);
         }
     }
 
@@ -137,19 +153,14 @@ export class ComparatorComponent extends BookBasedComponent {
         console.log("Updating verses for chapter " + n);
         this.chapter.set(n);
         const bible = this.bible();
-        const bibleRight = this.bibleRight();
         const book = this.book();
-        const bookRight = this.bookRight();
         if (bible && book && n !== null) {
             this.verseService.index(bible, book, n).subscribe((left: Verse[]) => {
                 this.versesLeft.set(left);
             });
         }
-        if (bibleRight && bookRight && n !== null) {
-            this.verseService.index(bibleRight, bookRight, n).subscribe((right: Verse[]) => {
-                this.versesRight.set(right);
-            });
-        }
+        // Right verses are loaded in the constructor effect so they still load when right
+        // book becomes available after the initial selectChapter (async books load race).
     }
 
     selectBookRight(slug: string) {
