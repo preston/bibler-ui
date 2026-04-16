@@ -15,9 +15,9 @@ export class SearchService {
     constructor(private biblerService: BiblerService, private http: HttpClient) {
     }
 
-    search(bible: string, searchText: string) {
-        console.log("Searching " + bible + " for " + searchText);
-        var url = this.biblerService.getUrl() + '/' + bible + '/search.json';
+    search(bibleUuid: string, searchText: string) {
+        console.log("Searching " + bibleUuid + " for " + searchText);
+        var url = this.biblerService.getUrl() + '/' + bibleUuid + '/search.json';
         var headers = new HttpHeaders();
         headers.append('Content-Type', 'application/x-www-form-urlencoded');
 

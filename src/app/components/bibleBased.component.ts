@@ -6,7 +6,7 @@ import { BibleService } from '../services/bible.service';
 import { TestamentService } from '../services/testament.service';
 import { Bible } from '../models/bible';
 import { Testament } from '../models/testament';
-import { Sluggable } from '../models/sluggable';
+import { Uuidable } from '../models/sluggable';
 import { Verse } from '../models/verse';
 
 @Injectable()
@@ -21,11 +21,11 @@ export abstract class BibleBasedComponent {
     private biblesSignal = toSignal(this.bibleService.index(), { initialValue: [] as Bible[] });
     bibles = computed(() => this.biblesSignal() ?? []);
 
-    selectedBibleSlug = signal<string | null>(null);
+    selectedBibleUuid = signal<string | null>(null);
     bible = computed(() => {
-        const slug = this.selectedBibleSlug();
-        if (!slug) return null;
-        return this.bibleForSlug(slug);
+        const uuid = this.selectedBibleUuid();
+        if (!uuid) return null;
+        return this.bibleForUuid(uuid);
     });
 
     private testamentsSignal = toSignal(this.testamentService.index(), { initialValue: [] as Testament[] });
@@ -35,9 +35,9 @@ export abstract class BibleBasedComponent {
         // Use effect to auto-select first bible when bibles load
         effect(() => {
             const bibles = this.bibles();
-            const currentSlug = this.selectedBibleSlug();
-            if (bibles.length > 0 && !currentSlug) {
-                this.selectBible(bibles[0].slug);
+            const currentUuid = this.selectedBibleUuid();
+            if (bibles.length > 0 && !currentUuid) {
+                this.selectBible(bibles[0].uuid);
             }
         });
 
@@ -56,16 +56,13 @@ export abstract class BibleBasedComponent {
                 this.afterBibleSelect();
             }
         });
-
-        console.log("BibleBasedComponent initialized!");
     }
 
     abstract afterBibleLoad(): void;
     abstract afterBibleSelect(): void;
 
-    selectBible(slug: string) {
-        console.log("Changing bible to " + slug);
-        this.selectedBibleSlug.set(slug);
+    selectBible(uuid: string) {
+        this.selectedBibleUuid.set(uuid);
     }
 
     highlighted(words: string, inText: string): string {
@@ -77,8 +74,9 @@ export abstract class BibleBasedComponent {
             terms.sort(function (a, b) {
                 return b.length - a.length;
             });
+            const escapedTerms = terms.map((term) => term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
             // Regex to simultaneously replace terms
-            const regex = new RegExp('(' + terms.join('|') + ')', 'gi');
+            const regex = new RegExp('(' + escapedTerms.join('|') + ')', 'gi');
             result = inText.replace(regex, '<span class="highlight">$&</span>');
         }
         return result;
@@ -93,13 +91,13 @@ export abstract class BibleBasedComponent {
             + '%0D%0A%0D%0A--%0D%0APowered by Bibler.';
     }
 
-    protected bibleForSlug(slug: string): Bible | null {
-        return this.objectForSlug(this.bibles(), slug);
+    protected bibleForUuid(uuid: string): Bible | null {
+        return this.objectForUuid(this.bibles(), uuid);
     }
 
-    protected objectForSlug<T extends Sluggable>(array: Array<T>, slug: string): T | null {
+    protected objectForUuid<T extends Uuidable>(array: Array<T>, uuid: string): T | null {
         for (let i = 0; i < array.length; i++) {
-            if (array[i].slug == slug) {
+            if (array[i].uuid == uuid) {
                 return array[i];
             }
         }

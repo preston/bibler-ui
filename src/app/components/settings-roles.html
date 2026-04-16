@@ -1,0 +1,87 @@
+<div class="card">
+  <div class="card-header"><strong>Roles</strong></div>
+  <div class="card-body">
+    @if (error()) {
+      <div class="alert alert-danger py-2">{{ error() }}</div>
+    }
+    @if (loading()) {
+      <p class="text-muted">Loading…</p>
+    } @else {
+      <div class="table-responsive">
+        <table class="table table-sm align-middle">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Default</th>
+              <th>Admin</th>
+              <th>Bibles</th>
+              <th>Access</th>
+              <th>Curation</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of roles(); track r.id) {
+              <tr>
+                <td>{{ r.name }}</td>
+                <td>
+                  <input type="checkbox" class="form-check-input" [checked]="r.default" (change)="toggleFlag(r, 'default', $any($event.target).checked)" />
+                </td>
+                <td>
+                  <input type="checkbox" class="form-check-input" [checked]="r.administrator" (change)="toggleFlag(r, 'administrator', $any($event.target).checked)" />
+                </td>
+                <td>
+                  <input type="checkbox" class="form-check-input" [checked]="r.bibles" (change)="toggleFlag(r, 'bibles', $any($event.target).checked)" />
+                </td>
+                <td>
+                  <input type="checkbox" class="form-check-input" [checked]="r.access" (change)="toggleFlag(r, 'access', $any($event.target).checked)" />
+                </td>
+                <td>
+                  <input type="checkbox" class="form-check-input" [checked]="r.curation" (change)="toggleFlag(r, 'curation', $any($event.target).checked)" />
+                </td>
+                <td>
+                  <button type="button" class="btn btn-outline-danger btn-sm" (click)="deleteRole(r)">Delete</button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <h6 class="mt-3">New role</h6>
+      <div class="row g-2 align-items-end">
+        <div class="col-md-4">
+          <div class="form-floating">
+            <input id="new-role-name" class="form-control" [ngModel]="newRole().name" (ngModelChange)="patchNewRole({ name: $event })" placeholder="Name" />
+            <label for="new-role-name">Name</label>
+          </div>
+        </div>
+        <div class="col-md-6 d-flex flex-wrap gap-3">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="nr-def" [ngModel]="newRole().default" (ngModelChange)="patchNewRole({ default: $event })" />
+            <label class="form-check-label" for="nr-def">Default</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="nr-adm" [ngModel]="newRole().administrator" (ngModelChange)="patchNewRole({ administrator: $event })" />
+            <label class="form-check-label" for="nr-adm">Administrator</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="nr-bib" [ngModel]="newRole().bibles" (ngModelChange)="patchNewRole({ bibles: $event })" />
+            <label class="form-check-label" for="nr-bib">Bibles</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="nr-acc" [ngModel]="newRole().access" (ngModelChange)="patchNewRole({ access: $event })" />
+            <label class="form-check-label" for="nr-acc">Access</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="nr-cur" [ngModel]="newRole().curation" (ngModelChange)="patchNewRole({ curation: $event })" />
+            <label class="form-check-label" for="nr-cur">Curation</label>
+          </div>
+        </div>
+        <div class="col-md-2">
+          <button type="button" class="btn btn-primary w-100" (click)="create()">Create</button>
+        </div>
+      </div>
+    }
+  </div>
+</div>

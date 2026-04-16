@@ -1,0 +1,96 @@
+@if (showStepEditor()) {
+  <study-plan-item-editor />
+}
+
+<div id="tasks-section" class="card mb-3">
+  <div class="card-header"><strong>Directed Participant Tasks</strong></div>
+  <div class="card-body">
+    @if (vm.canManageTasks()) {
+      <div class="mb-3">
+        <textarea class="form-control mb-2" rows="2" [ngModel]="vm.taskInstruction()" (ngModelChange)="vm.taskInstruction.set($event)" placeholder="Task instruction"></textarea>
+        <div class="row g-2">
+          <div class="col-md-4">
+            <select class="form-select" [ngModel]="vm.taskType()" (ngModelChange)="vm.taskType.set($event)">
+              <option value="discussion">Discussion</option>
+              <option value="reading">Reading</option>
+              <option value="prayer">Prayer</option>
+              <option value="memorization">Memorization</option>
+              <option value="reflection">Reflection</option>
+            </select>
+          </div>
+          <div class="col-md-8">
+            <input class="form-control" [ngModel]="vm.taskAssignee()" (ngModelChange)="vm.taskAssignee.set($event)" placeholder="Assignee label (group/person)" />
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm mt-2" type="button" (click)="vm.createTask()">Add Task</button>
+      </div>
+    }
+    <div class="list-group">
+      @for (task of vm.tasks(); track task.uuid) {
+        <div class="list-group-item">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <strong>{{ task.instruction }}</strong>
+              <div class="small text-muted">{{ task.task_type }} | {{ task.assignee_label }}</div>
+            </div>
+            @if (vm.canReorderContent()) {
+              <div class="btn-group btn-group-sm">
+                <button class="btn btn-outline-secondary" type="button" (click)="vm.moveTask(task, -1)">Up</button>
+                <button class="btn btn-outline-secondary" type="button" (click)="vm.moveTask(task, 1)">Down</button>
+              </div>
+            }
+          </div>
+          @if (vm.canManageTasks()) {
+            <div class="row g-2 mt-2">
+              <div class="col-md-6">
+                <input
+                  class="form-control form-control-sm"
+                  [ngModel]="vm.taskDrafts()[task.uuid]?.instruction ?? task.instruction"
+                  (ngModelChange)="vm.setTaskDraft(task.uuid, 'instruction', $event)"
+                  placeholder="Task instruction"
+                />
+              </div>
+              <div class="col-md-3">
+                <select
+                  class="form-select form-select-sm"
+                  [ngModel]="vm.taskDrafts()[task.uuid]?.task_type ?? task.task_type"
+                  (ngModelChange)="vm.setTaskDraft(task.uuid, 'task_type', $event)"
+                >
+                  <option value="discussion">Discussion</option>
+                  <option value="reading">Reading</option>
+                  <option value="prayer">Prayer</option>
+                  <option value="memorization">Memorization</option>
+                  <option value="reflection">Reflection</option>
+                </select>
+              </div>
+              <div class="col-md-3">
+                <div class="d-flex flex-column gap-1">
+                  <button class="btn btn-sm btn-outline-primary w-100" type="button" (click)="vm.saveTask(task)">Save</button>
+                  @if (vm.canDeleteContent()) {
+                    <button class="btn btn-sm btn-outline-danger w-100" type="button" (click)="vm.deleteTask(task)">Delete</button>
+                  }
+                </div>
+              </div>
+              <div class="col-12">
+                <input
+                  class="form-control form-control-sm"
+                  [ngModel]="vm.taskDrafts()[task.uuid]?.assignee_label ?? (task.assignee_label ?? '')"
+                  (ngModelChange)="vm.setTaskDraft(task.uuid, 'assignee_label', $event)"
+                  placeholder="Assignee label"
+                />
+              </div>
+            </div>
+          }
+          <div class="mt-2">
+            <div class="btn-group btn-group-sm">
+              <button class="btn btn-outline-secondary" type="button" (click)="vm.updateTaskStatus(task, 'open')">Open</button>
+              <button class="btn btn-outline-secondary" type="button" (click)="vm.updateTaskStatus(task, 'in_progress')">In Progress</button>
+              <button class="btn btn-outline-success" type="button" (click)="vm.updateTaskStatus(task, 'completed')">Complete</button>
+            </div>
+            <span class="badge bg-dark ms-2">{{ task.status }}</span>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>

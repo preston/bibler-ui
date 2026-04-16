@@ -1,0 +1,112 @@
+@if (showStepEditor()) {
+  <study-plan-item-editor />
+}
+
+<div id="guided-discussion-section" class="card mb-3">
+  <div class="card-header"><strong>Guided Discussion (Q&amp;A)</strong></div>
+  <div class="card-body">
+    @if (vm.canEditStructure()) {
+      <div class="mb-3">
+        <textarea class="form-control mb-2" rows="2" [ngModel]="vm.questionPrompt()" (ngModelChange)="vm.questionPrompt.set($event)" placeholder="Discussion question"></textarea>
+        <div class="row g-2">
+          <div class="col-md-4">
+            <select class="form-select" [ngModel]="vm.questionType()" (ngModelChange)="vm.questionType.set($event)">
+              <option value="discussion">Discussion</option>
+              <option value="observation">Observation</option>
+              <option value="interpretation">Interpretation</option>
+              <option value="application">Application</option>
+            </select>
+          </div>
+          <div class="col-md-8">
+            <input class="form-control" [ngModel]="vm.questionGuidance()" (ngModelChange)="vm.questionGuidance.set($event)" placeholder="Leader guidance notes" />
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm mt-2" type="button" (click)="vm.createQuestion()">Add Question</button>
+      </div>
+    }
+    @for (question of vm.questions(); track question.uuid) {
+      <div class="border rounded p-2 mb-2">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <strong>{{ question.prompt }}</strong>
+            <div class="small text-muted">{{ question.question_type }}</div>
+          </div>
+          @if (vm.canReorderContent()) {
+            <div class="btn-group btn-group-sm">
+              <button class="btn btn-outline-secondary" type="button" (click)="vm.moveQuestion(question, -1)">Up</button>
+              <button class="btn btn-outline-secondary" type="button" (click)="vm.moveQuestion(question, 1)">Down</button>
+            </div>
+          }
+        </div>
+        @if (vm.canEditStructure()) {
+          <div class="row g-2 mt-2">
+            <div class="col-md-6">
+              <input
+                class="form-control form-control-sm"
+                [ngModel]="vm.questionDrafts()[question.uuid]?.prompt ?? question.prompt"
+                (ngModelChange)="vm.setQuestionDraft(question.uuid, 'prompt', $event)"
+                placeholder="Question prompt"
+              />
+            </div>
+            <div class="col-md-3">
+              <select
+                class="form-select form-select-sm"
+                [ngModel]="vm.questionDrafts()[question.uuid]?.question_type ?? question.question_type"
+                (ngModelChange)="vm.setQuestionDraft(question.uuid, 'question_type', $event)"
+              >
+                <option value="discussion">Discussion</option>
+                <option value="observation">Observation</option>
+                <option value="interpretation">Interpretation</option>
+                <option value="application">Application</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <div class="d-flex flex-column gap-1">
+                <button class="btn btn-sm btn-outline-primary w-100" type="button" (click)="vm.saveQuestion(question)">Save</button>
+                @if (vm.canDeleteContent()) {
+                  <button class="btn btn-sm btn-outline-danger w-100" type="button" (click)="vm.deleteQuestion(question)">Delete</button>
+                }
+              </div>
+            </div>
+            <div class="col-12">
+              <input
+                class="form-control form-control-sm"
+                [ngModel]="vm.questionDrafts()[question.uuid]?.guidance_notes ?? (question.guidance_notes ?? '')"
+                (ngModelChange)="vm.setQuestionDraft(question.uuid, 'guidance_notes', $event)"
+                placeholder="Guidance notes"
+              />
+            </div>
+          </div>
+        }
+        <ul class="list-group list-group-flush mt-2">
+          @for (answer of vm.answersByQuestion()[question.uuid]; track answer.uuid) {
+            <li class="list-group-item px-0 d-flex justify-content-between align-items-start gap-2">
+              <div>
+                <span>{{ answer.response }}</span>
+                @if (answer.username) {
+                  <span class="small text-muted ms-1">— {{ answer.username }}</span>
+                }
+                @if (answer.user_id && vm.session.user()?.id === answer.user_id) {
+                  <span class="badge bg-secondary ms-1">You</span>
+                }
+              </div>
+              @if (vm.studyMode() === 'leader') {
+                <button type="button" class="btn btn-sm btn-outline-danger flex-shrink-0" (click)="vm.deleteAnswer(question.uuid, answer)">Delete</button>
+              }
+            </li>
+          }
+        </ul>
+        @if (vm.session.isLoggedIn()) {
+          <div class="input-group mt-2">
+            <input class="form-control" [ngModel]="vm.answerDrafts()[question.uuid]" (ngModelChange)="vm.setAnswerDraft(question.uuid, $event)" placeholder="Add your response" />
+            <button class="btn btn-outline-primary" type="button" (click)="vm.submitAnswer(question.uuid)">Reply</button>
+          </div>
+        } @else {
+          <p class="small text-muted mt-2 mb-0">
+            <a routerLink="/login" [queryParams]="{ returnUrl: vm.returnUrlForLogin() }">Log in</a> to reply.
+          </p>
+        }
+      </div>
+    }
+  </div>
+</div>

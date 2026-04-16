@@ -12,31 +12,60 @@
 		<div class="collapse navbar-collapse" id="navbarNav">
 			<ul class="navbar-nav me-auto">
 				<li class="nav-item">
-					<a id="reader_nav_link" class="nav-link" routerLink="/reader" routerLinkActive="active" [routerLinkActiveOptions]="{exact: false}">
-						<!-- <span class="bi bi-list"></span> -->
-						 Reader
+					<a id="studies_nav_link" class="nav-link" routerLink="/studies" routerLinkActive="active" [routerLinkActiveOptions]="{exact: false}">
+						Studies
 					</a>
 				</li>
-				<li class="nav-item">
-					<a id="comparator_nav_link" class="nav-link" routerLink="/comparator" routerLinkActive="active" [routerLinkActiveOptions]="{exact: false}">
-						<!-- <span class="bi bi-arrow-left-right"></span> -->
-						Translation Comparator
+				<li class="nav-item dropdown">
+					<a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+						Research
 					</a>
-				</li>
-				<li class="nav-item">
-					<a id="search_nav_link" class="nav-link" routerLink="/search" routerLinkActive="active" [routerLinkActiveOptions]="{exact: false}">
-						<!-- <span class="bi bi-search"></span> -->
-						Search
-					</a>
+					<ul class="dropdown-menu">
+						<li>
+							<a id="reader_nav_link" class="dropdown-item" routerLink="/reader" routerLinkActive="active" [routerLinkActiveOptions]="{exact: false}">
+								Reader
+							</a>
+						</li>
+						<li>
+							<a id="comparator_nav_link" class="dropdown-item" routerLink="/comparator" routerLinkActive="active" [routerLinkActiveOptions]="{exact: false}">
+								Translation Comparator
+							</a>
+						</li>
+						<li>
+							<a id="search_nav_link" class="dropdown-item" routerLink="/search" routerLinkActive="active" [routerLinkActiveOptions]="{exact: false}">
+								Search
+							</a>
+						</li>
+					</ul>
 				</li>
 			</ul>
-			<ul class="navbar-nav">
-				<li class="nav-item">
-					<a id="api_page_link" class="nav-link" routerLink="/api" routerLinkActive="active">
-						<span class="bi bi-arrow-left-right"></span> API
-					</a>
-				</li>
+			<ul class="navbar-nav me-2 align-items-lg-center">
+				@if (!session.user()) {
+					<li class="nav-item">
+						<a id="nav_login_link" class="nav-link" routerLink="/login" routerLinkActive="active">Log In</a>
+					</li>
+				} @else {
+					<li class="nav-item">
+						<button id="nav_logout_button" type="button" class="btn btn-link nav-link py-2 border-0" (click)="logout()">Log Out</button>
+					</li>
+				}
 			</ul>
+			@if (showSystemMenu()) {
+				<ul class="navbar-nav">
+					<li class="nav-item dropdown">
+						<a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+							System
+						</a>
+						<ul class="dropdown-menu dropdown-menu-end">
+							<li>
+								<a id="settings_page_link" class="dropdown-item" routerLink="/settings" routerLinkActive="active">
+									<span class="bi bi-gear"></span> Settings
+								</a>
+							</li>
+						</ul>
+					</li>
+				</ul>
+			}
 		</div>
 	</div>
 </nav>

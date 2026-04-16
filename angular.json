@@ -35,10 +35,13 @@
                         ],
                         "styles": [
                             "src/styles.scss",
-                            "src/litera.min.css"
-
+                            "node_modules/bootstrap/dist/css/bootstrap.min.css",
+                            "src/lux.min.css",
+                            "node_modules/bootstrap-icons/font/bootstrap-icons.css"
                         ],
                         "scripts": [
+                            "node_modules/@popperjs/core/dist/umd/popper.min.js",
+                            "node_modules/bootstrap/dist/js/bootstrap.min.js"
                         ]
                     },
                     "configurations": {
@@ -100,9 +103,15 @@
                             "src/assets"
                         ],
                         "styles": [
-                            "src/styles.scss"
+                            "src/styles.scss",
+                            "node_modules/bootstrap/dist/css/bootstrap.min.css",
+                            "src/lux.min.css",
+                            "node_modules/bootstrap-icons/font/bootstrap-icons.css"
                         ],
-                        "scripts": []
+                        "scripts": [
+                            "node_modules/@popperjs/core/dist/umd/popper.min.js",
+                            "node_modules/bootstrap/dist/js/bootstrap.min.js"
+                        ]
                     }
                 }
             }

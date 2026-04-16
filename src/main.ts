@@ -4,9 +4,8 @@ import { AppComponent } from './app/components/app.component';
 import { FormsModule } from '@angular/forms';
 import { AppRoutingModule } from './app/app-routing.module';
 import { BrowserModule, bootstrapApplication } from '@angular/platform-browser';
-import { withInterceptorsFromDi, provideHttpClient } from '@angular/common/http';
-
-import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+import { withInterceptors, provideHttpClient } from '@angular/common/http';
+import { authTokenInterceptor } from './app/services/auth-token.interceptor';
 
 
 if (environment.production) {
@@ -17,7 +16,7 @@ bootstrapApplication(AppComponent, {
     providers: [
         provideZonelessChangeDetection(),
         importProvidersFrom(BrowserModule, AppRoutingModule, FormsModule),
-        provideHttpClient(withInterceptorsFromDi())
+        provideHttpClient(withInterceptors([authTokenInterceptor]))
     ]
 })
   .catch(err => console.error(err));

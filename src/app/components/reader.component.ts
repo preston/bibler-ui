@@ -1,6 +1,6 @@
 // Author: Preston Lee
 
-import { Component, signal, computed, effect, ChangeDetectionStrategy } from '@angular/core';
+import { Component, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { BookBasedComponent } from './bookBased.component';
 import { Verse } from '../models/verse';
 import { FormsModule } from '@angular/forms';
@@ -29,11 +29,9 @@ export class ReaderComponent extends BookBasedComponent {
 
     constructor() {
         super();
-        console.log("ReaderComponent created!");
     }
 
     selectChapter(n: number) {
-        console.log("Updating verses for chapter " + n);
         this.chapter.set(n);
         const bible = this.bible();
         const book = this.book();
@@ -43,10 +41,4 @@ export class ReaderComponent extends BookBasedComponent {
             });
         }
     }
-
-    updateHighlights() {
-        console.log("Updating highlights...");
-        // Highlights are now computed automatically via highlightedVerses
-    }
-
 }

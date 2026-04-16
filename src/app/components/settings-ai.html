@@ -1,0 +1,59 @@
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <strong>Default AI Reference Bibles</strong>
+    <button class="btn btn-sm btn-outline-primary" type="button" (click)="saveDefaults()">Save defaults</button>
+  </div>
+  <div class="card-body">
+    @if (error()) {
+      <div class="alert alert-warning">{{error()}}</div>
+    }
+
+    <server-table-controls
+      [query]="q()"
+      [sort]="sort()"
+      [direction]="direction()"
+      [meta]="meta()"
+      [sortableColumns]="sortable"
+      (queryChange)="q.set($event)"
+      (sortChange)="sort.set($event); load(true)"
+      (directionChange)="direction.set($event); load(true)"
+      (pageChange)="page.set($event); load()"
+      (perPageChange)="perPage.set($event); load(true)"
+      (search)="load(true)">
+    </server-table-controls>
+
+    <div class="table-responsive">
+      <table class="table table-sm align-middle">
+        <thead>
+          <tr><th>Bible</th><th>Lang</th><th>English</th><th>Hebrew OT</th><th>Greek</th><th>Aramaic</th></tr>
+        </thead>
+        <tbody>
+          @for (b of bibles(); track b.uuid) {
+            <tr>
+              <td>{{b.name}} <span class="text-muted">({{b.uuid}})</span></td>
+              <td>{{b.language}}</td>
+              <td><input type="checkbox" class="form-check-input" [checked]="!!b.ai_default_english" (change)="b.ai_default_english = $any($event.target).checked"></td>
+              <td><input type="checkbox" class="form-check-input" [checked]="!!b.ai_default_hebrew_ot" (change)="b.ai_default_hebrew_ot = $any($event.target).checked"></td>
+              <td><input type="checkbox" class="form-check-input" [checked]="!!b.ai_default_greek" (change)="b.ai_default_greek = $any($event.target).checked"></td>
+              <td><input type="checkbox" class="form-check-input" [checked]="!!b.ai_default_aramaic" (change)="b.ai_default_aramaic = $any($event.target).checked"></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <server-table-controls
+      [query]="q()"
+      [sort]="sort()"
+      [direction]="direction()"
+      [meta]="meta()"
+      [sortableColumns]="sortable"
+      (queryChange)="q.set($event)"
+      (sortChange)="sort.set($event); load(true)"
+      (directionChange)="direction.set($event); load(true)"
+      (pageChange)="page.set($event); load()"
+      (perPageChange)="perPage.set($event); load(true)"
+      (search)="load(true)">
+    </server-table-controls>
+  </div>
+</div>

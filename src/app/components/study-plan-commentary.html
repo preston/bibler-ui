@@ -1,0 +1,71 @@
+@if (showStepEditor()) {
+  <study-plan-item-editor />
+}
+
+<div class="card mb-3">
+  <div class="card-header"><strong>Commentary workspace</strong></div>
+  <div class="card-body">
+    <h6 class="text-muted">Manual and generated commentary</h6>
+    @if (vm.canEditStructure()) {
+      <div class="mb-2">
+        <input class="form-control mb-2" [ngModel]="vm.commentaryTitle()" (ngModelChange)="vm.commentaryTitle.set($event)" placeholder="Commentary title" />
+        <textarea class="form-control mb-2" rows="3" [ngModel]="vm.commentaryBody()" (ngModelChange)="vm.commentaryBody.set($event)" placeholder="Manual commentary"></textarea>
+        <button class="btn btn-outline-primary btn-sm" type="button" (click)="vm.createManualCommentary()">Save Commentary</button>
+      </div>
+    }
+    <div class="mb-2">
+      <input class="form-control mb-2" [ngModel]="vm.commentaryPrompt()" (ngModelChange)="vm.commentaryPrompt.set($event)" placeholder="AI instruction/context" />
+      <textarea class="form-control mb-2" rows="2" [ngModel]="vm.aiCommand()" (ngModelChange)="vm.aiCommand.set($event)" placeholder="AI prompt command"></textarea>
+      <button class="btn btn-outline-secondary btn-sm" type="button" (click)="vm.generateAiCommentary()">Generate AI Commentary</button>
+    </div>
+    @if (vm.aiOutput()) {
+      <div class="alert alert-info">{{ vm.aiOutput() }}</div>
+    }
+    <ul class="list-group">
+      @for (commentary of vm.commentaries(); track commentary.uuid) {
+        <li class="list-group-item">
+          <strong>{{ commentary.title }}</strong>
+          <span class="badge ms-2" [class.bg-secondary]="commentary.source_type === 'manual'" [class.bg-info]="commentary.source_type === 'ai'">{{ commentary.source_type }}</span>
+          <div class="small mt-1">{{ commentary.body }}</div>
+          @if (vm.canEditStructure()) {
+            <div class="row g-2 mt-2">
+              <div class="col-md-4">
+                <input
+                  class="form-control form-control-sm"
+                  [ngModel]="vm.commentaryDrafts()[commentary.uuid]?.title ?? commentary.title"
+                  (ngModelChange)="vm.setCommentaryDraft(commentary.uuid, 'title', $event)"
+                  placeholder="Title"
+                />
+              </div>
+              <div class="col-md-8">
+                <input
+                  class="form-control form-control-sm"
+                  [ngModel]="vm.commentaryDrafts()[commentary.uuid]?.prompt ?? (commentary.prompt ?? '')"
+                  (ngModelChange)="vm.setCommentaryDraft(commentary.uuid, 'prompt', $event)"
+                  placeholder="Prompt / context"
+                />
+              </div>
+              <div class="col-md-10">
+                <textarea
+                  class="form-control form-control-sm"
+                  rows="2"
+                  [ngModel]="vm.commentaryDrafts()[commentary.uuid]?.body ?? (commentary.body ?? '')"
+                  (ngModelChange)="vm.setCommentaryDraft(commentary.uuid, 'body', $event)"
+                  placeholder="Commentary body"
+                ></textarea>
+              </div>
+              <div class="col-md-2">
+                <div class="d-flex flex-column gap-1">
+                  <button class="btn btn-sm btn-outline-primary w-100" type="button" (click)="vm.saveCommentary(commentary)">Save</button>
+                  @if (vm.canDeleteContent()) {
+                    <button class="btn btn-sm btn-outline-danger w-100" type="button" (click)="vm.deleteCommentary(commentary)">Delete</button>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        </li>
+      }
+    </ul>
+  </div>
+</div>

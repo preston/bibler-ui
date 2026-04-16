@@ -1,0 +1,21 @@
+<div class="card mb-3">
+  <div class="card-header"><strong>Account</strong></div>
+  <div class="card-body">
+    @if (user(); as u) {
+      <p class="mb-1">Signed in as <strong>{{ u.name }}</strong> ({{ u.username }}).</p>
+      @if (permissions(); as p) {
+        <p class="text-muted small mb-2">
+          Permissions:
+          @if (p.administrator) { <span class="badge bg-danger me-1">administrator</span> }
+          @if (p.bibles) { <span class="badge bg-secondary me-1">bibles</span> }
+          @if (p.access) { <span class="badge bg-secondary me-1">access</span> }
+          @if (p.curation) { <span class="badge bg-secondary me-1">curation</span> }
+        </p>
+      }
+      <button type="button" class="btn btn-outline-secondary btn-sm" (click)="logout()">Log out</button>
+    } @else {
+      <p class="mb-2">You are not signed in.</p>
+      <p class="text-muted small mb-2">Use <strong>Log In</strong> in the navigation bar, or open the <a routerLink="/login">login page</a>.</p>
+    }
+  </div>
+</div>

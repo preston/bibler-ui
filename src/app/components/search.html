@@ -7,8 +7,8 @@
                     <form (ngSubmit)="search()" role="form">
                         <div class="form-floating mb-3">
                             <select class="form-select" id="bible_select" (change)="selectBible($any($event.target).value)">
-                                @for (b of bibles(); track b.slug; let i = $index) {
-                                    <option [value]="b.slug" [selected]="b.slug == bible()?.slug">{{b.name}}</option>
+                                @for (b of bibles(); track b.uuid; let i = $index) {
+                                    <option [value]="b.uuid" [selected]="b.uuid == bible()?.uuid">{{b.name}}</option>
                                 }
 						</select>
                             <label for="bible_select"><span class="bi bi-book"></span> Bible</label>

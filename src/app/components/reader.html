@@ -7,8 +7,8 @@
                     <div class="col-sm-4">
                         <div class="form-floating mb-3">
                             <select class="form-select" id="bible_select" (change)="selectBible($any($event.target).value)">
-                                @for (b of bibles(); track b.slug) {
-                                    <option [value]="b.slug" [selected]="b.slug == bible()?.slug">{{b.name}}</option>
+                                @for (b of bibles(); track b.uuid) {
+                                    <option [value]="b.uuid" [selected]="b.uuid == bible()?.uuid">{{b.name}}</option>
                                 }
 							</select>
                             <label for="bible_select">
@@ -34,8 +34,8 @@
                                 @if (books().length === 0) {
                                     <option value="">Loading books...</option>
                                 }
-                                @for (b of books(); track b.slug) {
-                                    <option [value]="b.slug" [selected]="b.slug == book()?.slug">{{b.name}}</option>
+                                @for (b of books(); track b.uuid) {
+                                    <option [value]="b.uuid" [selected]="b.uuid == book()?.uuid">{{b.name}}</option>
                                 }
 							</select>
                             <label for="book_select">
@@ -82,7 +82,7 @@
                             <td [innerHTML]="v.highlightedText"></td>
                             <td>
                                 <!-- <div class="btn-group"> -->
-                                <!-- <a class="btn btn-sm btn-secondary" href="/{{bible.slug}}/{{book.slug}}/{{chapter}}/{{verse}}.html">
+                                <!-- <a class="btn btn-sm btn-secondary" href="/{{bible.uuid}}/{{book.uuid}}/{{chapter}}/{{verse}}.html">
                                         <span class="bi bi-link"></span> Web
                                     </a> -->
                                 <a class="" [href]="verseMailTo(v)" title="Email">

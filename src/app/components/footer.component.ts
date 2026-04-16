@@ -7,7 +7,7 @@ import { RouterLink } from '@angular/router';
     selector: 'app-footer',
     templateUrl: 'footer.html',
     standalone: true,
-    imports: [RouterLink],
+    imports: [],
     changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class FooterComponent {

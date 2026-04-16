@@ -1,0 +1,113 @@
+<div class="card mb-3 border-primary">
+  <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <strong>Study AI assistant</strong>
+    <a routerLink=".." class="btn btn-sm btn-outline-secondary" title="Back to study workspace" aria-label="Back to study workspace">
+      <span class="bi bi-chevron-left me-1" aria-hidden="true"></span>
+      Done
+    </a>
+  </div>
+  <div class="card-body">
+    @if (vm.planWorkspaceContextKind() === 'study') {
+      <p class="small text-muted mb-3">Set title and goal in <strong>Details &amp; references</strong> (pencil icon in the sidebar), then describe what you want in your plan. <strong>Apply</strong> adds the suggested content and a matching plan step.</p>
+    }
+    @if (vm.planWorkspaceContextKind() === 'commentary') {
+      <p class="small text-muted mb-3">Suggestions can add commentary, verses, questions, or tasks. <strong>Apply</strong> creates the item and a plan step.</p>
+    }
+    @if (vm.planWorkspaceContextKind() !== 'study' && vm.planWorkspaceContextKind() !== 'commentary') {
+      <p class="small text-muted mb-3">Describe what you need; <strong>Apply</strong> adds suggested content and a matching plan step.</p>
+    }
+    <div class="row g-2 mb-2">
+      <div class="col-12">
+        <label class="form-label small mb-0" for="assistant_message">Message to assistant</label>
+        <textarea id="assistant_message" class="form-control" rows="2" [ngModel]="vm.assistantMessage()" (ngModelChange)="vm.assistantMessage.set($event)" placeholder="What do you need help with?"></textarea>
+      </div>
+      <div class="col-12">
+        <button
+          type="button"
+          class="btn btn-sm btn-outline-secondary"
+          (click)="vm.toggleAdvancedModelPicker()"
+          [attr.aria-expanded]="vm.showAdvancedModelPicker()"
+          [disabled]="vm.assistantModelsLoading()"
+        >
+          {{ vm.showAdvancedModelPicker() ? 'Hide model options' : 'Choose model (advanced)' }}
+        </button>
+        @if (vm.showAdvancedModelPicker()) {
+          <div class="mt-2">
+            @if (vm.availableAssistantModels().length > 0) {
+              <label class="form-label small mb-0" for="assistant_model">Model</label>
+              <select
+                id="assistant_model"
+                class="form-select"
+                [ngModel]="vm.assistantModel()"
+                (ngModelChange)="vm.assistantModel.set($event)"
+              >
+                @for (model of vm.availableAssistantModels(); track model.id) {
+                  <option [ngValue]="model.id">{{ vm.assistantModelOptionLabel(model) }}</option>
+                }
+              </select>
+              <div class="form-text">If unsure, leave the default selection.</div>
+            } @else {
+              <div class="small text-muted mt-1">Using server default model.</div>
+            }
+          </div>
+        } @else if (vm.assistantModelsError()) {
+          <div class="small text-muted mt-1">{{ vm.assistantModelsError() }}</div>
+        } @else if (vm.assistantModelsLoading()) {
+          <div class="small text-muted mt-1">Loading model options…</div>
+        } @else {
+          <div class="small text-muted mt-1">Using server default model.</div>
+        }
+      </div>
+    </div>
+    <button type="button" class="btn btn-primary mb-3" [disabled]="vm.assistantLoading()" (click)="vm.runStudyAssistant()">Get suggestions</button>
+    @if (vm.assistantLoading()) {
+      <div class="border rounded p-2 mb-3 bg-light small">
+        <div class="fw-medium text-body d-inline-flex align-items-center gap-2">
+          <span class="spinner-border spinner-border-sm text-primary" role="status" aria-hidden="true"></span>
+          <span>{{ vm.assistantActivityPhase() }}</span>
+        </div>
+        @if (vm.assistantSearchSummary()) { <div class="text-muted mt-1">{{ vm.assistantSearchSummary() }}</div> }
+        @if (vm.assistantStreamPreview()) {
+          <pre class="mb-0 mt-2 small text-body-secondary border-top pt-2" style="max-height: 8rem; overflow: auto; white-space: pre-wrap;">{{ vm.assistantStreamPreview() }}</pre>
+        }
+      </div>
+    }
+    @if (vm.assistantError()) { <div class="alert alert-warning">{{vm.assistantError()}}</div> }
+    <p class="small text-muted mb-2">
+      Each suggestion can be added to your study content and plan, or dismissed. The <strong>summary</strong> becomes the plan step’s notes (aim for about one sentence up to two short paragraphs, still grounded in the database results above).
+    </p>
+    @if (vm.visibleAssistantSuggestions().length > 0) {
+      <div class="d-flex flex-wrap gap-2 mb-3">
+        <button type="button" class="btn btn-success btn-sm" (click)="vm.acceptAllAssistantSuggestions()">Accept All</button>
+        <button type="button" class="btn btn-outline-secondary btn-sm" (click)="vm.rejectAllAssistantSuggestions()">Reject All</button>
+      </div>
+    }
+    <div class="list-group mb-0">
+      @for (s of vm.visibleAssistantSuggestions(); track s.id) {
+        <div class="list-group-item" [attr.id]="'suggestion-' + s.id">
+          <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap">
+            <div class="flex-grow-1 min-w-0">
+              <strong>{{s.title}}</strong>
+              <span class="badge bg-secondary ms-1">{{s.type}}</span>
+              <div class="small mt-1">{{s.summary}}</div>
+            </div>
+            <div class="btn-group btn-group-sm flex-shrink-0" role="group" [attr.aria-labelledby]="'suggestion-' + s.id">
+              <button
+                type="button"
+                class="btn btn-success"
+                (click)="vm.applySuggestion(s)"
+                title="Create the suggested item and add a plan step"
+                [attr.aria-label]="'Apply: add ' + s.title + ' to content and plan'">Apply</button>
+              <button
+                type="button"
+                class="btn btn-outline-secondary"
+                (click)="vm.dismissSuggestion(s.id)"
+                title="Hide this suggestion without adding"
+                [attr.aria-label]="'Dismiss suggestion ' + s.title + ' without adding'">Dismiss</button>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>

@@ -1,0 +1,55 @@
+<div class="container py-4" style="max-width: 28rem">
+  <h1 class="h4 mb-3">Log in</h1>
+
+  @if (user(); as u) {
+    <div class="card">
+      <div class="card-body">
+        <p class="mb-2">You are signed in as <strong>{{ u.name }}</strong> ({{ u.username }}).</p>
+        <button type="button" class="btn btn-outline-secondary btn-sm" (click)="logout()">Log out</button>
+        <a class="btn btn-link btn-sm" routerLink="/studies">Continue to Studies</a>
+      </div>
+    </div>
+  } @else {
+    @if (error()) {
+      <div class="alert alert-danger py-2">{{ error() }}</div>
+    }
+    <div class="card">
+      <div class="card-body">
+        <div class="form-floating mb-3">
+          <input
+            id="login-username"
+            class="form-control"
+            [ngModel]="username()"
+            (ngModelChange)="username.set($event)"
+            placeholder="Username"
+            autocomplete="username"
+          />
+          <label for="login-username">Username</label>
+        </div>
+        <div class="form-floating mb-3">
+          <input
+            id="login-password"
+            type="password"
+            class="form-control"
+            [ngModel]="password()"
+            (ngModelChange)="password.set($event)"
+            placeholder="Password"
+            autocomplete="current-password"
+            (keydown.enter)="submit()"
+          />
+          <label for="login-password">Password</label>
+        </div>
+        <button type="button" class="btn btn-primary w-100" [disabled]="loading()" (click)="submit()">
+          @if (loading()) {
+            <span>Signing in…</span>
+          } @else {
+            <span>Log in</span>
+          }
+        </button>
+      </div>
+    </div>
+    <p class="text-muted small mt-3 mb-0">
+      Accounts are created by an administrator. There is no self-registration.
+    </p>
+  }
+</div>

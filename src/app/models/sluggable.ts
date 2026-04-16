@@ -1,3 +1,3 @@
-export interface Sluggable {
-    slug: string;
+export interface Uuidable {
+    uuid: string;
 }

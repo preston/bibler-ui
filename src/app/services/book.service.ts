@@ -20,17 +20,15 @@ export class BookService {
 	index(bible?: Bible) {
 		let url: string;
 		if (bible) {
-			// Use nested route: /bibles/:bible_slug/books.json
-			url = this.biblerService.getUrl() + '/bibles/' + bible.slug + '/books.json';
+			url = this.biblerService.getUrl() + '/bibles/' + bible.uuid + '/books.json';
 		} else {
-			// Fallback to old route for backward compatibility
 			url = this.biblerService.getUrl() + this.path + '.json';
 		}
 		return this.http.get<Book[]>(url);
 	}
 
 	chaptersFor(bible: Bible, book: Book) {
-		const url = this.biblerService.getUrl() + '/' + bible.slug + '/' + book.slug + '.json';
+		const url = this.biblerService.getUrl() + '/' + bible.uuid + '/' + book.uuid + '.json';
 		return this.http.get<number[]>(url);
 	}
 

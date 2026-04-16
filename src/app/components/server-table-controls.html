@@ -1,0 +1,65 @@
+<div class="d-flex flex-wrap align-items-end gap-2 mb-2">
+  <div class="input-group input-group-sm" style="max-width: 22rem;">
+    <input
+      type="search"
+      class="form-control"
+      [ngModel]="query"
+      (ngModelChange)="queryChange.emit($event)"
+      (keydown.enter)="onSearchEnter($event)"
+      placeholder="Search"
+      autocomplete="off"
+    >
+    <button class="btn btn-outline-secondary" type="button" (click)="search.emit()">Search</button>
+  </div>
+  @if (meta && meta.total_pages > 1) {
+    <button class="btn btn-sm btn-outline-secondary" type="button" [disabled]="meta.page <= 1" (click)="pageChange.emit(meta.page - 1)">Prev</button>
+    <button class="btn btn-sm btn-outline-secondary" type="button" [disabled]="meta.page >= meta.total_pages" (click)="pageChange.emit(meta.page + 1)">Next</button>
+  }
+  <div class="form-floating mb-0" style="width: 6.75rem;">
+    <select
+      class="form-select form-select-sm"
+      [id]="'stc-per-page-' + instanceId"
+      [ngModel]="meta?.per_page ?? 25"
+      (ngModelChange)="emitPerPage($event)"
+    >
+      <option [value]="10">10</option>
+      <option [value]="25">25</option>
+      <option [value]="50">50</option>
+      <option [value]="100">100</option>
+    </select>
+    <label [attr.for]="'stc-per-page-' + instanceId">Per page</label>
+  </div>
+  <div class="form-floating mb-0" style="width: 12rem;">
+    <select
+      class="form-select form-select-sm"
+      [id]="'stc-sort-' + instanceId"
+      [ngModel]="sort"
+      (ngModelChange)="sortChange.emit($event)"
+    >
+      @for (col of sortableColumns; track col.value) {
+        <option [value]="col.value">{{col.label}}</option>
+      }
+    </select>
+    <label [attr.for]="'stc-sort-' + instanceId">Sort</label>
+  </div>
+  <div class="form-floating mb-0" style="width: 9.5rem;">
+    <select
+      class="form-select form-select-sm"
+      [id]="'stc-direction-' + instanceId"
+      [ngModel]="direction"
+      (ngModelChange)="emitDirection($event)"
+    >
+      <option value="asc">Ascending</option>
+      <option value="desc">Descending</option>
+    </select>
+    <label [attr.for]="'stc-direction-' + instanceId">Order</label>
+  </div>
+  <span class="text-muted small ms-auto">
+    @if (meta) {
+      {{meta.total_count}} total
+      @if (meta.total_pages > 1) {
+        <span> · page {{meta.page}} / {{meta.total_pages}}</span>
+      }
+    }
+  </span>
+</div>

@@ -53,7 +53,7 @@ export class SearchComponent extends BibleBasedComponent {
         const bible = this.bible();
         const searchText = this.searchText();
         if (this.validSearch() && bible) {
-            this.searchService.search(bible.slug, searchText).subscribe((d: any) => {
+            this.searchService.search(bible.uuid, searchText).subscribe((d: any) => {
                 const verses = <Verse[]>d;
                 // Update highlighted text
                 for (let i = 0; i < verses.length; i++) {

@@ -1,0 +1,189 @@
+<div class="container-fluid">
+  <br>
+  @if (error()) {
+    <div class="alert alert-danger mb-3">{{ error() }}</div>
+  }
+  @if (loading() && !study()) {
+    <p class="text-muted mb-3">Loading study…</p>
+  }
+  @if (study()) {
+    <div class="row g-3 align-items-start">
+      <div class="col-lg-4 col-xl-3">
+        <div class="card sticky-top" style="top: 1rem;">
+          <div class="card-header">
+            <div class="d-flex align-items-start gap-2 mb-2">
+              <div class="fw-semibold text-truncate flex-grow-1 min-w-0" [attr.title]="study()!.title">{{ study()!.title }}</div>
+              @if (showStudyDetailsEdit()) {
+                <div class="d-flex align-items-start gap-1 flex-shrink-0">
+                  <a
+                    routerLink="details"
+                    class="btn btn-sm btn-outline-secondary"
+                    routerLinkActive="active"
+                    title="Details &amp; references"
+                    aria-label="Open study details and references"
+                  >
+                    <span class="bi bi-pencil-square" aria-hidden="true"></span>
+                  </a>
+                  <a
+                    routerLink="ai"
+                    class="btn btn-sm btn-outline-secondary"
+                    routerLinkActive="active"
+                    title="Study AI assistant"
+                    aria-label="Open study AI assistant"
+                  >
+                    <span class="bi bi-stars" aria-hidden="true"></span>
+                  </a>
+                </div>
+              }
+            </div>
+            @if (study()!.goal?.trim()) {
+              <p class="small text-muted mb-2 mb-md-3">{{ study()!.goal }}</p>
+            }
+            <div class="d-flex flex-wrap align-items-center gap-2 justify-content-end">
+              <label class="visually-hidden" for="study_mode_sidebar">Study mode</label>
+              <select
+                id="study_mode_sidebar"
+                class="form-select form-select-sm"
+                style="max-width: 11rem"
+                [ngModel]="studyMode()"
+                (ngModelChange)="changeStudyMode($event)"
+              >
+                <option value="leader">Leader</option>
+                <option value="co-leader">Co-Leader</option>
+                <option value="participant">Participant</option>
+              </select>
+              <button class="btn btn-sm btn-outline-secondary" type="button" (click)="closeStudy()">Close Study</button>
+            </div>
+          </div>
+          <div class="card-body p-2">
+            <div class="px-1 mb-2">
+              <strong class="small d-block">Plan</strong>
+              @if (canEditStructure()) {
+                <p class="small text-muted mb-2 mb-md-1">
+                  Add steps here, or open the <strong>AI assistant</strong> (stars icon next to the title) for suggestions in the main panel.
+                </p>
+                <div class="d-flex flex-wrap gap-1 mb-2">
+                  <button class="btn btn-sm btn-outline-primary" type="button" (click)="createPlanItemOfType('custom')">+ Custom</button>
+                  <button class="btn btn-sm btn-outline-primary" type="button" (click)="createPlanItemOfType('commentary')">+ Commentary</button>
+                  <button class="btn btn-sm btn-outline-primary" type="button" (click)="createPlanItemOfType('verse')">+ Verse</button>
+                  <button class="btn btn-sm btn-outline-primary" type="button" (click)="createPlanItemOfType('question')">+ Question</button>
+                  <button class="btn btn-sm btn-outline-primary" type="button" (click)="createPlanItemOfType('task')">+ Task</button>
+                </div>
+              }
+              @if (canEditStructure() && planItems().length === 0) {
+                <div class="border border-2 border-dashed rounded p-2 mb-2 small text-muted text-center">
+                  No steps yet. Add one above, or open the <strong>AI assistant</strong> (stars icon) to generate suggestions.
+                </div>
+              }
+            </div>
+            <div cdkDropList class="list-group list-group-flush mb-2" (cdkDropListDropped)="onPlanDrop($event)">
+              @if (planItems().length === 0 && studyMode() === 'participant') {
+                <div class="list-group-item border-0 py-2 small text-muted text-center">Nothing planned yet!</div>
+              } @else {
+                @for (item of planItems(); track item.uuid) {
+                  <div
+                    class="list-group-item list-group-item-action d-flex align-items-center gap-1"
+                    [class.active]="selectedPlanItemUuid() === item.uuid"
+                    cdkDrag
+                    [cdkDragDisabled]="!canReorderContent()"
+                    role="button"
+                    tabindex="0"
+                    (click)="openPlanItem(item)"
+                    (keydown.enter)="openPlanItem(item)"
+                    (keydown.space)="$event.preventDefault(); openPlanItem(item)"
+                  >
+                    @if (canReorderContent()) {
+                      <span class="bi bi-grip-vertical text-muted flex-shrink-0 cdkDragHandle" cdkDragHandle style="cursor: grab" aria-hidden="true"></span>
+                    }
+                    <div class="d-flex justify-content-between flex-grow-1 min-w-0">
+                      <span class="text-truncate d-inline-flex align-items-center gap-1 min-w-0">
+                        @if (session.isLoggedIn()) {
+                          <button
+                            type="button"
+                            class="btn btn-link p-0 flex-shrink-0 text-body"
+                            [title]="planProgressTitle(item)"
+                            (click)="cyclePlanItemProgress(item, $event)"
+                          >
+                            <span [class]="planProgressIcon(item)" aria-hidden="true"></span>
+                            <span class="visually-hidden">{{ planProgressTitle(item) }}</span>
+                          </button>
+                          <span class="text-truncate">{{ item.title }}</span>
+                        } @else {
+                          <span class="text-truncate">{{ item.position + 1 }}. {{ item.title }}</span>
+                        }
+                      </span>
+                      <small class="text-muted flex-shrink-0 ms-1 d-inline-flex align-items-center gap-1">
+                        {{ item.item_type }}
+                        @if (itemDisplayDuration(item); as minutes) {
+                          <span class="text-body-secondary">{{ formatMinutes(minutes) }}</span>
+                        }
+                      </small>
+                    </div>
+                  </div>
+                }
+              }
+            </div>
+            @if (planItems().length > 0) {
+              <div class="px-1 pb-2 small text-muted">
+                <div>Total: {{ formatMinutes(totalEstimatedMinutes()) || '—' }}</div>
+                <div>Remaining: {{ formatMinutes(remainingEstimatedMinutes()) || '—' }}</div>
+              </div>
+            }
+            @if (planItems().length > 0 && session.isLoggedIn()) {
+              <div class="px-1 pt-2 border-top">
+                <div class="dropdown dropup">
+                  <button
+                    class="btn btn-sm btn-outline-secondary dropdown-toggle w-100"
+                    type="button"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                    aria-haspopup="true"
+                    [disabled]="markingAllPlanProgress()"
+                  >
+                    Mark All
+                  </button>
+                  <ul class="dropdown-menu w-100">
+                    <li>
+                      <button
+                        type="button"
+                        class="dropdown-item d-flex align-items-center gap-2"
+                        (click)="markAllPlanItemsStatus('todo', $event)"
+                      >
+                        <span class="bi bi-circle" aria-hidden="true"></span>
+                        To do
+                      </button>
+                    </li>
+                    <li>
+                      <button
+                        type="button"
+                        class="dropdown-item d-flex align-items-center gap-2"
+                        (click)="markAllPlanItemsStatus('complete', $event)"
+                      >
+                        <span class="bi bi-check-circle-fill" aria-hidden="true"></span>
+                        Complete
+                      </button>
+                    </li>
+                    <li>
+                      <button
+                        type="button"
+                        class="dropdown-item d-flex align-items-center gap-2"
+                        (click)="markAllPlanItemsStatus('revisit', $event)"
+                      >
+                        <span class="bi bi-arrow-repeat" aria-hidden="true"></span>
+                        Revisit
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-8 col-xl-9">
+        <router-outlet></router-outlet>
+      </div>
+    </div>
+  }
+</div>

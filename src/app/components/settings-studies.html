@@ -1,0 +1,64 @@
+<div class="card">
+  <div class="card-header"><strong>Study Management</strong></div>
+  <div class="card-body">
+    @if (error()) {
+      <div class="alert alert-warning">{{error()}}</div>
+    }
+
+    <server-table-controls
+      [query]="q()"
+      [sort]="sort()"
+      [direction]="direction()"
+      [meta]="meta()"
+      [sortableColumns]="sortable"
+      (queryChange)="q.set($event)"
+      (sortChange)="sort.set($event); load(true)"
+      (directionChange)="direction.set($event); load(true)"
+      (pageChange)="page.set($event); load()"
+      (perPageChange)="perPage.set($event); load(true)"
+      (search)="load(true)">
+    </server-table-controls>
+
+    <div class="table-responsive">
+      <table class="table table-sm align-middle">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Visibility</th>
+            <th>UUID</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (s of studies(); track s.uuid) {
+            <tr>
+              <td>{{s.title}}</td>
+              <td>{{s.visibility}}</td>
+              <td><span class="small text-muted">{{s.uuid}}</span></td>
+              <td class="text-end">
+                <div class="btn-group btn-group-sm">
+                  <button class="btn btn-outline-primary" type="button" (click)="openStudy(s)">Open</button>
+                  <button class="btn btn-outline-danger" type="button" (click)="deleteStudy(s)">Delete</button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <server-table-controls
+      [query]="q()"
+      [sort]="sort()"
+      [direction]="direction()"
+      [meta]="meta()"
+      [sortableColumns]="sortable"
+      (queryChange)="q.set($event)"
+      (sortChange)="sort.set($event); load(true)"
+      (directionChange)="direction.set($event); load(true)"
+      (pageChange)="page.set($event); load()"
+      (perPageChange)="perPage.set($event); load(true)"
+      (search)="load(true)">
+    </server-table-controls>
+  </div>
+</div>

@@ -1,0 +1,93 @@
+<div class="container-fluid">
+  <br>
+  <div class="row g-3 mb-4">
+    <div class="col-12 col-xl-6">
+      <div class="card bg-light mb-3">
+        <div class="card-header"><strong>Create New Study</strong></div>
+        <div class="card-body">
+          @if (isSignedIn()) {
+            <div class="row g-2">
+              <div class="col-md-6">
+                <input class="form-control" [ngModel]="createTitle()" (ngModelChange)="createTitle.set($event)" placeholder="Study title">
+              </div>
+              <div class="col-md-6">
+                <input class="form-control" [ngModel]="createGoal()" (ngModelChange)="createGoal.set($event)" placeholder="Goal">
+              </div>
+            </div>
+            <div class="mt-2">
+              <button class="btn btn-success" type="button" (click)="createStudy()" [disabled]="!canCreateStudy() || loading()">Create Study</button>
+            </div>
+          } @else {
+            <a class="btn btn-primary" routerLink="/login" [queryParams]="{ returnUrl: '/studies' }">Log in</a>
+&nbsp;            <span class="mb-3 text-muted">..to create your own study.</span>
+          }
+        </div>
+      </div>
+
+      @if (ownedStudies().length > 0) {
+        <div class="card border-primary h-100">
+          <div class="card-header"><strong>My studies</strong></div>
+          <div class="card-body p-0">
+            <ul class="list-group list-group-flush">
+              @for (s of ownedStudies(); track s.uuid) {
+                <li class="list-group-item d-flex justify-content-between align-items-center gap-2">
+                  <button type="button" class="btn btn-link p-0 text-start text-truncate" (click)="openOwnedStudy(s.uuid)">{{ s.title }}</button>
+                  <div class="d-inline-flex align-items-center gap-2 flex-shrink-0">
+                    <span class="text-muted small">{{ formatStudyTotalDuration(s) }}</span>
+                    <span class="badge bg-secondary">{{ s.visibility }}</span>
+                  </div>
+                </li>
+              }
+            </ul>
+          </div>
+        </div>
+      }
+    </div>
+    <div class="col-12 col-xl-6">
+      <div class="card h-100">
+        <div class="card-header pb-2">
+          <div class="fw-semibold mb-2">Public studies</div>
+          <server-table-controls
+            [query]="publicSearchDraft()"
+            (queryChange)="onPublicSearchDraftChange($event)"
+            [sort]="publicSort()"
+            (sortChange)="onPublicSortChange($event)"
+            [direction]="publicDirection()"
+            (directionChange)="onPublicDirectionChange($event)"
+            [meta]="publicStudiesMeta()"
+            (pageChange)="onPublicPageChange($event)"
+            (perPageChange)="onPublicPerPageChange($event)"
+            (search)="applyPublicSearch()"
+            [sortableColumns]="publicStudiesSortColumns"
+          />
+        </div>
+        <div class="card-body p-0">
+          <ul class="list-group list-group-flush">
+            @for (s of publicStudies(); track s.uuid) {
+              <li class="list-group-item d-flex justify-content-between align-items-center gap-2">
+                <button type="button" class="btn btn-link p-0 text-start text-truncate" (click)="openStudy(s.uuid)">{{ s.title }}</button>
+                <div class="d-inline-flex align-items-center gap-2 flex-shrink-0">
+                  <span class="text-muted small">{{ formatStudyTotalDuration(s) }}</span>
+                  <span class="text-muted small">{{ s.updated_at | date: 'short' }}</span>
+                </div>
+              </li>
+            }
+          </ul>
+          @if (publicStudies().length === 0) {
+            <div class="p-3 text-muted small">
+              @if (publicListQuery().trim()) {
+                No public studies match your search.
+              } @else {
+                No public studies yet.
+              }
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+
+  @if (error()) {
+    <div class="alert alert-danger mb-3">{{error()}}</div>
+  }
+</div>
