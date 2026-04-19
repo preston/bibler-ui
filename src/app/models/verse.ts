@@ -15,19 +15,12 @@ export class Verse implements Uuidable {
     updated_at!: string;
 }
 
-export interface ComparatorAiVerseInput {
-    ordinal: number;
-    text: string;
-}
-
 export interface ComparatorAiCommentaryRequest {
-    left_bible_uuid: string;
-    right_bible_uuid: string;
-    left_book_uuid: string;
-    right_book_uuid: string;
+    primary_bible_uuid: string;
+    secondary_bible_uuid: string;
+    primary_book_uuid: string;
+    secondary_book_uuid: string;
     chapter: number;
-    left_verses: ComparatorAiVerseInput[];
-    right_verses: ComparatorAiVerseInput[];
 }
 
 export interface ComparatorAiVerseCommentary {

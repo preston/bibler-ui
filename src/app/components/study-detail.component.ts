@@ -21,7 +21,6 @@ import { Verse } from '../models/verse';
 import {
   Study,
   StudyAnswer,
-  StudyAiAvailableModel,
   StudyPlanItem,
   StudyAssistantSuggestion,
   StudyVerse,
@@ -100,14 +99,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
   error = signal('');
   loading = signal(false);
 
-  aiSystemPromptDraft = signal('');
   assistantMessage = signal('');
-  assistantModel = signal('');
-  availableAssistantModels = signal<StudyAiAvailableModel[]>([]);
-  defaultAssistantModel = signal('');
-  assistantModelsLoading = signal(false);
-  assistantModelsError = signal('');
-  showAdvancedModelPicker = signal(false);
   assistantSuggestions = signal<StudyAssistantSuggestion[]>([]);
   dismissedSuggestionIds = signal<Set<string>>(new Set());
   assistantLoading = signal(false);
@@ -123,8 +115,6 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
   selectedStudyBibleUuids = signal<string[]>([]);
   studyBibleFilter = signal('');
   showStudyBibleDropdown = signal(false);
-  /** When true, show the custom-instructions textarea (for users replacing default rules). */
-  showCustomAiPromptEditor = signal(false);
 
   private assistantRunSub: Subscription | undefined;
   private openStudyRequestSeq = 0;
@@ -291,9 +281,6 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
         this.loading.set(false);
         this.study.set(response.study);
         this.studyUuidInput.set(response.study.uuid);
-        const meta = response.study.metadata;
-        const ap = meta && typeof meta['ai_system_prompt'] === 'string' ? meta['ai_system_prompt'] : '';
-        this.aiSystemPromptDraft.set(ap);
         this.selectedReferenceBibleUuids.set(this.defaultReferenceBibleUuids(response.study));
         this.selectedStudyBibleUuids.set(
           response.study.selected_bible_uuids?.length ? response.study.selected_bible_uuids : this.defaultReferenceBibleUuids(response.study)
@@ -301,9 +288,6 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
         this.editTitle.set(response.study.title ?? '');
         this.editGoal.set(response.study.goal ?? '');
         this.editVisibility.set(response.study.visibility ?? 'private');
-        const customized = !!response.study.ai_system_prompt_customized;
-        this.showCustomAiPromptEditor.set(customized);
-        this.loadAssistantModels();
         const mode = this.studyMode();
         const tree = this.router.parseUrl(this.router.url);
         const primary = tree.root.children['primary'];
@@ -1003,49 +987,6 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
     return this.study()?.capabilities.can_reorder_content ?? false;
   }
 
-  revealCustomAiInstructions(): void {
-    this.showCustomAiPromptEditor.set(true);
-  }
-
-  saveAiSystemPrompt(): void {
-    const st = this.study();
-    if (!st) return;
-    this.loading.set(true);
-    this.studiesService.update(st.uuid, { metadata: { ai_system_prompt: this.aiSystemPromptDraft() } }, this.studyMode()).subscribe({
-      next: (r) => {
-        this.loading.set(false);
-        this.study.set(r.study);
-        this.showCustomAiPromptEditor.set(!!r.study.ai_system_prompt_customized);
-        this.toast.success('Saved.');
-      },
-      error: () => {
-        this.loading.set(false);
-        this.error.set('Could not save AI system prompt.');
-        this.toast.danger('Could not save AI system prompt.');
-      }
-    });
-  }
-
-  resetAiSystemPrompt(): void {
-    this.aiSystemPromptDraft.set('');
-    const st = this.study();
-    if (!st) return;
-    this.loading.set(true);
-    this.studiesService.update(st.uuid, { metadata: { ai_system_prompt: '' } }, this.studyMode()).subscribe({
-      next: (r) => {
-        this.loading.set(false);
-        this.study.set(r.study);
-        this.showCustomAiPromptEditor.set(false);
-        this.toast.success('Saved.');
-      },
-      error: () => {
-        this.loading.set(false);
-        this.error.set('Could not reset AI system prompt.');
-        this.toast.danger('Could not reset AI system prompt.');
-      }
-    });
-  }
-
   /**
    * Stop streaming assistant work (e.g. when leaving the AI tab). Avoids leaving `assistantLoading` stuck true.
    */
@@ -1073,11 +1014,10 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
     this.assistantSearchSummary.set('');
     this.assistantStreamPreview.set('');
 
-    const model = this.resolvedAssistantModelForRequest();
     const referenceBibleUuids = this.selectedReferenceBibleUuids();
     this.assistantRunSub?.unsubscribe();
     this.assistantRunSub = this.studiesService
-      .runStudyAssistantStream(st.uuid, msg, this.studyMode(), model || undefined, referenceBibleUuids)
+      .runStudyAssistantStream(st.uuid, msg, this.studyMode(), referenceBibleUuids)
       .subscribe({
         next: (ev) => this.onAssistantSse(ev),
         error: (err: Error) => {
@@ -1089,109 +1029,6 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
           this.assistantLoading.set(false);
         }
       });
-  }
-
-  toggleAdvancedModelPicker(): void {
-    this.showAdvancedModelPicker.set(!this.showAdvancedModelPicker());
-  }
-
-  assistantModelOptionLabel(model: StudyAiAvailableModel): string {
-    const name = model.label?.trim() || model.id;
-    const extras = [model.summary?.trim(), model.context_window ? `${model.context_window.toLocaleString()} ctx` : '', model.size_label?.trim()]
-      .filter((x): x is string => !!x);
-    return extras.length > 0 ? `${name} - ${extras.join(' | ')}` : name;
-  }
-
-  private loadAssistantModels(): void {
-    this.assistantModelsLoading.set(true);
-    this.assistantModelsError.set('');
-    this.availableAssistantModels.set([]);
-    this.defaultAssistantModel.set('');
-    this.studiesService.availableAssistantModels().subscribe({
-      next: (response) => {
-        const models = this.normalizeAssistantModelsPayload(response);
-        const ids = new Set(models.map((m) => m.id.trim()));
-        const preferred =
-          this.readStringField(response, 'default_model')?.trim() ||
-          models.find((m) => m.default)?.id?.trim() ||
-          models[0]?.id?.trim() ||
-          '';
-        this.availableAssistantModels.set(models);
-        this.defaultAssistantModel.set(preferred);
-        if (!ids.has(this.assistantModel().trim())) {
-          this.assistantModel.set(preferred);
-        }
-        this.assistantModelsLoading.set(false);
-      },
-      error: () => {
-        this.assistantModelsLoading.set(false);
-        this.assistantModelsError.set('Using server default model.');
-        this.availableAssistantModels.set([]);
-        this.defaultAssistantModel.set('');
-        this.assistantModel.set('');
-      }
-    });
-  }
-
-  /**
-   * Server returns Ollama `/api/tags` JSON (`name` per model) or our planned `{ models: [{ id }] }` shape.
-   */
-  private normalizeAssistantModelsPayload(raw: unknown): StudyAiAvailableModel[] {
-    if (!raw || typeof raw !== 'object') return [];
-    const envelope = raw as Record<string, unknown>;
-    const list = envelope['models'];
-    if (!Array.isArray(list)) return [];
-    const out: StudyAiAvailableModel[] = [];
-    for (const item of list) {
-      if (!item || typeof item !== 'object') continue;
-      const m = item as Record<string, unknown>;
-      const id = String(m['id'] ?? m['name'] ?? m['model'] ?? '').trim();
-      if (!id) continue;
-      const details =
-        m['details'] && typeof m['details'] === 'object' ? (m['details'] as Record<string, unknown>) : {};
-      const paramSize = details['parameter_size'] != null ? String(details['parameter_size']) : '';
-      const family = details['family'] != null ? String(details['family']) : '';
-      const quant = details['quantization_level'] != null ? String(details['quantization_level']) : '';
-      const summaryParts = [
-        family && paramSize ? `${family} · ${paramSize}` : paramSize || family || undefined,
-        quant || undefined
-      ].filter((x): x is string => !!x);
-      const summary = summaryParts.length > 0 ? summaryParts.join(' · ') : undefined;
-      const sizeRaw = m['size'];
-      const size_label =
-        typeof sizeRaw === 'number' && sizeRaw > 0 ? this.formatModelDiskSize(sizeRaw) : undefined;
-      out.push({
-        id,
-        label: typeof m['label'] === 'string' && m['label'].trim() ? String(m['label']).trim() : id,
-        summary,
-        size_label,
-        default: m['default'] === true
-      });
-    }
-    return out;
-  }
-
-  private readStringField(obj: unknown, key: string): string | undefined {
-    if (!obj || typeof obj !== 'object') return undefined;
-    const v = (obj as Record<string, unknown>)[key];
-    return typeof v === 'string' ? v : undefined;
-  }
-
-  private formatModelDiskSize(bytes: number): string {
-    if (!Number.isFinite(bytes) || bytes <= 0) return '';
-    if (bytes < 1024) return `${Math.round(bytes)} B`;
-    const kb = bytes / 1024;
-    if (kb < 1024) return `${kb.toFixed(1)} KB`;
-    const mb = kb / 1024;
-    if (mb < 1024) return `${mb.toFixed(1)} MB`;
-    return `${(mb / 1024).toFixed(1)} GB`;
-  }
-
-  private resolvedAssistantModelForRequest(): string | undefined {
-    const selected = this.assistantModel().trim();
-    const available = this.availableAssistantModels();
-    if (available.length === 0) return undefined;
-    return available.some((m) => m.id.trim() === selected) ? selected : undefined;
   }
 
   private onAssistantSse(ev: { event: string; data: Record<string, unknown> }): void {

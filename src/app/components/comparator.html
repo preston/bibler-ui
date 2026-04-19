@@ -7,12 +7,12 @@
                     <div class="col-sm-6">
                         @if (bible()) {
                             <div class="form-floating mb-3">
-                                <select #bible_select_left id="bible_select_left" class="form-select" (change)="selectBible(bible_select_left.value)">
+                                <select #bible_select_primary id="bible_select_primary" class="form-select" (change)="selectBible(bible_select_primary.value)">
                                     @for (b of bibles(); track b.uuid) {
                                         <option [value]="b.uuid" [selected]="b.uuid == bible()!.uuid">{{b.name}}</option>
                                     }
                                 </select>
-                                <label for="bible_select_left"><span class="bi bi-book"></span> Bible (Left)</label>
+                                <label for="bible_select_primary"><span class="bi bi-book"></span> Bible (Primary)</label>
                             </div>
                         }
                         @if (book()) {
@@ -37,24 +37,24 @@
                         }
                     </div>
                     <div class="col-sm-6">
-                        @if (bibleRight()) {
+                        @if (secondaryBible()) {
                             <div class="form-floating mb-3">
-                                <select #bible_select_right id="bible_select_right" class="form-select" (change)="selectBibleRight(bible_select_right.value)">
+                                <select #bible_select_secondary id="bible_select_secondary" class="form-select" (change)="selectBibleSecondary(bible_select_secondary.value)">
                                     @for (b of bibles(); track b.uuid) {
-                                        <option [value]="b.uuid" [selected]="b.uuid == bibleRight()!.uuid">{{b.name}}</option>
+                                        <option [value]="b.uuid" [selected]="b.uuid == secondaryBible()!.uuid">{{b.name}}</option>
                                     }
                                 </select>
-                                <label for="bible_select_right"><span class="bi bi-book"></span> Bible (Right)</label>
+                                <label for="bible_select_secondary"><span class="bi bi-book"></span> Bible (Secondary)</label>
                             </div>
                         }
-                        @if (bookRight()) {
+                        @if (bookSecondary()) {
                             <div class="form-floating mb-3">
-                                <select #book_select_right id="book_select_right" class="form-select" (change)="selectBookRight(book_select_right.value)">
-                                    @for (b of booksRight(); track b.uuid) {
-                                        <option [value]="b.uuid" [selected]="b.uuid == bookRight()!.uuid">{{b.name}}</option>
+                                <select #book_select_secondary id="book_select_secondary" class="form-select" (change)="selectBookSecondary(book_select_secondary.value)">
+                                    @for (b of booksSecondary(); track b.uuid) {
+                                        <option [value]="b.uuid" [selected]="b.uuid == bookSecondary()!.uuid">{{b.name}}</option>
                                     }
                                 </select>
-                                <label for="book_select_right"><span class="bi bi-person"></span> Book (Right)</label>
+                                <label for="book_select_secondary"><span class="bi bi-person"></span> Book (Secondary)</label>
                             </div>
                         }
                         @if (chapter()) {
@@ -63,12 +63,10 @@
                                 <label for="text_highlighter"><span class="bi bi-search"></span> Text Highlighter</label>
                             </div>
                         }
-                        <h3><span class="bi bi-arrow-left-right"></span> What is this for?</h3>
-                        <p class="form-text text-muted">The translation comparator allows you to read side-by-side versions of the same passage from multiple translation sources. This is useful for studying semantics than can be lost or misinterpreted in translation.</p>
-                        @if (versesLeft().length > 0) {
+                        @if (versesPrimary().length > 0) {
                             <span>
                                 <i>Verses: </i>
-                                <span class="badge bg-primary">{{versesLeft().length}}</span>
+                                <span class="badge bg-primary">{{versesPrimary().length}}</span>
                             </span>
                         }
                     </div>
@@ -77,16 +75,33 @@
         </div>
     </div>
     <div id="sideBySide">
-        @if (!versesAreAligned() && versesLeft().length > 0 && versesRight().length > 0) {
+        @if (!versesAreAligned() && versesPrimary().length > 0 && versesSecondary().length > 0) {
             <div class="alert alert-warning" role="alert">
-                Verse alignment is required for AI commentary. The current left/right chapter selection has mismatched verse counts or ordinals.
+                Verse alignment is required for AI commentary. The current primary/secondary chapter selection has mismatched verse counts or ordinals.
             </div>
         }
         @if (versesAreAligned()) {
+            <!-- <p class="form-text text-muted">This tool allows you to read side-by-side versions of the same passage from multiple translation sources, useful for studying semantics semantic and interpretational differences.</p> -->
             <div class="d-flex align-items-center gap-2 mb-2">
                 <button type="button" class="btn btn-primary btn-sm" [disabled]="aiCommentaryLoading()" (click)="runAiCommentary()">
-                    <span class="bi bi-stars"></span> AI Commentary
+                    <span class="bi bi-stars"></span> Add AI Commentary
                 </button>
+                <div class="btn-group btn-group-sm" role="group" aria-label="Primary Bible chapter navigation">
+                    <button
+                        type="button"
+                        class="btn btn-outline-secondary"
+                        [disabled]="!canNavigateToPreviousChapter()"
+                        (click)="navigateToPreviousChapter()">
+                        <span class="bi bi-chevron-left"></span> Prev Chapter
+                    </button>
+                    <button
+                        type="button"
+                        class="btn btn-outline-secondary"
+                        [disabled]="!canNavigateToNextChapter()"
+                        (click)="navigateToNextChapter()">
+                        Next Chapter <span class="bi bi-chevron-right"></span>
+                    </button>
+                </div>
                 @if (aiCommentaryLoading()) {
                     <span class="text-muted small d-inline-flex align-items-center gap-2">
                         <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
@@ -103,7 +118,7 @@
                         <tr>
                             <th class="col-sm-1">Verse</th>
                             <th class="col-sm-3">{{bible()?.name}}</th>
-                            <th class="col-sm-3">{{bibleRight()?.name}}</th>
+                            <th class="col-sm-3">{{secondaryBible()?.name}}</th>
                             <th class="col-sm-5">AI Commentary</th>
                         </tr>
                     </thead>
@@ -111,8 +126,8 @@
                         @for (row of comparisonRows(); track row.ordinal) {
                             <tr>
                                 <td class="fw-semibold">{{row.ordinal}}</td>
-                                <td [innerHTML]="row.leftText"></td>
-                                <td [innerHTML]="row.rightText"></td>
+                                <td [innerHTML]="row.primaryText"></td>
+                                <td [innerHTML]="row.secondaryText"></td>
                                 <td>
                                     @if (row.ai) {
                                         <div class="small mb-2">{{row.ai.commentary}}</div>
@@ -127,65 +142,57 @@
                                             <span class="badge text-bg-info">Cultural/Idiom</span>
                                         }
 
-                                        <div class="mt-2">
-                                            <button type="button" class="btn btn-outline-secondary btn-sm" (click)="toggleVerseDetails(row.ordinal)">
-                                                {{isVerseDetailsOpen(row.ordinal) ? 'Hide details' : 'Show details'}}
-                                            </button>
-                                        </div>
-
-                                        @if (isVerseDetailsOpen(row.ordinal)) {
-                                            <div class="mt-2 small">
-                                                @if (row.ai.linguistic_notes) {
-                                                    <div><strong>Linguistic:</strong> {{row.ai.linguistic_notes}}</div>
-                                                }
-                                                @if (row.ai.translation_issues) {
-                                                    <div><strong>Translation issues:</strong> {{row.ai.translation_issues}}</div>
-                                                }
-                                                @if (row.ai.cultural_context) {
-                                                    <div><strong>Cultural:</strong> {{row.ai.cultural_context}}</div>
-                                                }
-                                                @if (row.ai.anthropological_context) {
-                                                    <div><strong>Anthropological:</strong> {{row.ai.anthropological_context}}</div>
-                                                }
-                                                @if (row.ai.grammar_notes) {
-                                                    <div><strong>Grammar impact:</strong> {{row.ai.grammar_notes}}</div>
-                                                }
-                                                @if (row.ai.idiom_notes && row.ai.idiom_notes.length > 0) {
-                                                    <div><strong>Idiom notes:</strong> {{row.ai.idiom_notes.join('; ')}}</div>
-                                                }
-                                                @if (row.ai.interlinear_tokens && row.ai.interlinear_tokens.length > 0) {
-                                                    <div class="mt-1"><strong>Interlinear tokens</strong></div>
-                                                    <div class="table-responsive">
-                                                        <table class="table table-sm mb-0">
-                                                            <thead>
+                                        <div class="mt-2 small">
+                                            @if (row.ai.linguistic_notes) {
+                                                <div><strong>Linguistic:</strong> {{row.ai.linguistic_notes}}</div>
+                                            }
+                                            @if (row.ai.translation_issues) {
+                                                <div><strong>Translation issues:</strong> {{row.ai.translation_issues}}</div>
+                                            }
+                                            @if (row.ai.cultural_context) {
+                                                <div><strong>Cultural:</strong> {{row.ai.cultural_context}}</div>
+                                            }
+                                            @if (row.ai.anthropological_context) {
+                                                <div><strong>Anthropological:</strong> {{row.ai.anthropological_context}}</div>
+                                            }
+                                            @if (row.ai.grammar_notes) {
+                                                <div><strong>Grammar impact:</strong> {{row.ai.grammar_notes}}</div>
+                                            }
+                                            @if (row.ai.idiom_notes && row.ai.idiom_notes.length > 0) {
+                                                <div><strong>Idiom notes:</strong> {{row.ai.idiom_notes.join('; ')}}</div>
+                                            }
+                                            @if (row.ai.interlinear_tokens && row.ai.interlinear_tokens.length > 0) {
+                                                <div class="mt-1"><strong>Interlinear tokens</strong></div>
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm mb-0">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Token</th>
+                                                                <th>Transliteration</th>
+                                                                <th>Lemma</th>
+                                                                <th>Morphology</th>
+                                                                <th>Gloss</th>
+                                                                <th>Confidence</th>
+                                                                <th>Ambiguity note</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @for (token of row.ai.interlinear_tokens; track token.token + (token.lemma || '')) {
                                                                 <tr>
-                                                                    <th>Token</th>
-                                                                    <th>Transliteration</th>
-                                                                    <th>Lemma</th>
-                                                                    <th>Morphology</th>
-                                                                    <th>Gloss</th>
-                                                                    <th>Confidence</th>
-                                                                    <th>Ambiguity note</th>
+                                                                    <td>{{token.token}}</td>
+                                                                    <td>{{token.transliteration || '-'}}</td>
+                                                                    <td>{{token.lemma || '-'}}</td>
+                                                                    <td>{{token.morphology || '-'}}</td>
+                                                                    <td>{{token.gloss || '-'}}</td>
+                                                                    <td>{{token.confidence ?? '-'}}</td>
+                                                                    <td>{{token.ambiguity_note || '-'}}</td>
                                                                 </tr>
-                                                            </thead>
-                                                            <tbody>
-                                                                @for (token of row.ai.interlinear_tokens; track token.token + (token.lemma || '')) {
-                                                                    <tr>
-                                                                        <td>{{token.token}}</td>
-                                                                        <td>{{token.transliteration || '-'}}</td>
-                                                                        <td>{{token.lemma || '-'}}</td>
-                                                                        <td>{{token.morphology || '-'}}</td>
-                                                                        <td>{{token.gloss || '-'}}</td>
-                                                                        <td>{{token.confidence ?? '-'}}</td>
-                                                                        <td>{{token.ambiguity_note || '-'}}</td>
-                                                                    </tr>
-                                                                }
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-                                                }
-                                            </div>
-                                        }
+                                                            }
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            }
+                                        </div>
                                     } @else {
                                         <span class="text-muted small">No commentary yet.</span>
                                     }

@@ -19,35 +19,34 @@ export class ComparatorComponent extends BookBasedComponent {
     private aiRunSub: Subscription | undefined;
     private defaultsApplied = false;
 
-    selectedBibleRightUuid = signal<string | null>(null);
-    bibleRight = computed(() => {
-        const uuid = this.selectedBibleRightUuid();
+    selectedBibleSecondaryUuid = signal<string | null>(null);
+    secondaryBible = computed(() => {
+        const uuid = this.selectedBibleSecondaryUuid();
         if (!uuid) return null;
         return this.bibleForUuid(uuid);
     });
 
-    private booksRightSignal = signal<Book[]>([]);
-    booksRight = computed(() => this.booksRightSignal());
+    private booksSecondarySignal = signal<Book[]>([]);
+    booksSecondary = computed(() => this.booksSecondarySignal());
 
-    selectedBookRightUuid = signal<string | null>(null);
-    bookRight = computed(() => {
-        const uuid = this.selectedBookRightUuid();
+    selectedBookSecondaryUuid = signal<string | null>(null);
+    bookSecondary = computed(() => {
+        const uuid = this.selectedBookSecondaryUuid();
         if (!uuid) return null;
-        return this.objectForUuid<Book>(this.booksRight(), uuid);
+        return this.objectForUuid<Book>(this.booksSecondary(), uuid);
     });
 
-    chaptersRight = signal<number[]>([]);
+    chaptersSecondary = signal<number[]>([]);
 
-    versesLeft = signal<Verse[]>([]);
-    versesRight = signal<Verse[]>([]);
+    versesPrimary = signal<Verse[]>([]);
+    versesSecondary = signal<Verse[]>([]);
     aiCommentaryLoading = signal(false);
     aiCommentaryError = signal('');
     aiCommentaryStatus = signal('');
     aiCommentaryByOrdinal = signal<Record<number, ComparatorAiVerseCommentary>>({});
-    expandedVerseOrdinals = signal<Record<number, boolean>>({});
 
-    highlightedVersesLeft = computed(() => {
-        const verses = this.versesLeft();
+    highlightedVersesPrimary = computed(() => {
+        const verses = this.versesPrimary();
         const searchText = this.searchText();
         return verses.map(verse => ({
             ...verse,
@@ -55,8 +54,8 @@ export class ComparatorComponent extends BookBasedComponent {
         }));
     });
 
-    highlightedVersesRight = computed(() => {
-        const verses = this.versesRight();
+    highlightedVersesSecondary = computed(() => {
+        const verses = this.versesSecondary();
         const searchText = this.searchText();
         return verses.map(verse => ({
             ...verse,
@@ -65,105 +64,125 @@ export class ComparatorComponent extends BookBasedComponent {
     });
 
     versesAreAligned = computed(() => {
-        const left = this.versesLeft();
-        const right = this.versesRight();
-        if (left.length === 0 || right.length === 0 || left.length !== right.length) return false;
-        for (let i = 0; i < left.length; i++) {
-            if (left[i].ordinal !== right[i].ordinal) return false;
+        const primary = this.versesPrimary();
+        const secondary = this.versesSecondary();
+        if (primary.length === 0 || secondary.length === 0 || primary.length !== secondary.length) return false;
+        for (let i = 0; i < primary.length; i++) {
+            if (primary[i].ordinal !== secondary[i].ordinal) return false;
         }
         return true;
     });
 
     comparisonRows = computed(() => {
         if (!this.versesAreAligned()) return [];
-        const left = this.highlightedVersesLeft();
-        const rightByOrdinal = new Map(this.highlightedVersesRight().map((v) => [v.ordinal, v]));
+        const primary = this.highlightedVersesPrimary();
+        const secondaryByOrdinal = new Map(this.highlightedVersesSecondary().map((v) => [v.ordinal, v]));
         const aiByOrdinal = this.aiCommentaryByOrdinal();
-        return left.map((lv) => ({
-            ordinal: lv.ordinal,
-            leftText: lv.highlightedText,
-            rightText: rightByOrdinal.get(lv.ordinal)?.highlightedText ?? '',
-            ai: aiByOrdinal[lv.ordinal] ?? null
+        return primary.map((pv) => ({
+            ordinal: pv.ordinal,
+            primaryText: pv.highlightedText,
+            secondaryText: secondaryByOrdinal.get(pv.ordinal)?.highlightedText ?? '',
+            ai: aiByOrdinal[pv.ordinal] ?? null
         }));
+    });
+
+    canNavigateToPreviousChapter = computed(() => {
+        const books = this.books();
+        const chapters = this.chapters();
+        const chapter = this.chapter();
+        const currentBook = this.book();
+        if (!currentBook || chapter === null) return false;
+        const chapterIndex = chapters.indexOf(chapter);
+        if (chapterIndex > 0) return true;
+        if (chapterIndex === -1) return false;
+        const bookIndex = books.findIndex((b) => b.uuid === currentBook.uuid);
+        return bookIndex > 0;
+    });
+
+    canNavigateToNextChapter = computed(() => {
+        const books = this.books();
+        const chapters = this.chapters();
+        const chapter = this.chapter();
+        const currentBook = this.book();
+        if (!currentBook || chapter === null) return false;
+        const chapterIndex = chapters.indexOf(chapter);
+        if (chapterIndex !== -1 && chapterIndex < chapters.length - 1) return true;
+        if (chapterIndex === -1) return false;
+        const bookIndex = books.findIndex((b) => b.uuid === currentBook.uuid);
+        return bookIndex > -1 && bookIndex < books.length - 1;
     });
 
     constructor() {
         super();
 
-        // Load books for right bible when it changes
         effect((onCleanup) => {
-            const bibleRight = this.bibleRight();
-            if (bibleRight) {
-                const sub = this.bookService.index(bibleRight).subscribe((books: Book[]) => {
-                    this.booksRightSignal.set(books);
-                    // Match left book when possible; otherwise first book so right column can load.
-                    const leftBook = this.book();
+            const bibleSecondary = this.secondaryBible();
+            if (bibleSecondary) {
+                const sub = this.bookService.index(bibleSecondary).subscribe((books: Book[]) => {
+                    this.booksSecondarySignal.set(books);
+                    const primaryBook = this.book();
                     if (books.length === 0) {
-                        this.selectedBookRightUuid.set(null);
-                    } else if (leftBook) {
-                        const matchingBook = books.find((b) => b.ordinal === leftBook.ordinal);
-                        this.selectedBookRightUuid.set(
+                        this.selectedBookSecondaryUuid.set(null);
+                    } else if (primaryBook) {
+                        const matchingBook = books.find((b) => b.ordinal === primaryBook.ordinal);
+                        this.selectedBookSecondaryUuid.set(
                             matchingBook ? matchingBook.uuid : books[0].uuid
                         );
                     } else {
-                        this.selectedBookRightUuid.set(books[0].uuid);
+                        this.selectedBookSecondaryUuid.set(books[0].uuid);
                     }
                 });
                 onCleanup(() => sub.unsubscribe());
             } else {
-                this.booksRightSignal.set([]);
-                this.selectedBookRightUuid.set(null);
+                this.booksSecondarySignal.set([]);
+                this.selectedBookSecondaryUuid.set(null);
             }
         });
 
-        // Update chapters for right bible when book changes
         effect((onCleanup) => {
-            const bibleRight = this.bibleRight();
-            const bookRight = this.bookRight();
-            if (bibleRight && bookRight) {
-                const sub = this.bookService.chaptersFor(bibleRight, bookRight).subscribe((d: number[]) => {
-                    this.chaptersRight.set(d);
+            const bibleSecondary = this.secondaryBible();
+            const bookSecondary = this.bookSecondary();
+            if (bibleSecondary && bookSecondary) {
+                const sub = this.bookService.chaptersFor(bibleSecondary, bookSecondary).subscribe((d: number[]) => {
+                    this.chaptersSecondary.set(d);
                 });
                 onCleanup(() => sub.unsubscribe());
             } else {
-                this.chaptersRight.set([]);
+                this.chaptersSecondary.set([]);
             }
         });
 
-        // When left book changes, sync the right book by book ordinal.
         effect(() => {
-            const leftBook = this.book();
-            const booksRight = this.booksRight();
-            if (leftBook && booksRight.length > 0) {
-                const matchingBook = booksRight.find((b) => b.ordinal === leftBook.ordinal);
-                this.selectedBookRightUuid.set(
-                    matchingBook ? matchingBook.uuid : booksRight[0].uuid
+            const primaryBook = this.book();
+            const booksSecondary = this.booksSecondary();
+            if (primaryBook && booksSecondary.length > 0) {
+                const matchingBook = booksSecondary.find((b) => b.ordinal === primaryBook.ordinal);
+                this.selectedBookSecondaryUuid.set(
+                    matchingBook ? matchingBook.uuid : booksSecondary[0].uuid
                 );
             }
         });
 
-        // Load right-column verses whenever right bible, right book, and chapter are ready.
-        // (selectChapter often runs before right books finish loading, so right verses were never fetched.)
         effect((onCleanup) => {
-            const bibleRight = this.bibleRight();
-            const bookRight = this.bookRight();
+            const bibleSecondary = this.secondaryBible();
+            const bookSecondary = this.bookSecondary();
             const n = this.chapter();
-            if (bibleRight && bookRight && n !== null) {
-                const sub = this.verseService.index(bibleRight, bookRight, n).subscribe((right: Verse[]) => {
-                    this.versesRight.set(right);
+            if (bibleSecondary && bookSecondary && n !== null) {
+                const sub = this.verseService.index(bibleSecondary, bookSecondary, n).subscribe((secondary: Verse[]) => {
+                    this.versesSecondary.set(secondary);
                     this.cdr.markForCheck();
                 });
                 onCleanup(() => sub.unsubscribe());
             } else {
-                this.versesRight.set([]);
+                this.versesSecondary.set([]);
             }
         });
 
         effect(() => {
             this.bible();
-            this.bibleRight();
+            this.secondaryBible();
             this.book();
-            this.bookRight();
+            this.bookSecondary();
             this.chapter();
             this.resetAiCommentaryState();
         });
@@ -175,64 +194,103 @@ export class ComparatorComponent extends BookBasedComponent {
         if (bibles.length === 0 || this.defaultsApplied) return;
         this.defaultsApplied = true;
 
-        const defaultLeft = bibles.find((b) => !!b.ai_default_english) ?? bibles[0];
-        this.selectBible(defaultLeft.uuid);
+        const defaultPrimary = bibles.find((b) => !!b.ai_default_english) ?? bibles[0];
+        this.selectBible(defaultPrimary.uuid);
 
-        const defaultRight = bibles.find((b) => !!b.ai_default_hebrew_ot)
-            ?? bibles.find((b) => b.uuid !== defaultLeft.uuid)
-            ?? defaultLeft;
-        if (!this.selectedBibleRightUuid()) {
-            this.selectBibleRight(defaultRight.uuid);
+        const defaultSecondary = bibles.find((b) => !!b.ai_default_hebrew_ot)
+            ?? bibles.find((b) => b.uuid !== defaultPrimary.uuid)
+            ?? defaultPrimary;
+        if (!this.selectedBibleSecondaryUuid()) {
+            this.selectBibleSecondary(defaultSecondary.uuid);
         }
     }
 
     selectChapterString(s: string) {
         this.selectChapter(parseInt(s));
     }
-    
+
     selectChapter(n: number) {
         this.chapter.set(n);
         const bible = this.bible();
         const book = this.book();
         if (bible && book && n !== null) {
             const requestChapter = n;
-            this.verseService.index(bible, book, n).subscribe((left: Verse[]) => {
+            this.verseService.index(bible, book, n).subscribe((primary: Verse[]) => {
                 if (this.chapter() !== requestChapter) return;
-                this.versesLeft.set(left);
+                this.versesPrimary.set(primary);
             });
         }
-        // Right verses are loaded in the constructor effect so they still load when right
-        // book becomes available after the initial selectChapter (async books load race).
     }
 
-    selectBookRight(uuid: string) {
+    selectBookSecondary(uuid: string) {
         if (uuid) {
-            this.selectedBookRightUuid.set(uuid);
+            this.selectedBookSecondaryUuid.set(uuid);
         }
     }
 
-    selectBibleRight(uuid: string) {
-        this.selectedBibleRightUuid.set(uuid);
-        // Books will be reloaded automatically via effect
+    selectBibleSecondary(uuid: string) {
+        this.selectedBibleSecondaryUuid.set(uuid);
+    }
+
+    navigateToPreviousChapter() {
+        const chapters = this.chapters();
+        const chapter = this.chapter();
+        if (chapter === null) return;
+
+        const chapterIndex = chapters.indexOf(chapter);
+        if (chapterIndex > 0) {
+            this.selectChapter(chapters[chapterIndex - 1]);
+            return;
+        }
+
+        const previousBook = this.adjacentBook(-1);
+        const bible = this.bible();
+        if (!previousBook || !bible) return;
+
+        this.bookService.chaptersFor(bible, previousBook).subscribe((previousBookChapters) => {
+            if (previousBookChapters.length === 0) return;
+            this.selectBook(previousBook.uuid);
+            queueMicrotask(() => this.selectChapter(previousBookChapters[previousBookChapters.length - 1]));
+        });
+    }
+
+    navigateToNextChapter() {
+        const chapters = this.chapters();
+        const chapter = this.chapter();
+        if (chapter === null) return;
+
+        const chapterIndex = chapters.indexOf(chapter);
+        if (chapterIndex > -1 && chapterIndex < chapters.length - 1) {
+            this.selectChapter(chapters[chapterIndex + 1]);
+            return;
+        }
+
+        const nextBook = this.adjacentBook(1);
+        const bible = this.bible();
+        if (!nextBook || !bible) return;
+
+        this.bookService.chaptersFor(bible, nextBook).subscribe((nextBookChapters) => {
+            if (nextBookChapters.length === 0) return;
+            this.selectBook(nextBook.uuid);
+            queueMicrotask(() => this.selectChapter(nextBookChapters[0]));
+        });
     }
 
     runAiCommentary() {
         if (!this.versesAreAligned()) return;
-        const leftBible = this.bible();
-        const rightBible = this.bibleRight();
-        const leftBook = this.book();
-        const rightBook = this.bookRight();
+        const primaryBible = this.bible();
+        const secondaryBbl = this.secondaryBible();
+        const primaryBook = this.book();
+        const secondaryBk = this.bookSecondary();
         const chapter = this.chapter();
-        if (!leftBible || !rightBible || !leftBook || !rightBook || chapter === null) return;
+        if (!primaryBible || !secondaryBbl || !primaryBook || !secondaryBk || chapter === null) return;
 
         const payload: ComparatorAiCommentaryRequest = {
-            left_bible_uuid: leftBible.uuid,
-            right_bible_uuid: rightBible.uuid,
-            left_book_uuid: leftBook.uuid,
-            right_book_uuid: rightBook.uuid,
-            chapter,
-            left_verses: this.versesLeft().map((v) => ({ ordinal: v.ordinal, text: v.text })),
-            right_verses: this.versesRight().map((v) => ({ ordinal: v.ordinal, text: v.text }))
+            primary_bible_uuid: primaryBible.uuid,
+            secondary_bible_uuid: secondaryBbl.uuid,
+            primary_book_uuid: primaryBook.uuid,
+            secondary_book_uuid: secondaryBk.uuid,
+            chapter
         };
 
         this.aiRunSub?.unsubscribe();
@@ -240,9 +298,8 @@ export class ComparatorComponent extends BookBasedComponent {
         this.aiCommentaryError.set('');
         this.aiCommentaryStatus.set('Requesting AI analysis...');
         this.aiCommentaryByOrdinal.set({});
-        this.expandedVerseOrdinals.set({});
 
-        this.aiRunSub = this.verseService.streamComparatorAiCommentary(payload).subscribe({
+        this.aiRunSub = this.verseService.requestComparatorAiCommentary(payload).subscribe({
             next: (msg) => this.onAiSse(msg),
             error: (err: Error) => {
                 this.aiCommentaryLoading.set(false);
@@ -250,14 +307,6 @@ export class ComparatorComponent extends BookBasedComponent {
             },
             complete: () => this.aiCommentaryLoading.set(false)
         });
-    }
-
-    toggleVerseDetails(ordinal: number) {
-        this.expandedVerseOrdinals.update((state) => ({ ...state, [ordinal]: !state[ordinal] }));
-    }
-
-    isVerseDetailsOpen(ordinal: number): boolean {
-        return !!this.expandedVerseOrdinals()[ordinal];
     }
 
     private onAiSse(msg: ComparatorAiSseMessage) {
@@ -350,7 +399,17 @@ export class ComparatorComponent extends BookBasedComponent {
         this.aiCommentaryError.set('');
         this.aiCommentaryStatus.set('');
         this.aiCommentaryByOrdinal.set({});
-        this.expandedVerseOrdinals.set({});
+    }
+
+    private adjacentBook(offset: -1 | 1): Book | null {
+        const currentBook = this.book();
+        if (!currentBook) return null;
+        const books = this.books();
+        const currentIndex = books.findIndex((b) => b.uuid === currentBook.uuid);
+        if (currentIndex === -1) return null;
+        const targetIndex = currentIndex + offset;
+        if (targetIndex < 0 || targetIndex >= books.length) return null;
+        return books[targetIndex];
     }
 
     ngOnDestroy(): void {

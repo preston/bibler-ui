@@ -29,11 +29,6 @@ export interface Study {
   owner?: StudyOwnerSummary;
   created_at?: string;
   updated_at?: string;
-  /** Resolved server-side when present in JSON */
-  ai_system_prompt_effective?: string;
-  /** Canonical default rules (same for all studies unless customized) */
-  ai_system_prompt_default?: string;
-  ai_system_prompt_customized?: boolean;
   ai_default_reference_bibles?: Record<string, unknown>;
   selected_bible_uuids?: string[];
   total_duration_minutes?: number;
@@ -48,20 +43,6 @@ export interface StudyAssistantSuggestion {
   duration?: number | null;
   /** 0-based index from server — display and bulk-apply in this order */
   order?: number;
-}
-
-export interface StudyAiAvailableModel {
-  id: string;
-  label?: string;
-  summary?: string;
-  context_window?: number;
-  size_label?: string;
-  default?: boolean;
-}
-
-export interface StudyAiAvailableModelsResponse {
-  models: StudyAiAvailableModel[];
-  default_model?: string;
 }
 
 export interface StudyPlanItem {

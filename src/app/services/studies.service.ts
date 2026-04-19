@@ -7,9 +7,7 @@ import { AuthTokenService } from './auth-token.service';
 import {
   Study,
   StudyAnswer,
-  StudyAiAvailableModelsResponse,
   StudyPlanItem,
-  StudyAssistantSuggestion,
   StudyAssistantSseMessage,
   StudyVerse,
   StudyCommentary,
@@ -226,38 +224,9 @@ export class StudiesService {
     return this.http.patch<{ plan_item: StudyPlanItem }>(url, { status }, { headers: this.modeHeaders(studyMode) });
   }
 
-  aiChat(prompt: string, context: Record<string, unknown>, model?: string): Observable<{ output?: string; error?: string }> {
-    const url = `${this.biblerService.getUrl()}/ai/chat`;
-    return this.http.post<{ output?: string; error?: string }>(url, { prompt, context, model });
-  }
-
   aiGenerateCommentary(studyUuid: string, prompt: string, instruction: string, studyMode: StudyMode): Observable<{ output?: string; error?: string }> {
     const url = `${this.biblerService.getUrl()}/studies/${studyUuid}/ai/generate_commentary`;
     return this.http.post<{ output?: string; error?: string }>(url, { prompt, instruction }, { headers: this.modeHeaders(studyMode) });
-  }
-
-  availableAssistantModels(): Observable<StudyAiAvailableModelsResponse> {
-    const url = `${this.biblerService.getUrl()}/ai/models`;
-    return this.http.get<StudyAiAvailableModelsResponse>(url);
-  }
-
-  runStudyAssistant(
-    studyUuid: string,
-    message: string,
-    studyMode: StudyMode,
-    model?: string,
-    referenceBibleUuids?: string[]
-  ): Observable<{
-    suggestions?: StudyAssistantSuggestion[];
-    debug?: Record<string, unknown>;
-    error?: string;
-  }> {
-    const url = `${this.biblerService.getUrl()}/studies/${studyUuid}/ai/assistant`;
-    return this.http.post<{
-      suggestions?: StudyAssistantSuggestion[];
-      debug?: Record<string, unknown>;
-      error?: string;
-    }>(url, { message, model, reference_bible_uuids: referenceBibleUuids }, { headers: this.modeHeaders(studyMode) });
   }
 
   /**
@@ -267,7 +236,6 @@ export class StudiesService {
     studyUuid: string,
     message: string,
     studyMode: StudyMode,
-    model?: string,
     referenceBibleUuids?: string[]
   ): Observable<StudyAssistantSseMessage> {
     const url = `${this.biblerService.getUrl()}/studies/${studyUuid}/ai/assistant`;
@@ -286,7 +254,7 @@ export class StudiesService {
           const res = await fetch(url, {
             method: 'POST',
             headers,
-            body: JSON.stringify({ message, model, stream: true, reference_bible_uuids: referenceBibleUuids }),
+            body: JSON.stringify({ message, stream: true, reference_bible_uuids: referenceBibleUuids }),
             signal: ac.signal
           });
 

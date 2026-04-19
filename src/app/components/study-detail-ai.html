@@ -16,48 +16,9 @@
     @if (vm.planWorkspaceContextKind() !== 'study' && vm.planWorkspaceContextKind() !== 'commentary') {
       <p class="small text-muted mb-3">Describe what you need; <strong>Apply</strong> adds suggested content and a matching plan step.</p>
     }
-    <div class="row g-2 mb-2">
-      <div class="col-12">
-        <label class="form-label small mb-0" for="assistant_message">Message to assistant</label>
-        <textarea id="assistant_message" class="form-control" rows="2" [ngModel]="vm.assistantMessage()" (ngModelChange)="vm.assistantMessage.set($event)" placeholder="What do you need help with?"></textarea>
-      </div>
-      <div class="col-12">
-        <button
-          type="button"
-          class="btn btn-sm btn-outline-secondary"
-          (click)="vm.toggleAdvancedModelPicker()"
-          [attr.aria-expanded]="vm.showAdvancedModelPicker()"
-          [disabled]="vm.assistantModelsLoading()"
-        >
-          {{ vm.showAdvancedModelPicker() ? 'Hide model options' : 'Choose model (advanced)' }}
-        </button>
-        @if (vm.showAdvancedModelPicker()) {
-          <div class="mt-2">
-            @if (vm.availableAssistantModels().length > 0) {
-              <label class="form-label small mb-0" for="assistant_model">Model</label>
-              <select
-                id="assistant_model"
-                class="form-select"
-                [ngModel]="vm.assistantModel()"
-                (ngModelChange)="vm.assistantModel.set($event)"
-              >
-                @for (model of vm.availableAssistantModels(); track model.id) {
-                  <option [ngValue]="model.id">{{ vm.assistantModelOptionLabel(model) }}</option>
-                }
-              </select>
-              <div class="form-text">If unsure, leave the default selection.</div>
-            } @else {
-              <div class="small text-muted mt-1">Using server default model.</div>
-            }
-          </div>
-        } @else if (vm.assistantModelsError()) {
-          <div class="small text-muted mt-1">{{ vm.assistantModelsError() }}</div>
-        } @else if (vm.assistantModelsLoading()) {
-          <div class="small text-muted mt-1">Loading model options…</div>
-        } @else {
-          <div class="small text-muted mt-1">Using server default model.</div>
-        }
-      </div>
+    <div class="mb-2">
+      <label class="form-label small mb-0" for="assistant_message">Message to assistant</label>
+      <textarea id="assistant_message" class="form-control" rows="2" [ngModel]="vm.assistantMessage()" (ngModelChange)="vm.assistantMessage.set($event)" placeholder="What do you need help with?"></textarea>
     </div>
     <button type="button" class="btn btn-primary mb-3" [disabled]="vm.assistantLoading()" (click)="vm.runStudyAssistant()">Get suggestions</button>
     @if (vm.assistantLoading()) {

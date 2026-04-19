@@ -8,7 +8,7 @@
           @if (isSignedIn()) {
             <div class="row g-2">
               <div class="col-md-6">
-                <input class="form-control" [ngModel]="createTitle()" (ngModelChange)="createTitle.set($event)" placeholder="Study title">
+                <input class="form-control" [ngModel]="createTitle()" (ngModelChange)="createTitle.set($event)" placeholder="Study title" autofocus>
               </div>
               <div class="col-md-6">
                 <input class="form-control" [ngModel]="createGoal()" (ngModelChange)="createGoal.set($event)" placeholder="Goal">

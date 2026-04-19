@@ -39,7 +39,7 @@ export class StudiesListComponent implements OnInit {
     { label: 'Title', value: 'title' },
     { label: 'Visibility', value: 'visibility' }
   ];
-  createTitle = signal('Untitled Study');
+  createTitle = signal('');
   createGoal = signal('');
   error = signal('');
   loading = signal(false);

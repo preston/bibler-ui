@@ -13,21 +13,24 @@ import { ComparatorAiCommentaryRequest, ComparatorAiSseMessage, Verse } from '..
 	providedIn: 'root'
 })
 export class VerseService {
-
 	constructor(private biblerService: BiblerService, private http: HttpClient) {
 	}
 
 	index(bible: Bible, book: Book, chapter: number) {
-		var url = this.biblerService.getUrl() + '/' + bible.uuid + '/' + book.uuid + '/' + chapter;
-		return this.http.get<Verse[]>(url);//.map(res => res.json());
+		const url = this.biblerService.getUrl() + '/' + bible.uuid + '/' + book.uuid + '/' + chapter;
+		return this.http.get<Verse[]>(url);
 	}
 
-	streamComparatorAiCommentary(payload: ComparatorAiCommentaryRequest): Observable<ComparatorAiSseMessage> {
+	/**
+	 * POSTs bible/book UUIDs and chapter to `/ai/comparator_commentary` (verse text is loaded server-side).
+	 * Replays the JSON response as a sequence of `ComparatorAiSseMessage` events (status → verse × n → complete).
+	 */
+	requestComparatorAiCommentary(payload: ComparatorAiCommentaryRequest): Observable<ComparatorAiSseMessage> {
 		return new Observable<ComparatorAiSseMessage>((subscriber) => {
 			const ac = new AbortController();
 			(async () => {
 				try {
-					await this.runComparatorFallbackChat(payload, subscriber, ac.signal);
+					await this.runComparatorCommentaryRequest(payload, subscriber, ac.signal);
 				} catch (e) {
 					if ((e as Error).name === 'AbortError') {
 						subscriber.complete();
@@ -41,7 +44,7 @@ export class VerseService {
 		});
 	}
 
-	private async runComparatorFallbackChat(
+	private async runComparatorCommentaryRequest(
 		payload: ComparatorAiCommentaryRequest,
 		subscriber: {
 			next: (v: ComparatorAiSseMessage) => void;
@@ -51,28 +54,16 @@ export class VerseService {
 		signal: AbortSignal
 	): Promise<void> {
 		subscriber.next({ event: 'status', data: { message: 'Generating AI commentary...' } });
-		const url = `${this.biblerService.getUrl()}/ai/chat`;
-		const prompt = [
-			'You are a biblical linguistic assistant.',
-			'Return strict JSON only, no markdown.',
-			'Schema: {"verses":[{"ordinal":number,"commentary":string,"linguistic_notes":string,"translation_issues":string,"cultural_context":string,"anthropological_context":string,"translation_lens":string,"grammar_notes":string,"idiom_notes":[string]}]}',
-			'Create one object per verse ordinal in left_verses.',
-			'Use right_verses as comparison context for translation differences.',
-			'Do not invent ordinals.'
-		].join(' ');
-
+		const url = `${this.biblerService.getUrl()}/ai/comparator_commentary`;
 		const response = await fetch(url, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({
-				prompt,
-				context: payload
-			}),
+			body: JSON.stringify(payload),
 			signal
 		});
 		const bodyText = await response.text();
 		if (!response.ok) {
-			subscriber.error(new Error(bodyText || 'Comparator AI fallback failed.'));
+			subscriber.error(new Error(bodyText || 'Comparator AI commentary request failed.'));
 			return;
 		}
 
@@ -85,13 +76,13 @@ export class VerseService {
 			}
 			outputText = parsed.output ?? '';
 		} catch {
-			subscriber.error(new Error('Comparator AI fallback returned malformed JSON.'));
+			subscriber.error(new Error('Comparator AI commentary returned malformed JSON.'));
 			return;
 		}
 
 		const normalized = this.extractJsonObject(outputText);
 		if (!normalized) {
-			subscriber.error(new Error('Comparator AI fallback could not parse model output.'));
+			subscriber.error(new Error('Comparator AI commentary could not parse model output.'));
 			return;
 		}
 
@@ -104,7 +95,7 @@ export class VerseService {
 			subscriber.next({ event: 'complete', data: {} });
 			subscriber.complete();
 		} catch {
-			subscriber.error(new Error('Comparator AI fallback output did not match expected verse schema.'));
+			subscriber.error(new Error('Comparator AI commentary output did not match expected verse schema.'));
 		}
 	}
 
@@ -113,35 +104,6 @@ export class VerseService {
 		const end = text.lastIndexOf('}');
 		if (start < 0 || end < start) return null;
 		return text.slice(start, end + 1);
-	}
-
-	private consumeSseBuffer(
-		buffer: string,
-		subscriber: { next: (v: ComparatorAiSseMessage) => void }
-	): string {
-		const parts = buffer.split(/\n\n/);
-		const rest = parts.pop() ?? '';
-		for (const block of parts) {
-			if (!block.trim()) continue;
-			let eventName = 'message';
-			const dataLines: string[] = [];
-			for (const line of block.split('\n')) {
-				if (line.startsWith('event:')) {
-					eventName = line.slice(6).trim();
-				} else if (line.startsWith('data:')) {
-					dataLines.push(line.slice(5).trimStart());
-				}
-			}
-			if (dataLines.length === 0) continue;
-			const dataStr = dataLines.join('\n');
-			try {
-				const data = JSON.parse(dataStr) as Record<string, unknown>;
-				subscriber.next({ event: eventName, data });
-			} catch {
-				subscriber.next({ event: eventName, data: { raw: dataStr } });
-			}
-		}
-		return rest;
 	}
 
 }
