@@ -9,7 +9,7 @@
     <div class="row g-2 mb-2">
       <div class="col-md-4">
         <select class="form-select" [ngModel]="vm.selectedBibleUuid()"
-          (ngModelChange)="vm.selectedBibleUuid.set($event); vm.loadBooks()">
+          (ngModelChange)="vm.onVerseBrowserBibleChange($event)">
           @for (b of vm.scopedBibles(); track b.uuid) {
           <option [value]="b.uuid">{{ b.name }}</option>
           }
@@ -17,7 +17,7 @@
       </div>
       <div class="col-md-4">
         <select class="form-select" [ngModel]="vm.selectedBookUuid()"
-          (ngModelChange)="vm.selectedBookUuid.set($event); vm.loadChapters()">
+          (ngModelChange)="vm.onVerseBrowserBookChange($event)">
           @for (b of vm.books(); track b.uuid) {
           <option [value]="b.uuid">{{ b.name }}</option>
           }
@@ -25,7 +25,7 @@
       </div>
       <div class="col-md-4">
         <select class="form-select" [ngModel]="vm.selectedChapter()"
-          (ngModelChange)="vm.selectedChapter.set($event); vm.loadVerses()">
+          (ngModelChange)="vm.onVerseBrowserChapterChange($event)">
           @for (c of vm.chapters(); track c) {
           <option [value]="c">{{ c }}</option>
           }

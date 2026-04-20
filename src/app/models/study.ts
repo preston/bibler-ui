@@ -49,6 +49,7 @@ export interface StudyPlanItem {
   title: string;
   item_type: 'verse' | 'commentary' | 'question' | 'task' | 'custom' | 'worship';
   notes: string | null;
+  lyrics?: string | null;
   duration?: number | null;
   position: number;
   metadata: Record<string, unknown>;

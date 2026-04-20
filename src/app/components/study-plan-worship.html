@@ -1,3 +1,35 @@
 @if (showStepEditor()) {
   <study-plan-item-editor />
 }
+
+@if (vm.selectedPlanItem(); as item) {
+  @if (vm.canEditStructure()) {
+    <div class="card mb-3">
+      <div class="card-header"><strong>Lyrics</strong></div>
+      <div class="card-body">
+        <label class="form-label small mb-0" [attr.for]="'plan_item_lyrics_' + item.uuid">Song lyrics (optional)</label>
+        <textarea
+          class="form-control"
+          rows="10"
+          [id]="'plan_item_lyrics_' + item.uuid"
+          [ngModel]="vm.planItemDrafts()[item.uuid]?.lyrics ?? (item.lyrics ?? '')"
+          (ngModelChange)="vm.setPlanItemDraft(item.uuid, 'lyrics', $event)"
+          placeholder="Paste or type lyrics"
+        ></textarea>
+        <div class="mt-2 d-flex justify-content-end">
+          <button class="btn btn-sm btn-primary" type="button" (click)="vm.savePlanItem(item)">
+            <span class="bi bi-floppy me-1" aria-hidden="true"></span>
+            Save lyrics
+          </button>
+        </div>
+      </div>
+    </div>
+  } @else if ((item.lyrics ?? '').trim()) {
+    <div class="card mb-3">
+      <div class="card-header"><strong>Lyrics</strong></div>
+      <div class="card-body">
+        <pre class="mb-0 small" style="white-space: pre-wrap">{{ item.lyrics }}</pre>
+      </div>
+    </div>
+  }
+}

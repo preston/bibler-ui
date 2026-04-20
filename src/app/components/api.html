@@ -54,43 +54,6 @@
 				</div>
 			</div>
 
-			<div class="card bg-light mb-3" id="books">
-				<div class="card-body">
-					<h4><small class="badge bg-success">GET</small> List all books (global)</h4>
-					<p class="mb-2">
-						<code>{{biblerService.getUrl()}}/books.json</code>
-					</p>
-					<p class="text-muted small">Returns a list of all books across all Bible translations, as some
-						translations contain apocryphal content or variations from canonical texts. You probably don't
-						want to use this endpoint. For books specific to a Bible translation, use the nested route
-						instead.</p>
-					<a [href]="biblerService.getUrl() + '/books.json'" target="_blank"
-						class="btn btn-sm btn-outline-primary me-2">
-						<span class="bi bi-box-arrow-up-right"></span> Open URL
-					</a>
-					<button aria-controls="books_result" aria-expanded="false" class="btn btn-sm btn-primary"
-						data-bs-target="#books_result" data-bs-toggle="collapse" type="button">
-						<span class="bi bi-eye"></span> Show Result
-					</button>
-					<pre class="collapse mt-3" id="books_result"><code>{{stringify(books())}}</code></pre>
-				</div>
-			</div>
-
-			<div class="card bg-light mb-3" id="book-show">
-				<div class="card-body">
-					<h4><small class="badge bg-success">GET</small> Get a specific book (global)</h4>
-					<p class="mb-2">
-						<code>{{biblerService.getUrl()}}/books/:id.json</code>
-					</p>
-					<p class="text-muted small">Returns details for a specific book. Use the book UUID.</p>
-					@if (book()) {
-					<p class="mb-2">
-						<strong>Example:</strong> <code>{{biblerService.getUrl()}}/books/{{book()!.uuid}}.json</code>
-					</p>
-					}
-				</div>
-			</div>
-
 			<div class="card bg-light mb-3" id="testaments">
 				<div class="card-body">
 					<h4><small class="badge bg-success">GET</small> List all testaments</h4>

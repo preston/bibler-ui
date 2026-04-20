@@ -83,7 +83,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
   commentaryDrafts = signal<Record<string, { title: string; body: string; prompt: string }>>({});
   questionDrafts = signal<Record<string, { prompt: string; question_type: string; guidance_notes: string }>>({});
   taskDrafts = signal<Record<string, { instruction: string; task_type: string; assignee_label: string }>>({});
-  planItemDrafts = signal<Record<string, { title: string; notes: string; duration: string }>>({});
+  planItemDrafts = signal<Record<string, { title: string; notes: string; lyrics: string; duration: string }>>({});
 
   commentaryTitle = signal('');
   commentaryBody = signal('');
@@ -124,6 +124,9 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
   private assistantRunSub: Subscription | undefined;
   private openStudyRequestSeq = 0;
   private workspaceLoadSeq = 0;
+  private booksLoadSeq = 0;
+  private chaptersLoadSeq = 0;
+  private versesLoadSeq = 0;
 
   visibleAssistantSuggestions = computed(() => {
     const dismissed = this.dismissedSuggestionIds();
@@ -479,9 +482,14 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
       } else {
         this.selectedPlanItemUuid.set(response.plan_items[0]?.uuid ?? '');
       }
-      const drafts: Record<string, { title: string; notes: string; duration: string }> = {};
+      const drafts: Record<string, { title: string; notes: string; lyrics: string; duration: string }> = {};
       for (const p of response.plan_items) {
-        drafts[p.uuid] = { title: p.title ?? '', notes: p.notes ?? '', duration: this.durationInputValue(p.duration) };
+        drafts[p.uuid] = {
+          title: p.title ?? '',
+          notes: p.notes ?? '',
+          lyrics: p.lyrics ?? '',
+          duration: this.durationInputValue(p.duration)
+        };
       }
       this.planItemDrafts.set(drafts);
       if (options?.thenNavigate) {
@@ -541,40 +549,100 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
   }
 
   loadBooks(): void {
+    const requestSeq = ++this.booksLoadSeq;
     const available = this.scopedBibles();
-    if (available.length === 0) return;
+    if (available.length === 0) {
+      this.books.set([]);
+      this.selectedBookUuid.set('');
+      this.chapters.set([]);
+      this.verses.set([]);
+      return;
+    }
     if (!available.some((b) => b.uuid === this.selectedBibleUuid())) {
       this.selectedBibleUuid.set(available[0].uuid);
     }
     const bible = available.find((b) => b.uuid === this.selectedBibleUuid());
-    if (!bible) return;
+    if (!bible) {
+      this.books.set([]);
+      this.selectedBookUuid.set('');
+      this.chapters.set([]);
+      this.verses.set([]);
+      return;
+    }
+    const previousBookUuid = this.selectedBookUuid();
     this.bookService.index(bible).subscribe((books) => {
+      if (requestSeq !== this.booksLoadSeq) return;
       this.books.set(books);
-      if (books.length > 0) {
-        this.selectedBookUuid.set(books[0].uuid);
-        this.loadChapters();
+      if (books.length === 0) {
+        this.selectedBookUuid.set('');
+        this.chapters.set([]);
+        this.verses.set([]);
+        return;
       }
+      const nextBookUuid = books.some((book) => book.uuid === previousBookUuid) ? previousBookUuid : books[0].uuid;
+      this.selectedBookUuid.set(nextBookUuid);
+      this.loadChapters();
     });
+  }
+
+  onVerseBrowserBibleChange(bibleUuid: string): void {
+    this.selectedBibleUuid.set(bibleUuid);
+    // Clear dependent dropdown state immediately so UI does not show stale options.
+    this.selectedBookUuid.set('');
+    this.books.set([]);
+    this.chapters.set([]);
+    this.verses.set([]);
+    this.loadBooks();
+  }
+
+  onVerseBrowserBookChange(bookUuid: string): void {
+    this.selectedBookUuid.set(bookUuid);
+    // Book change invalidates chapter + verse state until refreshed.
+    this.chapters.set([]);
+    this.verses.set([]);
+    this.loadChapters();
+  }
+
+  onVerseBrowserChapterChange(chapter: number | string): void {
+    this.selectedChapter.set(Number(chapter));
+    this.loadVerses();
   }
 
   loadChapters(): void {
     const bible = this.bibles().find((b) => b.uuid === this.selectedBibleUuid());
     const book = this.books().find((b) => b.uuid === this.selectedBookUuid());
-    if (!bible || !book) return;
+    if (!bible || !book) {
+      this.chapters.set([]);
+      this.verses.set([]);
+      return;
+    }
+    const requestSeq = ++this.chaptersLoadSeq;
+    const previousChapter = this.selectedChapter();
     this.bookService.chaptersFor(bible, book).subscribe((chapters) => {
+      if (requestSeq !== this.chaptersLoadSeq) return;
       this.chapters.set(chapters);
-      if (chapters.length > 0) {
-        this.selectedChapter.set(chapters[0]);
-        this.loadVerses();
+      if (chapters.length === 0) {
+        this.verses.set([]);
+        return;
       }
+      const nextChapter = chapters.includes(previousChapter) ? previousChapter : chapters[0];
+      this.selectedChapter.set(nextChapter);
+      this.loadVerses();
     });
   }
 
   loadVerses(): void {
     const bible = this.bibles().find((b) => b.uuid === this.selectedBibleUuid());
     const book = this.books().find((b) => b.uuid === this.selectedBookUuid());
-    if (!bible || !book) return;
-    this.verseService.index(bible, book, this.selectedChapter()).subscribe((verses) => this.verses.set(verses));
+    if (!bible || !book) {
+      this.verses.set([]);
+      return;
+    }
+    const requestSeq = ++this.versesLoadSeq;
+    this.verseService.index(bible, book, this.selectedChapter()).subscribe((verses) => {
+      if (requestSeq !== this.versesLoadSeq) return;
+      this.verses.set(verses);
+    });
   }
 
   addStudyVerseFromReader(verse: Verse): void {
@@ -944,11 +1012,11 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
     });
   }
 
-  setPlanItemDraft(planItemUuid: string, field: 'title' | 'notes', value: string): void {
+  setPlanItemDraft(planItemUuid: string, field: 'title' | 'notes' | 'lyrics', value: string): void {
     this.planItemDrafts.update((d) => ({
       ...d,
       [planItemUuid]: {
-        ...(d[planItemUuid] ?? { title: '', notes: '', duration: '' }),
+        ...(d[planItemUuid] ?? { title: '', notes: '', lyrics: '', duration: '' }),
         [field]: value
       }
     }));
@@ -958,7 +1026,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
     this.planItemDrafts.update((d) => ({
       ...d,
       [planItemUuid]: {
-        ...(d[planItemUuid] ?? { title: '', notes: '', duration: '' }),
+        ...(d[planItemUuid] ?? { title: '', notes: '', lyrics: '', duration: '' }),
         duration: value
       }
     }));
@@ -972,6 +1040,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
     this.studiesService.updatePlanItem(st.uuid, item.uuid, {
       title: d.title.trim(),
       notes: d.notes.trim(),
+      lyrics: item.item_type === 'worship' ? d.lyrics.trim() : null,
       duration: this.durationPayloadFromInput(d.duration)
     }, this.studyMode()).subscribe({
       next: () => {
@@ -1186,7 +1255,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
         break;
       }
       case 'complete': {
-        const raw = ev.data['suggestions'];
+        const raw = ev.data['suggestions'] ?? ev.data;
         this.assistantSuggestions.set(this.normalizeAssistantSuggestions(raw));
         this.assistantActivityPhase.set('Suggestions ready.');
         break;
@@ -1205,8 +1274,9 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
   }
 
   private normalizeAssistantSuggestions(raw: unknown): StudyAssistantSuggestion[] {
-    if (!Array.isArray(raw)) return [];
-    const mapped = raw.map((item, index) => {
+    const list = this.extractSuggestionArray(raw);
+    if (list.length === 0) return [];
+    const mapped = list.map((item, index) => {
       const o = item as Record<string, unknown>;
       const ordRaw = o['order'];
       const order =
@@ -1226,6 +1296,55 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
       };
     });
     return mapped.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  }
+
+  private extractSuggestionArray(raw: unknown): unknown[] {
+    if (Array.isArray(raw)) return raw;
+    if (raw && typeof raw === 'object') {
+      const wrapped = (raw as Record<string, unknown>)['suggestions'];
+      if (Array.isArray(wrapped)) return wrapped;
+      return [];
+    }
+    if (typeof raw !== 'string') return [];
+    const parsed = this.tryParseJsonLoose(raw.trim());
+    if (Array.isArray(parsed)) return parsed;
+    if (parsed && typeof parsed === 'object') {
+      const wrapped = (parsed as Record<string, unknown>)['suggestions'];
+      return Array.isArray(wrapped) ? wrapped : [];
+    }
+    return [];
+  }
+
+  /**
+   * Assistant output may include JSON wrapped in explanation text.
+   * Pull the first JSON object/array if direct parsing fails.
+   */
+  private tryParseJsonLoose(input: string): unknown {
+    if (!input) return null;
+    try {
+      return JSON.parse(input) as unknown;
+    } catch {
+      // Continue with slice attempts below.
+    }
+    const objectStart = input.indexOf('{');
+    const objectEnd = input.lastIndexOf('}');
+    if (objectStart !== -1 && objectEnd > objectStart) {
+      try {
+        return JSON.parse(input.slice(objectStart, objectEnd + 1)) as unknown;
+      } catch {
+        // Continue with array slice attempt.
+      }
+    }
+    const arrayStart = input.indexOf('[');
+    const arrayEnd = input.lastIndexOf(']');
+    if (arrayStart !== -1 && arrayEnd > arrayStart) {
+      try {
+        return JSON.parse(input.slice(arrayStart, arrayEnd + 1)) as unknown;
+      } catch {
+        return null;
+      }
+    }
+    return null;
   }
 
   dismissSuggestion(id: string): void {
