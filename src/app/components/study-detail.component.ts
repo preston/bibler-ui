@@ -131,6 +131,10 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
   });
 
   selectedPlanItem = computed(() => this.planItems().find((x) => x.uuid === this.selectedPlanItemUuid()) ?? null);
+  readonly visibleStudyVerses = computed(() => this.scopeContentToSelectedStep(this.studyVerses(), 'verse'));
+  readonly visibleCommentaries = computed(() => this.scopeContentToSelectedStep(this.commentaries(), 'commentary'));
+  readonly visibleQuestions = computed(() => this.scopeContentToSelectedStep(this.questions(), 'question'));
+  readonly visibleTasks = computed(() => this.scopeContentToSelectedStep(this.tasks(), 'task'));
 
   /** Previous step in plan order when viewing a plan item; null if none. */
   readonly planItemNavPrevious = computed((): StudyPlanItem | null => {
@@ -255,7 +259,38 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * In a `step/:planItemUuid/:kind` route, show only the content item matching that step's
+   * type-relative index (e.g., 2nd commentary step -> 2nd commentary record).
+   * Outside a selected step context, return the full collection.
+   */
+  private scopeContentToSelectedStep<T extends { position: number }>(
+    items: T[],
+    itemType: StudyPlanItem['item_type']
+  ): T[] {
+    const selected = this.selectedPlanItem();
+    if (!selected || selected.item_type !== itemType) return items;
+
+    const orderedPlanItems = [...this.planItems()]
+      .filter((p) => p.item_type === itemType)
+      .sort((a, b) => a.position - b.position);
+    const selectedIndex = orderedPlanItems.findIndex((p) => p.uuid === selected.uuid);
+    if (selectedIndex < 0) return [];
+
+    const orderedItems = [...items].sort((a, b) => a.position - b.position);
+    const matched = orderedItems[selectedIndex];
+    return matched ? [matched] : [];
+  }
+
   private syncRouteSub?: Subscription;
+
+  private isViewingStepRoute(studyUuid: string): boolean {
+    const tree = this.router.parseUrl(this.router.url.split('?')[0]);
+    const primary = tree.root.children['primary'];
+    if (!primary) return false;
+    const segments = primary.segments.map((s) => s.path);
+    return segments[0] === 'studies' && segments[1] === studyUuid && segments[2] === 'step' && !!segments[3] && !!segments[4];
+  }
 
   ngOnDestroy(): void {
     this.cancelAssistantRun();
@@ -370,7 +405,10 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
         }
         this.loadBooks();
         this.loadStudyWorkspace(response.study.uuid, {
-          selectFirstPlanOnOpenForParticipant: mode === 'participant'
+          selectFirstPlanOnOpenForParticipant:
+            mode === 'participant' &&
+            !this.selectedPlanItemUuid() &&
+            !this.isViewingStepRoute(response.study.uuid)
         });
       },
       error: () => {
@@ -755,7 +793,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
     const st = this.study();
     if (!st) return;
     const titles: Record<StudyPlanItem['item_type'], string> = {
-      custom: 'Custom step',
+      custom: 'Blank step',
       commentary: 'Commentary step',
       verse: 'Verse step',
       question: 'Discussion step',
@@ -1391,7 +1429,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
       commentary: 'Commentary',
       question: 'Question',
       task: 'Task',
-      custom: 'Custom',
+      custom: 'Blank',
       worship: 'Worship'
     };
     return map[kind] ?? kind;

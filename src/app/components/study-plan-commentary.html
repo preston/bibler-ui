@@ -10,7 +10,7 @@
       <div class="mb-2">
         <input class="form-control mb-2" [ngModel]="vm.commentaryTitle()" (ngModelChange)="vm.commentaryTitle.set($event)" placeholder="Commentary title" />
         <input class="form-control mb-2" [ngModel]="vm.commentaryPrompt()" (ngModelChange)="vm.commentaryPrompt.set($event)" placeholder="Prompt / context" />
-        <textarea class="form-control mb-2" rows="3" [ngModel]="vm.commentaryBody()" (ngModelChange)="vm.commentaryBody.set($event)" placeholder="Manual commentary"></textarea>
+        <textarea class="form-control mb-2" rows="10" [ngModel]="vm.commentaryBody()" (ngModelChange)="vm.commentaryBody.set($event)" placeholder="Manual commentary"></textarea>
         <button
           class="btn btn-primary btn-sm"
           type="button"
@@ -27,7 +27,7 @@
         <div class="card-header py-2"><strong class="small">AI commentary</strong></div>
         <div class="card-body py-2">
           <input class="form-control form-control-sm mb-2" [ngModel]="vm.commentaryPrompt()" (ngModelChange)="vm.commentaryPrompt.set($event)" placeholder="AI instruction/context" />
-          <textarea class="form-control form-control-sm mb-2" rows="2" [ngModel]="vm.aiCommand()" (ngModelChange)="vm.aiCommand.set($event)" placeholder="AI prompt command"></textarea>
+          <textarea class="form-control form-control-sm mb-2" rows="4" [ngModel]="vm.aiCommand()" (ngModelChange)="vm.aiCommand.set($event)" placeholder="AI prompt command"></textarea>
           <button class="btn btn-outline-secondary btn-sm" type="button" (click)="vm.generateAiCommentary()">Generate AI Commentary</button>
         </div>
       </div>
@@ -36,7 +36,7 @@
       <div class="alert alert-info">{{ vm.aiOutput() }}</div>
     }
     <ul class="list-group">
-      @for (commentary of vm.commentaries(); track commentary.uuid) {
+      @for (commentary of vm.visibleCommentaries(); track commentary.uuid) {
         <li class="list-group-item">
           <strong>{{ commentary.title }}</strong>
           <span class="badge ms-2" [class.bg-secondary]="commentary.source_type === 'manual'" [class.bg-info]="commentary.source_type === 'ai'">{{ commentary.source_type }}</span>
@@ -62,7 +62,7 @@
               <div class="col-md-10">
                 <textarea
                   class="form-control form-control-sm"
-                  rows="2"
+                  rows="10"
                   [ngModel]="vm.commentaryDrafts()[commentary.uuid]?.body ?? (commentary.body ?? '')"
                   (ngModelChange)="vm.setCommentaryDraft(commentary.uuid, 'body', $event)"
                   placeholder="Commentary body"

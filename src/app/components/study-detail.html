@@ -63,7 +63,7 @@
                   Add steps here, or open the <strong>AI assistant</strong> (stars icon next to the title) for suggestions in the main panel.
                 </p> -->
                 <div class="d-flex flex-wrap gap-1 mb-2">
-                  <button class="btn btn-sm btn-primary" type="button" (click)="createPlanItemOfType('custom')">+ Custom</button>
+                  <button class="btn btn-sm btn-primary" type="button" (click)="createPlanItemOfType('custom')">+ Blank</button>
                   <button class="btn btn-sm btn-primary" type="button" (click)="createPlanItemOfType('commentary')">+ Commentary</button>
                   <button class="btn btn-sm btn-primary" type="button" (click)="createPlanItemOfType('verse')">+ Verse</button>
                   <button class="btn btn-sm btn-primary" type="button" (click)="createPlanItemOfType('question')">+ Question</button>
@@ -120,13 +120,13 @@
                       </div>
                       <div class="d-flex justify-content-end min-w-0 w-100">
                         <div class="d-flex align-items-center gap-2 min-w-0 max-w-100">
-                          <span
-                            class="text-muted d-inline-flex align-items-center flex-shrink-0"
+                          <small
+                            class="text-muted d-inline-flex align-items-center gap-1 min-w-0"
                             [attr.title]="planItemTypeLabel(item.item_type)"
                           >
                             <span [class]="planItemTypeIconClasses(item.item_type)" aria-hidden="true"></span>
-                            <span class="visually-hidden">{{ planItemTypeLabel(item.item_type) }}</span>
-                          </span>
+                            <span class="text-truncate min-w-0">{{ planItemTypeLabel(item.item_type) }}</span>
+                          </small>
                           @if (itemDisplayDuration(item); as minutes) {
                             <small class="text-body-secondary flex-shrink-0">{{ formatMinutes(minutes) }}</small>
                           }
@@ -201,7 +201,7 @@
         }
         <router-outlet></router-outlet>
         @if (showPlanItemStepNav()) {
-          <ng-container *ngTemplateOutlet="planItemStepNav; context: planItemStepNavContextBottom" />
+          <!-- <ng-container *ngTemplateOutlet="planItemStepNav; context: planItemStepNavContextBottom" /> -->
         }
 
         <ng-template #planItemStepNav let-marginClass="marginClass">

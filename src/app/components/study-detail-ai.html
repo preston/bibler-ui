@@ -7,21 +7,12 @@
     </a>
   </div>
   <div class="card-body">
-    <!-- @if (vm.planWorkspaceContextKind() === 'study') {
-      <p class="small text-muted mb-3">Set title and goal in <strong>Details &amp; references</strong> (pencil icon in the sidebar), then describe what you want in your plan.
-    }
-    @if (vm.planWorkspaceContextKind() === 'commentary') {
-      <p class="small text-muted mb-3">Suggestions can add commentary, verses, questions, or tasks. <strong>Apply</strong> creates the item and a plan step.</p>
-    }
-    @if (vm.planWorkspaceContextKind() !== 'study' && vm.planWorkspaceContextKind() !== 'commentary') {
-      <p class="small text-muted mb-3">Describe what you need; <strong>Apply</strong> adds suggested content and a matching plan step.</p>
-    } -->
     <div class="mb-2">
       <label class="form-label small mb-0" for="assistant_message">Instructions to assistant</label>
-      <textarea id="assistant_message" class="form-control" rows="2" [ngModel]="vm.assistantMessage()" (ngModelChange)="vm.assistantMessage.set($event)" placeholder="What do you need help with?"></textarea>
+      <textarea id="assistant_message" class="form-control" rows="2" [ngModel]="vm.assistantMessage()" (ngModelChange)="vm.assistantMessage.set($event)" placeholder="What would you like to create? Be specific and detailed."></textarea>
     </div>
     <div class="mb-2">
-      <label class="form-label small mb-0" for="assistant_target_duration">Target duration (minutes)</label>
+      <label class="form-label small mb-0" for="assistant_target_duration">Optional target duration (minutes)</label>
       <input
         id="assistant_target_duration"
         type="number"

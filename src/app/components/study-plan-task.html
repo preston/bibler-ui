@@ -26,7 +26,7 @@
       </div>
     }
     <div class="list-group">
-      @for (task of vm.tasks(); track task.uuid) {
+      @for (task of vm.visibleTasks(); track task.uuid) {
         <div class="list-group-item">
           <div class="d-flex justify-content-between align-items-start">
             <div>

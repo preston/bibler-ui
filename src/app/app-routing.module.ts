@@ -15,7 +15,7 @@ import { StudyPlanCommentaryComponent } from './components/study-plan-commentary
 import { StudyPlanVerseComponent } from './components/study-plan-verse.component';
 import { StudyPlanQuestionComponent } from './components/study-plan-question.component';
 import { StudyPlanTaskComponent } from './components/study-plan-task.component';
-import { StudyPlanCustomComponent } from './components/study-plan-custom.component';
+import { StudyPlanBlankComponent } from './components/study-plan-blank.component';
 import { StudyPlanWorshipComponent } from './components/study-plan-worship.component';
 import { SettingsShellComponent } from './components/settings-shell.component';
 import { SettingsAccessComponent } from './components/settings-access.component';
@@ -47,7 +47,7 @@ const routes: Routes = [
         { path: 'step/:planItemUuid/verse', component: StudyPlanVerseComponent },
         { path: 'step/:planItemUuid/question', component: StudyPlanQuestionComponent },
         { path: 'step/:planItemUuid/task', component: StudyPlanTaskComponent },
-        { path: 'step/:planItemUuid/custom', component: StudyPlanCustomComponent },
+        { path: 'step/:planItemUuid/custom', component: StudyPlanBlankComponent },
         { path: 'step/:planItemUuid/worship', component: StudyPlanWorshipComponent },
         { path: '', pathMatch: 'full', component: StudyPlanEmptyComponent }
       ]
