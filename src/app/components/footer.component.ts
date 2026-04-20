@@ -10,10 +10,4 @@ import { RouterLink } from '@angular/router';
     imports: [],
     changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class FooterComponent {
-
-    constructor() {
-        console.log("FooterComponent has been initialized.");
-    }
-
-}
+export class FooterComponent {}

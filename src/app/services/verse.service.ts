@@ -67,43 +67,44 @@ export class VerseService {
 			return;
 		}
 
-		let outputText = '';
+		let outputPayload: unknown = null;
 		try {
-			const parsed = JSON.parse(bodyText) as { output?: string; error?: string };
+			const parsed = JSON.parse(bodyText) as { output?: unknown; error?: string };
 			if (parsed.error) {
 				subscriber.error(new Error(parsed.error));
 				return;
 			}
-			outputText = parsed.output ?? '';
+			outputPayload = parsed.output ?? null;
 		} catch {
 			subscriber.error(new Error('Comparator AI commentary returned malformed JSON.'));
 			return;
 		}
 
-		const normalized = this.extractJsonObject(outputText);
-		if (!normalized) {
-			subscriber.error(new Error('Comparator AI commentary could not parse model output.'));
+		const parsedOutput = this.normalizeComparatorOutput(outputPayload);
+		if (!parsedOutput) {
+			subscriber.error(new Error('Comparator AI commentary output did not match expected schema.'));
 			return;
 		}
 
-		try {
-			const parsed = JSON.parse(normalized) as { verses?: Array<Record<string, unknown>> };
-			const verses = parsed.verses ?? [];
-			for (const verse of verses) {
-				subscriber.next({ event: 'verse', data: verse });
-			}
-			subscriber.next({ event: 'complete', data: {} });
-			subscriber.complete();
-		} catch {
-			subscriber.error(new Error('Comparator AI commentary output did not match expected verse schema.'));
+		const verses = parsedOutput.verses ?? [];
+		for (const verse of verses) {
+			subscriber.next({ event: 'verse', data: verse });
 		}
+		subscriber.next({ event: 'complete', data: {} });
+		subscriber.complete();
 	}
 
-	private extractJsonObject(text: string): string | null {
-		const start = text.indexOf('{');
-		const end = text.lastIndexOf('}');
-		if (start < 0 || end < start) return null;
-		return text.slice(start, end + 1);
+	private normalizeComparatorOutput(output: unknown): { verses?: Array<Record<string, unknown>> } | null {
+		if (output && typeof output === 'object') {
+			return output as { verses?: Array<Record<string, unknown>> };
+		}
+
+		if (typeof output !== 'string' || output.trim() === '') return null;
+		try {
+			return JSON.parse(output) as { verses?: Array<Record<string, unknown>> };
+		} catch {
+			return null;
+		}
 	}
 
 }

@@ -11,10 +11,4 @@ import { ToastHostComponent } from './toast-host.component';
     imports: [RouterOutlet, HeaderComponent, FooterComponent, ToastHostComponent],
     changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class AppComponent {
-
-    constructor() {
-        console.log("AppComponent has been initialized.");
-    }
-
-}
+export class AppComponent {}

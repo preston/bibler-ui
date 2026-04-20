@@ -31,11 +31,6 @@ export class SearchComponent extends BibleBasedComponent {
         }
     });
 
-    constructor() {
-        super();
-        console.log("SearchComponent has been initialized.");
-    }
-
     resort() {
         this.ascending.update(asc => !asc);
     }
@@ -49,7 +44,6 @@ export class SearchComponent extends BibleBasedComponent {
     }
 
     search() {
-        console.log("Searching...");
         const bible = this.bible();
         const searchText = this.searchText();
         if (this.validSearch() && bible) {

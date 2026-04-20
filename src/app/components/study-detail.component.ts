@@ -852,8 +852,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
       title: 'New plan step',
       item_type: 'custom',
       notes: '',
-      duration: this.defaultDurationForItemType('custom'),
-      metadata: {}
+      duration: this.defaultDurationForItemType('custom')
     }, this.studyMode()).subscribe({
       next: (r) => {
         this.toast.success('Saved.');
@@ -880,8 +879,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
       title: titles[itemType],
       item_type: itemType,
       notes: '',
-      duration: this.defaultDurationForItemType(itemType),
-      metadata: {}
+      duration: this.defaultDurationForItemType(itemType)
     }, this.studyMode()).subscribe({
       next: (r) => {
         this.toast.success('Saved.');
@@ -1320,19 +1318,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
 
   private normalizeSuggestionType(raw: unknown): StudyAssistantSuggestion['type'] | null {
     const token = String(raw ?? '').trim().toLowerCase().replace(/-/g, '_').replace(/\s+/g, '_');
-    const aliases: Record<string, StudyAssistantSuggestion['type']> = {
-      break: 'add_task',
-      rest: 'add_task',
-      pause: 'add_task',
-      discussion: 'add_question',
-      verse: 'add_verse',
-      commentary: 'add_commentary',
-      question: 'add_question',
-      task: 'add_task',
-      create: 'add_task',
-      worship: 'add_worship'
-    };
-    const mapped = (aliases[token] ?? token) as StudyAssistantSuggestion['type'];
+    const mapped = token as StudyAssistantSuggestion['type'];
     return this.allowedSuggestionTypes.includes(mapped) ? mapped : null;
   }
 
@@ -1343,46 +1329,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
       if (Array.isArray(wrapped)) return wrapped;
       return [];
     }
-    if (typeof raw !== 'string') return [];
-    const parsed = this.tryParseJsonLoose(raw.trim());
-    if (Array.isArray(parsed)) return parsed;
-    if (parsed && typeof parsed === 'object') {
-      const wrapped = (parsed as Record<string, unknown>)['suggestions'];
-      return Array.isArray(wrapped) ? wrapped : [];
-    }
     return [];
-  }
-
-  /**
-   * Assistant output may include JSON wrapped in explanation text.
-   * Pull the first JSON object/array if direct parsing fails.
-   */
-  private tryParseJsonLoose(input: string): unknown {
-    if (!input) return null;
-    try {
-      return JSON.parse(input) as unknown;
-    } catch {
-      // Continue with slice attempts below.
-    }
-    const objectStart = input.indexOf('{');
-    const objectEnd = input.lastIndexOf('}');
-    if (objectStart !== -1 && objectEnd > objectStart) {
-      try {
-        return JSON.parse(input.slice(objectStart, objectEnd + 1)) as unknown;
-      } catch {
-        // Continue with array slice attempt.
-      }
-    }
-    const arrayStart = input.indexOf('[');
-    const arrayEnd = input.lastIndexOf(']');
-    if (arrayStart !== -1 && arrayEnd > arrayStart) {
-      try {
-        return JSON.parse(input.slice(arrayStart, arrayEnd + 1)) as unknown;
-      } catch {
-        return null;
-      }
-    }
-    return null;
   }
 
   dismissSuggestion(id: string): void {
@@ -1428,7 +1375,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
     const rm = this.studyMode();
 
     if (s.type === 'add_worship') {
-      return this.createPlanItemFromSuggestion$(st.uuid, s, this.worshipPayloadMetadata(p)).pipe(
+      return this.createPlanItemFromSuggestion$(st.uuid, s, { anchor: s.id }).pipe(
         tap(() => this.dismissSuggestion(s.id)),
         map(() => void 0)
       );
@@ -1449,9 +1396,11 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
               note: p['note'] != null ? String(p['note']) : ''
             };
         pipe$ = this.studiesService.createStudyVerse(st.uuid, versePayload, rm).pipe(
-          switchMap((r) =>
-            this.createPlanItemFromSuggestion$(st.uuid, s, { study_verse_uuid: r.verse.uuid })
-          )
+          switchMap((r) => this.createPlanItemFromSuggestion$(st.uuid, s, {
+            anchor: s.id,
+            resource_type: 'study_verse',
+            resource_uuid: r.verse.uuid
+          }))
         );
         break;
       }
@@ -1468,7 +1417,13 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
             },
             rm
           )
-          .pipe(switchMap(() => this.createPlanItemFromSuggestion$(st.uuid, s)));
+          .pipe(
+            switchMap((r) => this.createPlanItemFromSuggestion$(st.uuid, s, {
+              anchor: s.id,
+              resource_type: 'study_commentary',
+              resource_uuid: r.commentary.uuid
+            }))
+          );
         break;
       case 'add_question':
         pipe$ = this.studiesService
@@ -1481,7 +1436,13 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
             },
             rm
           )
-          .pipe(switchMap(() => this.createPlanItemFromSuggestion$(st.uuid, s)));
+          .pipe(
+            switchMap((r) => this.createPlanItemFromSuggestion$(st.uuid, s, {
+              anchor: s.id,
+              resource_type: 'study_question',
+              resource_uuid: r.question.uuid
+            }))
+          );
         break;
       case 'add_task':
         pipe$ = this.studiesService
@@ -1495,7 +1456,13 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
             },
             rm
           )
-          .pipe(switchMap(() => this.createPlanItemFromSuggestion$(st.uuid, s)));
+          .pipe(
+            switchMap((r) => this.createPlanItemFromSuggestion$(st.uuid, s, {
+              anchor: s.id,
+              resource_type: 'study_task',
+              resource_uuid: r.task.uuid
+            }))
+          );
         break;
       default:
         this.toast.danger(`Unsupported suggestion type "${s.type}" was ignored.`);
@@ -1506,13 +1473,6 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
       tap(() => this.dismissSuggestion(s.id)),
       map(() => void 0)
     );
-  }
-
-  private worshipPayloadMetadata(p: Record<string, unknown>): Record<string, unknown> {
-    const meta: Record<string, unknown> = {};
-    if (p['resource_url'] != null) meta['resource_url'] = String(p['resource_url']);
-    if (p['worship_format'] != null) meta['worship_format'] = String(p['worship_format']);
-    return meta;
   }
 
   applySuggestion(s: StudyAssistantSuggestion): void {
@@ -1534,7 +1494,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
   private createPlanItemFromSuggestion$(
     studyUuid: string,
     s: StudyAssistantSuggestion,
-    extraMetadata: Record<string, unknown> = {}
+    extraFields: Partial<StudyPlanItem> = {}
   ): Observable<{ plan_item: StudyPlanItem }> {
     const typeMap: Record<StudyAssistantSuggestion['type'], StudyPlanItem['item_type']> = {
       add_verse: 'verse',
@@ -1551,7 +1511,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
         item_type: kind,
         notes: s.summary,
         duration: this.normalizeDuration(s.duration) ?? this.defaultDurationForItemType(kind),
-        metadata: { suggestion_id: s.id, ...extraMetadata }
+        ...extraFields
       },
       this.studyMode()
     );

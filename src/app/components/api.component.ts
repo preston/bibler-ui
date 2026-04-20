@@ -15,13 +15,7 @@ export class ApiComponent extends BookBasedComponent {
     verses = signal<Verse[]>([]);
     selectedVerse = signal<Verse | null>(null);
 
-    constructor() {
-        super();
-        console.log("ApiComponent has been initialized.");
-    }
-
     override selectChapter(n: number) {
-        console.log("Updating verses for chapter " + n);
         this.chapter.set(n);
         const bible = this.bible();
         const book = this.book();

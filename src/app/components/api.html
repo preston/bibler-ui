@@ -54,36 +54,6 @@
 				</div>
 			</div>
 
-			<div class="card bg-light mb-3" id="testaments">
-				<div class="card-body">
-					<h4><small class="badge bg-success">GET</small> List all testaments</h4>
-					<p class="mb-2">
-						<code>{{biblerService.getUrl()}}/testaments.json</code>
-					</p>
-					<p class="text-muted small">Returns a list of all testaments across all Bible translations.</p>
-					<a [href]="biblerService.getUrl() + '/testaments.json'" target="_blank"
-						class="btn btn-sm btn-outline-primary me-2">
-						<span class="bi bi-box-arrow-up-right"></span> Open URL
-					</a>
-					<button aria-controls="testaments_result" aria-expanded="false" class="btn btn-sm btn-primary"
-						data-bs-target="#testaments_result" data-bs-toggle="collapse" type="button">
-						<span class="bi bi-eye"></span> Show Result
-					</button>
-					<pre class="collapse mt-3" id="testaments_result"><code>{{stringify(testaments())}}</code></pre>
-				</div>
-			</div>
-
-			<div class="card bg-light mb-3" id="testament-show">
-				<div class="card-body">
-					<h4><small class="badge bg-success">GET</small> Get a specific testament</h4>
-					<p class="mb-2">
-						<code>{{biblerService.getUrl()}}/testaments/:id.json</code>
-					</p>
-					<p class="text-muted small">Returns details for a specific testament. Use the testament's ID or
-						UUID.</p>
-				</div>
-			</div>
-
 			<!-- Bible-Specific Resources -->
 			<h3 id="bible-resources" class="mb-4 mt-5"><span class="bi bi-book"></span> Bible-Specific Resources</h3>
 
@@ -94,7 +64,9 @@
 					<p class="mb-2">
 						<code>{{biblerService.getUrl()}}/bibles/:bible_uuid/books.json</code>
 					</p>
-					<p class="text-muted small">Returns all books available in a specific Bible translation.</p>
+					<p class="text-muted small">Returns all books available in a specific Bible translation. Each book
+						includes a <code>testament</code> string: <code>old</code>, <code>new</code>, or
+						<code>other</code>.</p>
 					<p class="mb-2">
 						<strong>Example:</strong> <a
 							[href]="biblerService.getUrl() + '/bibles/' + bible()!.uuid + '/books.json'"

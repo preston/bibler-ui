@@ -3,9 +3,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 
 import { BiblerService } from '../services/bibler.service';
 import { BibleService } from '../services/bible.service';
-import { TestamentService } from '../services/testament.service';
 import { Bible } from '../models/bible';
-import { Testament } from '../models/testament';
 import { Uuidable } from '../models/sluggable';
 import { Verse } from '../models/verse';
 
@@ -14,7 +12,6 @@ export abstract class BibleBasedComponent {
 
     protected biblerService = inject(BiblerService);
     protected bibleService = inject(BibleService);
-    protected testamentService = inject(TestamentService);
 
     searchText = signal('');
 
@@ -27,9 +24,6 @@ export abstract class BibleBasedComponent {
         if (!uuid) return null;
         return this.bibleForUuid(uuid);
     });
-
-    private testamentsSignal = toSignal(this.testamentService.index(), { initialValue: [] as Testament[] });
-    testaments = computed(() => this.testamentsSignal() ?? []);
 
     constructor() {
         // Use effect to auto-select first bible when bibles load

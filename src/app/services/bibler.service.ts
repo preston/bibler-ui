@@ -1,6 +1,6 @@
 // Author: Preston Lee
 
-import { Component, Injectable } from '@angular/core';
+import { Injectable } from '@angular/core';
 
 @Injectable({
 	providedIn: 'root'
@@ -10,11 +10,10 @@ export class BiblerService {
 	private root: string;
 
 	constructor() {
-		this.root = (window as any)["BIBLER_SERVER_URL"];
-		if (this.root) {
-			console.log('Server URL is: ' + this.root);
-		} else {
-			let msg = "BIBLER_SERVER_URL is not set. This UI application will not function without it!";
+		const w = globalThis as typeof globalThis & { BIBLER_SERVER_URL?: string };
+		this.root = w.BIBLER_SERVER_URL ?? '';
+		if (!this.root) {
+			const msg = 'BIBLER_SERVER_URL is not set. This UI application will not function without it!';
 			console.error(msg);
 			throw new Error(msg);
 		}

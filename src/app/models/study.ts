@@ -4,7 +4,7 @@ export type StudyMode = 'leader' | 'co-leader' | 'participant';
 export type StudyVisibility = 'private' | 'sharable' | 'public';
 
 export interface StudyOwnerSummary {
-  id: number;
+  id: string;
   username: string;
   name: string;
 }
@@ -24,7 +24,6 @@ export interface Study {
   title: string;
   goal: string | null;
   visibility: StudyVisibility;
-  metadata: Record<string, unknown>;
   capabilities: StudyCapabilities;
   owner?: StudyOwnerSummary;
   created_at?: string;
@@ -52,7 +51,9 @@ export interface StudyPlanItem {
   lyrics?: string | null;
   duration?: number | null;
   position: number;
-  metadata: Record<string, unknown>;
+  anchor?: string | null;
+  resource_type?: 'study_verse' | 'study_commentary' | 'study_question' | 'study_task' | null;
+  resource_uuid?: string | null;
   /** Current user's progress (present when signed in) */
   my_status?: 'todo' | 'revisit' | 'complete';
 }

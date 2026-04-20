@@ -2,7 +2,7 @@ import { Uuidable } from "./sluggable";
 
 export class Bible implements Uuidable{
 
-	id!: number;
+	id!: string;
 	uuid!: string;
 	name!: string;
 	abbreviation!: string;

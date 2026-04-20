@@ -19,10 +19,6 @@ export class HeaderComponent {
   /** System menu (API, Settings): global administrator only. */
   readonly showSystemMenu = computed(() => this.session.hasAdministratorPermission());
 
-  constructor() {
-    console.log('HeaderComponent has been initialized.');
-  }
-
   logout(): void {
     this.session.logout().subscribe({
       next: () => this.toast.success('Signed out.')
