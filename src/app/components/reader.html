@@ -66,12 +66,20 @@
     </div>
     @if (highlightedVerses().length > 0) {
         <div id="results">
+            <div class="d-flex justify-content-between mb-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary" (click)="navigatePrevious()" [disabled]="!canNavigatePrevious()">
+                    <span class="bi bi-chevron-left"></span> Previous
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" (click)="navigateNext()" [disabled]="!canNavigateNext()">
+                    Next <span class="bi bi-chevron-right"></span>
+                </button>
+            </div>
             <table class="table table-sm table-striped">
                 <thead>
                     <tr>
                         <th class="col-sm-1">Verse</th>
                         <th class="col-sm-8">Text</th>
-                        <th class="col-sm-3">Links &amp; API</th>
+                        <th class="col-sm-3">Tools</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -88,9 +96,6 @@
                                 <a class="" [href]="verseMailTo(v)" title="Email">
                                     <span class="bi bi-envelope"></span>
                                 </a>
-                                <a class="ms-2" [href]="verseDataPermalink(v, 'json')" title="JSON">
-                                    <span class="bi bi-code"></span>
-                                </a>
                                 <!-- <a class="" href="{{verseDataPermalink(v, 'xml')}}">
                                     <small>XML</small>
                                 </a> -->
@@ -99,6 +104,14 @@
                     }
                 </tbody>
             </table>
+            <div class="d-flex justify-content-between mt-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary" (click)="navigatePrevious()" [disabled]="!canNavigatePrevious()">
+                    <span class="bi bi-chevron-left"></span> Previous
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" (click)="navigateNext()" [disabled]="!canNavigateNext()">
+                    Next <span class="bi bi-chevron-right"></span>
+                </button>
+            </div>
         </div>
     }
 </div>

@@ -67,9 +67,9 @@ export const requireCurationRoute: CanActivateFn = (_route, state) => {
 export const studyDetailsEditorRoute: CanActivateFn = (_route, state) => {
   const router = inject(Router);
   const ui = inject(StudiesUiStateService);
-  return requireSession(state.url, (session) => {
+  return requireSession(state.url, () => {
     const mode = ui.studyMode();
-    if (mode === 'leader' || mode === 'co-leader' || session.hasCurationPermission()) return true;
+    if (mode === 'leader' || mode === 'co-leader') return true;
     const base = state.url.split('?')[0].replace(/\/(?:details|ai)\/?$/, '');
     return router.parseUrl(base.length > 0 ? base : '/studies');
   });

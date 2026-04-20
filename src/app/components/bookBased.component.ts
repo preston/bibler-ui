@@ -112,6 +112,15 @@ export abstract class BookBasedComponent extends BibleBasedComponent {
         return this.biblerService.getUrl() + '/' + bible.uuid + '/' + book.uuid + '/' + chapter + '/' + verse.ordinal + '.' + format;
     }
 
+    override verseMailTo(verse: Verse) {
+        const bible = this.bible();
+        const bookName = verse.book?.name ?? this.book()?.name ?? 'Unknown';
+        return "mailto:?subject=" + bookName + '%20' + verse.chapter + ':' + verse.ordinal
+            + '%20-%20' + (bible?.name ?? '')
+            + '&body=%22' + verse.text
+            + '%22%0D%0A%0D%0A--%0D%0APowered by Bibler.';
+    }
+
     protected bookForUuid(uuid: string): Book | null {
         return this.objectForUuid<Book>(this.books(), uuid);
     }

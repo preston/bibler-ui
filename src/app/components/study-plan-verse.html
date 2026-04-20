@@ -46,7 +46,7 @@
           <tr>
             <td>{{ v.ordinal }}</td>
             <td>{{ v.text }}</td>
-            <td><button class="btn btn-sm btn-outline-primary" type="button"
+            <td><button class="btn btn-sm btn-primary" type="button"
                 (click)="vm.addStudyVerseFromReader(v)">Add</button></td>
           </tr>
           }
@@ -87,7 +87,7 @@
             placeholder="Note"></textarea>
           <div class="btn-group btn-group-sm mt-1">
             <button
-              class="btn btn-outline-primary"
+              class="btn btn-primary"
               type="button"
               (click)="vm.saveStudyVerseNote(sv)"
               title="Save"
@@ -97,7 +97,7 @@
             </button>
             @if (vm.canDeleteContent()) {
             <button
-              class="btn btn-outline-danger"
+              class="btn btn-danger"
               type="button"
               (click)="vm.deleteStudyVerse(sv)"
               title="Delete"

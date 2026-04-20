@@ -9,9 +9,10 @@
     @if (vm.canEditStructure()) {
       <div class="mb-2">
         <input class="form-control mb-2" [ngModel]="vm.commentaryTitle()" (ngModelChange)="vm.commentaryTitle.set($event)" placeholder="Commentary title" />
+        <input class="form-control mb-2" [ngModel]="vm.commentaryPrompt()" (ngModelChange)="vm.commentaryPrompt.set($event)" placeholder="Prompt / context" />
         <textarea class="form-control mb-2" rows="3" [ngModel]="vm.commentaryBody()" (ngModelChange)="vm.commentaryBody.set($event)" placeholder="Manual commentary"></textarea>
         <button
-          class="btn btn-outline-primary btn-sm"
+          class="btn btn-primary btn-sm"
           type="button"
           (click)="vm.createManualCommentary()"
           title="Save commentary"
@@ -21,12 +22,17 @@
         </button>
       </div>
     }
-    <div class="mb-2">
-      <input class="form-control mb-2" [ngModel]="vm.commentaryPrompt()" (ngModelChange)="vm.commentaryPrompt.set($event)" placeholder="AI instruction/context" />
-      <textarea class="form-control mb-2" rows="2" [ngModel]="vm.aiCommand()" (ngModelChange)="vm.aiCommand.set($event)" placeholder="AI prompt command"></textarea>
-      <button class="btn btn-outline-secondary btn-sm" type="button" (click)="vm.generateAiCommentary()">Generate AI Commentary</button>
-    </div>
-    @if (vm.aiOutput()) {
+    @if (vm.showStudyDetailsEdit()) {
+      <div class="card mb-3 bg-success-subtle border-success-subtle">
+        <div class="card-header py-2"><strong class="small">AI commentary</strong></div>
+        <div class="card-body py-2">
+          <input class="form-control form-control-sm mb-2" [ngModel]="vm.commentaryPrompt()" (ngModelChange)="vm.commentaryPrompt.set($event)" placeholder="AI instruction/context" />
+          <textarea class="form-control form-control-sm mb-2" rows="2" [ngModel]="vm.aiCommand()" (ngModelChange)="vm.aiCommand.set($event)" placeholder="AI prompt command"></textarea>
+          <button class="btn btn-outline-secondary btn-sm" type="button" (click)="vm.generateAiCommentary()">Generate AI Commentary</button>
+        </div>
+      </div>
+    }
+    @if (vm.showStudyDetailsEdit() && vm.aiOutput()) {
       <div class="alert alert-info">{{ vm.aiOutput() }}</div>
     }
     <ul class="list-group">
@@ -63,9 +69,9 @@
                 ></textarea>
               </div>
               <div class="col-md-2">
-                <div class="d-flex flex-column gap-1">
+                <div class="btn-group btn-group-sm">
                   <button
-                    class="btn btn-sm btn-outline-primary w-100"
+                    class="btn btn-primary"
                     type="button"
                     (click)="vm.saveCommentary(commentary)"
                     title="Save"
@@ -75,7 +81,7 @@
                   </button>
                   @if (vm.canDeleteContent()) {
                     <button
-                      class="btn btn-sm btn-outline-danger w-100"
+                      class="btn btn-danger"
                       type="button"
                       (click)="vm.deleteCommentary(commentary)"
                       title="Delete"

@@ -25,7 +25,7 @@
         <label for="study_edit_visibility">Visibility</label>
       </div>
       <div class="mb-3">
-        <button class="btn btn-sm btn-outline-primary" type="button" (click)="vm.saveStudyDetails()">Save Study Details</button>
+        <button class="btn btn-sm btn-primary" type="button" (click)="vm.saveStudyDetails()">Save Study Details</button>
       </div>
     } @else {
       @if (vm.study()!.goal) {
@@ -42,7 +42,7 @@
 
     @if (vm.canDeleteStudy()) {
       <div class="border-top border-light pt-3 mt-3">
-        <button class="btn btn-sm btn-outline-danger w-100" type="button" (click)="vm.deleteEntireStudy()">Delete study</button>
+        <button class="btn btn-sm btn-danger" type="button" (click)="vm.deleteEntireStudy()">Delete study</button>
       </div>
     }
   </div>

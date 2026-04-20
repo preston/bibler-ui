@@ -61,9 +61,9 @@
               </select>
             </div>
             <div class="col-md-3">
-              <div class="d-flex flex-column gap-1">
+              <div class="btn-group btn-group-sm">
                 <button
-                  class="btn btn-sm btn-outline-primary w-100"
+                  class="btn btn-primary"
                   type="button"
                   (click)="vm.saveQuestion(question)"
                   title="Save"
@@ -73,7 +73,7 @@
                 </button>
                 @if (vm.canDeleteContent()) {
                   <button
-                    class="btn btn-sm btn-outline-danger w-100"
+                    class="btn btn-danger"
                     type="button"
                     (click)="vm.deleteQuestion(question)"
                     title="Delete"
@@ -109,7 +109,7 @@
               @if (vm.studyMode() === 'leader') {
                 <button
                   type="button"
-                  class="btn btn-sm btn-outline-danger flex-shrink-0"
+                  class="btn btn-sm btn-danger flex-shrink-0"
                   (click)="vm.deleteAnswer(question.uuid, answer)"
                   title="Delete"
                   aria-label="Delete answer"
@@ -123,7 +123,7 @@
         @if (vm.session.isLoggedIn()) {
           <div class="input-group mt-2">
             <input class="form-control" [ngModel]="vm.answerDrafts()[question.uuid]" (ngModelChange)="vm.setAnswerDraft(question.uuid, $event)" placeholder="Add your response" />
-            <button class="btn btn-outline-primary" type="button" (click)="vm.submitAnswer(question.uuid)">Reply</button>
+            <button class="btn btn-primary" type="button" (click)="vm.submitAnswer(question.uuid)">Reply</button>
           </div>
         } @else {
           <p class="small text-muted mt-2 mb-0">

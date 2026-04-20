@@ -1,6 +1,6 @@
 @if (vm.selectedPlanItem(); as item) {
   @if (vm.canEditStructure()) {
-    <div class="card mb-3 bg-success">
+    <div class="card mb-3 bg-success-subtle border-success-subtle">
       <div class="card-header"><strong>Plan item</strong></div>
       <div class="card-body">
         <div class="row g-2">
@@ -39,7 +39,7 @@
             <div class="mt-2 d-flex justify-content-end">
               <div class="btn-group btn-group-sm">
                 <button
-                  class="btn btn-outline-primary"
+                  class="btn btn-primary"
                   type="button"
                   (click)="vm.savePlanItem(item)"
                   title="Save"
@@ -49,7 +49,7 @@
                 </button>
                 @if (vm.canDeleteContent()) {
                   <button
-                    class="btn btn-outline-danger"
+                    class="btn btn-danger"
                     type="button"
                     (click)="vm.deletePlanItem(item)"
                     title="Delete"

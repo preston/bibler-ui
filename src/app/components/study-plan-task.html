@@ -64,9 +64,9 @@
                 </select>
               </div>
               <div class="col-md-3">
-                <div class="d-flex flex-column gap-1">
+                <div class="btn-group btn-group-sm">
                   <button
-                    class="btn btn-sm btn-outline-primary w-100"
+                    class="btn btn-primary"
                     type="button"
                     (click)="vm.saveTask(task)"
                     title="Save"
@@ -76,7 +76,7 @@
                   </button>
                   @if (vm.canDeleteContent()) {
                     <button
-                      class="btn btn-sm btn-outline-danger w-100"
+                      class="btn btn-danger"
                       type="button"
                       (click)="vm.deleteTask(task)"
                       title="Delete"

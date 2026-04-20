@@ -323,6 +323,18 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
 
   changeStudyMode(mode: StudyMode): void {
     this.studyMode.set(mode);
+    if (mode === 'participant') {
+      const tree = this.router.parseUrl(this.router.url);
+      const primary = tree.root.children['primary'];
+      const segments = primary?.segments.map((s) => s.path) ?? [];
+      if (
+        segments.length >= 3 &&
+        segments[0] === 'studies' &&
+        (segments[2] === 'ai' || segments[2] === 'details')
+      ) {
+        void this.router.navigate(['/studies', segments[1]], { replaceUrl: true });
+      }
+    }
     const currentStudy = this.study();
     if (currentStudy) {
       this.openStudy(currentStudy.uuid);
@@ -570,6 +582,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
   }
 
   generateAiCommentary(): void {
+    if (!this.showStudyDetailsEdit()) return;
     const currentStudy = this.study();
     if (!currentStudy) return;
     this.studiesService.aiGenerateCommentary(
@@ -1057,6 +1070,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
   }
 
   runStudyAssistant(): void {
+    if (!this.showStudyDetailsEdit()) return;
     const st = this.study();
     if (!st) {
       this.toast.danger('Study is not loaded. Open the study again from the list.');
@@ -1356,6 +1370,31 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
   formatMinutes(minutes: number | null | undefined): string {
     if (!minutes || minutes <= 0) return '';
     return `${minutes}m`;
+  }
+
+  /** Bootstrap Icons class list (includes `bi`) for plan step kind in the sidebar. */
+  planItemTypeIconClasses(kind: StudyPlanItem['item_type']): string {
+    const map: Record<StudyPlanItem['item_type'], string> = {
+      verse: 'bi bi-book',
+      commentary: 'bi bi-chat-left-text',
+      question: 'bi bi-question-circle',
+      task: 'bi bi-check2-square',
+      custom: 'bi bi-puzzle',
+      worship: 'bi bi-music-note-beamed'
+    };
+    return map[kind] ?? 'bi bi-circle';
+  }
+
+  planItemTypeLabel(kind: StudyPlanItem['item_type']): string {
+    const map: Record<StudyPlanItem['item_type'], string> = {
+      verse: 'Verse',
+      commentary: 'Commentary',
+      question: 'Question',
+      task: 'Task',
+      custom: 'Custom',
+      worship: 'Worship'
+    };
+    return map[kind] ?? kind;
   }
 
   /** Return URL for login redirect back to this study view */
