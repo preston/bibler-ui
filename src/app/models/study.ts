@@ -1,7 +1,29 @@
 export type StudyMode = 'leader' | 'co-leader' | 'participant';
 
+/** Server-computed role for the current viewer (see studies JSON). */
+export type MyStudyRole = 'owner' | 'co_leader' | 'participant' | 'curator';
+
 /** Who may discover or open this study (server-enforced). */
 export type StudyVisibility = 'private' | 'sharable' | 'public';
+
+/** Co-leader row from GET .../assignments.json */
+export interface StudyAssignment {
+  user_id: string;
+  username: string;
+  name: string;
+  email: string;
+}
+
+/** Default sidebar view mode from server hints after opening a study. */
+export function defaultStudyViewMode(study: Study): StudyMode {
+  const role = study.my_study_role;
+  if (role === 'owner') return 'leader';
+  if (role === 'co_leader') return 'co-leader';
+  const modes = study.available_study_modes;
+  if (modes?.includes('leader')) return 'leader';
+  if (modes?.includes('co-leader')) return 'co-leader';
+  return 'participant';
+}
 
 export interface StudyOwnerSummary {
   id: string;
@@ -25,6 +47,9 @@ export interface Study {
   goal: string | null;
   visibility: StudyVisibility;
   capabilities: StudyCapabilities;
+  /** Collaboration labels the UI may offer (RBAC); not sent as a request header. */
+  available_study_modes?: StudyMode[];
+  my_study_role?: MyStudyRole;
   owner?: StudyOwnerSummary;
   created_at?: string;
   updated_at?: string;

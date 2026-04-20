@@ -38,6 +38,56 @@
       <div class="small text-success mb-2">{{vm.copyFeedback()}}</div>
     }
 
+    @if (vm.canManageStudyAccess()) {
+      <div class="border-top border-light pt-3 mt-3">
+        <strong class="small d-block mb-2">Access</strong>
+        <p class="small text-muted mb-2">Co-leaders can edit this study. Add a user by username or email.</p>
+        @if (vm.accessSectionLoading()) {
+          <p class="small text-muted mb-2">Loading…</p>
+        }
+        <ul class="list-group list-group-flush mb-3 small">
+          @for (a of vm.studyAssignments(); track a.user_id) {
+            <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
+              <div>
+                <span class="fw-medium">{{ a.name }}</span>
+                <span class="text-muted ms-1">@{{ a.username }}</span>
+              </div>
+              <button type="button" class="btn btn-sm btn-outline-danger" (click)="vm.removeCoLeader(a.user_id)" [disabled]="vm.accessSectionLoading()">Remove</button>
+            </li>
+          }
+        </ul>
+        <div class="row g-2 align-items-end mb-3">
+          <div class="col">
+            <label class="form-label small mb-1" for="co_leader_invite">Username or email</label>
+            <input id="co_leader_invite" class="form-control form-control-sm" [ngModel]="vm.newCoLeaderInput()" (ngModelChange)="vm.newCoLeaderInput.set($event)" placeholder="username or email" autocomplete="off">
+          </div>
+          <div class="col-auto">
+            <button type="button" class="btn btn-sm btn-primary" (click)="vm.addCoLeader()" [disabled]="vm.accessSectionLoading() || vm.newCoLeaderInput().trim().length === 0">Add co-leader</button>
+          </div>
+        </div>
+        @if (vm.canTransferOwnership() && vm.studyAssignments().length > 0) {
+          <div class="border-top border-light pt-3">
+            <strong class="small d-block mb-2">Transfer leadership</strong>
+            <p class="small text-muted mb-2">Make an existing co-leader the owner. You will become a co-leader.</p>
+            <div class="row g-2 align-items-end">
+              <div class="col">
+                <label class="form-label small mb-1" for="transfer_owner_select">New owner</label>
+                <select id="transfer_owner_select" class="form-select form-select-sm" [ngModel]="vm.transferOwnerUserId()" (ngModelChange)="vm.transferOwnerUserId.set($event)">
+                  <option value="">Select co-leader…</option>
+                  @for (a of vm.studyAssignments(); track a.user_id) {
+                    <option [ngValue]="a.user_id">{{ a.name }} (@{{ a.username }})</option>
+                  }
+                </select>
+              </div>
+              <div class="col-auto">
+                <button type="button" class="btn btn-sm btn-warning" (click)="vm.transferStudyOwnership()" [disabled]="vm.accessSectionLoading() || !vm.transferOwnerUserId()">Transfer</button>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
     <p class="small text-muted mb-0">Verse reader and the Study AI assistant use your organization's default AI Bibles (configured on the server).</p>
 
     @if (vm.canDeleteStudy()) {

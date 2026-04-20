@@ -34,6 +34,9 @@
                   <button type="button" class="btn btn-link p-0 text-start text-truncate" (click)="openOwnedStudy(s.uuid)">{{ s.title }}</button>
                   <div class="d-inline-flex align-items-center gap-2 flex-shrink-0">
                     <span class="text-muted small">{{ formatStudyTotalDuration(s) }}</span>
+                    @if (s.my_study_role === 'co_leader') {
+                      <span class="badge bg-info text-dark">Co-led</span>
+                    }
                     <span class="badge bg-secondary">{{ s.visibility }}</span>
                   </div>
                 </li>

@@ -3,7 +3,6 @@ import { CanActivateFn, Router } from '@angular/router';
 import { map } from 'rxjs/operators';
 import { AuthTokenService } from '../services/auth-token.service';
 import { SessionService } from '../services/session.service';
-import { StudiesUiStateService } from '../services/studies-ui-state.service';
 
 const loginRedirect = (router: Router, returnUrl: string) =>
   router.createUrlTree(['/login'], { queryParams: { returnUrl } });
@@ -61,16 +60,4 @@ export const requireAccessRoute: CanActivateFn = (_route, state) => {
 
 export const requireCurationRoute: CanActivateFn = (_route, state) => {
   return requireSession(state.url, (session, router) => (session.hasCurationPermission() ? true : router.createUrlTree(['/settings/access'])));
-};
-
-/** Study details / AI subroutes: leaders and co-leaders only (matches sidebar controls). */
-export const studyDetailsEditorRoute: CanActivateFn = (_route, state) => {
-  const router = inject(Router);
-  const ui = inject(StudiesUiStateService);
-  return requireSession(state.url, () => {
-    const mode = ui.studyMode();
-    if (mode === 'leader' || mode === 'co-leader') return true;
-    const base = state.url.split('?')[0].replace(/\/(?:details|ai)\/?$/, '');
-    return router.parseUrl(base.length > 0 ? base : '/studies');
-  });
 };

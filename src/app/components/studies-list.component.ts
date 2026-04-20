@@ -9,7 +9,7 @@ import { StudiesUiStateService } from '../services/studies-ui-state.service';
 import { AuthTokenService } from '../services/auth-token.service';
 import { PageMeta, SortDirection } from '../models/pagination';
 import { ServerTableControlsComponent } from './server-table-controls.component';
-import { Study } from '../models/study';
+import { Study, defaultStudyViewMode } from '../models/study';
 import { ToastService } from '../services/toast.service';
 
 @Component({
@@ -64,11 +64,10 @@ export class StudiesListComponent implements OnInit {
   loadStudies(): void {
     this.error.set('');
     this.publicPage.set(1);
-    const mode = this.studyMode();
     const hasToken = !!this.authToken.token()?.trim();
 
     if (hasToken) {
-      this.studiesService.index(mode, { scope: 'owned' }).subscribe({
+      this.studiesService.index({ scope: 'owned' }).subscribe({
         next: (response) => {
           this.ownedStudies.set(response.studies);
           this.loadPublicStudiesOnly();
@@ -87,7 +86,7 @@ export class StudiesListComponent implements OnInit {
   private loadPublicStudiesOnly(): void {
     const q = this.publicListQuery().trim();
     this.studiesService
-      .listPaged(this.studyMode(), {
+      .listPaged({
         scope: 'public',
         sort: this.publicSort(),
         direction: this.publicDirection(),
@@ -155,18 +154,17 @@ export class StudiesListComponent implements OnInit {
       this.error.set('A study title and goal are required.');
       return;
     }
-    this.studyMode.set('leader');
     this.loading.set(true);
-    this.studiesService.create(
-      {
+    this.studiesService
+      .create({
         title: this.createTitle().trim(),
         goal: this.createGoal().trim(),
         visibility: 'private'
-      },
-      this.studyMode()
-    ).subscribe({
+      })
+      .subscribe({
       next: (response) => {
         this.loading.set(false);
+        this.studyMode.set(defaultStudyViewMode(response.study));
         this.toast.success('Saved.');
         void this.router.navigate(['/studies', response.study.uuid]);
       },
@@ -181,13 +179,17 @@ export class StudiesListComponent implements OnInit {
   openStudy(studyUuid: string): void {
     const uuid = studyUuid.trim();
     if (!uuid) return;
+    this.studyMode.set('participant');
     void this.router.navigate(['/studies', uuid]);
   }
 
-  /** Owned studies are opened in leader mode so editing APIs use the correct X-Study-Mode header. */
+  /** My studies: default sidebar view from server RBAC (owner vs co-leader). */
   openOwnedStudy(studyUuid: string): void {
-    this.studyMode.set('leader');
-    this.openStudy(studyUuid);
+    const row = this.ownedStudies().find((s) => s.uuid === studyUuid);
+    this.studyMode.set(row ? defaultStudyViewMode(row) : 'leader');
+    const uuid = studyUuid.trim();
+    if (!uuid) return;
+    void this.router.navigate(['/studies', uuid]);
   }
 
   formatStudyTotalDuration(study: Study): string {

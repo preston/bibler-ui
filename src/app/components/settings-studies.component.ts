@@ -6,8 +6,6 @@ import { PageMeta, SortDirection } from '../models/pagination';
 import { StudiesService } from '../services/studies.service';
 import { ServerTableControlsComponent } from './server-table-controls.component';
 import { ToastService } from '../services/toast.service';
-import { StudiesUiStateService } from '../services/studies-ui-state.service';
-
 @Component({
   selector: 'settings-studies',
   standalone: true,
@@ -33,9 +31,6 @@ export class SettingsStudiesComponent implements OnInit {
   ];
 
   private readonly toast = inject(ToastService);
-  private readonly uiState = inject(StudiesUiStateService);
-
-  readonly studyMode = this.uiState.studyMode;
 
   constructor(private studiesService: StudiesService, private router: Router) {}
 
@@ -46,7 +41,7 @@ export class SettingsStudiesComponent implements OnInit {
   load(resetPage = false): void {
     if (resetPage) this.page.set(1);
     this.loading.set(true);
-    this.studiesService.listPaged(this.studyMode(), {
+    this.studiesService.listPaged({
       scope: 'public',
       q: this.q().trim() || undefined,
       sort: this.sort(),
@@ -71,7 +66,7 @@ export class SettingsStudiesComponent implements OnInit {
   }
 
   deleteStudy(study: Study): void {
-    this.studiesService.destroy(study.uuid, this.studyMode()).subscribe({
+    this.studiesService.destroy(study.uuid).subscribe({
       next: () => {
         this.toast.success('Deleted.');
         this.load();

@@ -49,9 +49,9 @@
                 [ngModel]="studyMode()"
                 (ngModelChange)="changeStudyMode($event)"
               >
-                <option value="leader">Leader</option>
-                <option value="co-leader">Co-Leader</option>
-                <option value="participant">Participant</option>
+                @for (m of availableStudyModesList(); track m) {
+                  <option [ngValue]="m">{{ studyViewModeLabel(m) }}</option>
+                }
               </select>
             </div>
           </div>

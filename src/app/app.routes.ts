@@ -7,7 +7,6 @@ import {
   requireBiblesRoute,
   requireCurationRoute,
   requireSignedInRoute,
-  studyDetailsEditorRoute
 } from './guards/auth.guards';
 
 export const routes: Routes = [
@@ -33,12 +32,12 @@ export const routes: Routes = [
         path: 'details',
         loadComponent: () =>
           import('./components/study-detail-details.component').then((m) => m.StudyDetailDetailsComponent),
-        canActivate: [studyDetailsEditorRoute]
+        canActivate: [requireSignedInRoute]
       },
       {
         path: 'ai',
         loadComponent: () => import('./components/study-detail-ai.component').then((m) => m.StudyDetailAiComponent),
-        canActivate: [studyDetailsEditorRoute]
+        canActivate: [requireSignedInRoute]
       },
       {
         path: 'step/:planItemUuid/commentary',

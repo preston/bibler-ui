@@ -21,6 +21,7 @@ import { Verse } from '../models/verse';
 import {
   Study,
   StudyAnswer,
+  StudyAssignment,
   StudyPlanItem,
   StudyAssistantSuggestion,
   StudyVerse,
@@ -28,7 +29,8 @@ import {
   StudyQuestion,
   StudyMode,
   StudyTask,
-  StudyVisibility
+  StudyVisibility,
+  defaultStudyViewMode
 } from '../models/study';
 
 @Component({
@@ -116,6 +118,11 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
     confirmLabel: string;
     onConfirm: () => void;
   } | null>(null);
+
+  studyAssignments = signal<StudyAssignment[]>([]);
+  accessSectionLoading = signal(false);
+  newCoLeaderInput = signal('');
+  transferOwnerUserId = signal<string>('');
 
   assistantMessage = signal('');
   /** When set to a positive integer, server scales suggestion durations to sum to this many minutes. */
@@ -224,10 +231,29 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
     return all.filter((b) => uuids.has(b.uuid));
   });
 
-  /** Details route / edit UI is for leaders and co-leaders only. */
+  /** Details route / edit UI: leader/co-leader view and server allows editing. */
   readonly showStudyDetailsEdit = computed(() => {
     const m = this.studyMode();
-    return m === 'leader' || m === 'co-leader';
+    if (m === 'participant') return false;
+    return this.study()?.capabilities.can_edit_structure ?? false;
+  });
+
+  /** Sidebar view dropdown options from server RBAC. */
+  readonly availableStudyModesList = computed((): StudyMode[] => {
+    const s = this.study();
+    const modes = s?.available_study_modes;
+    return modes?.length ? modes : (['participant'] as StudyMode[]);
+  });
+
+  readonly canManageStudyAccess = computed(() => {
+    if (this.studyMode() === 'participant') return false;
+    const r = this.study()?.my_study_role;
+    return r === 'owner' || r === 'co_leader' || r === 'curator';
+  });
+
+  readonly canTransferOwnership = computed(() => {
+    if (this.studyMode() === 'participant') return false;
+    return this.study()?.my_study_role === 'owner';
   });
 
   constructor(
@@ -368,8 +394,11 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
   }
 
   changeStudyMode(mode: StudyMode): void {
-    this.studyMode.set(mode);
-    if (mode === 'participant') {
+    const st = this.study();
+    const allowed = st?.available_study_modes ?? (['participant'] as StudyMode[]);
+    const next = allowed.includes(mode) ? mode : (allowed[0] ?? 'participant');
+    this.studyMode.set(next);
+    if (next === 'participant') {
       const tree = this.router.parseUrl(this.router.url);
       const primary = tree.root.children['primary'];
       const segments = primary?.segments.map((s) => s.path) ?? [];
@@ -381,10 +410,6 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
         void this.router.navigate(['/studies', segments[1]], { replaceUrl: true });
       }
     }
-    const currentStudy = this.study();
-    if (currentStudy) {
-      this.openStudy(currentStudy.uuid);
-    }
   }
 
   openStudy(studyUuid?: string): void {
@@ -392,7 +417,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
     const uuid = (studyUuid ?? this.studyUuidInput()).trim();
     if (!uuid) return;
     this.loading.set(true);
-    this.studiesService.show(uuid, this.studyMode()).subscribe({
+    this.studiesService.show(uuid).subscribe({
       next: (response) => {
         if (requestSeq !== this.openStudyRequestSeq) return;
         this.loading.set(false);
@@ -401,7 +426,12 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
         this.editTitle.set(response.study.title ?? '');
         this.editGoal.set(response.study.goal ?? '');
         this.editVisibility.set(response.study.visibility ?? 'private');
-        const mode = this.studyMode();
+        const allowed = response.study.available_study_modes ?? (['participant'] as StudyMode[]);
+        let mode = this.studyMode();
+        if (!allowed.includes(mode)) {
+          mode = defaultStudyViewMode(response.study);
+          this.studyMode.set(mode);
+        }
         const tree = this.router.parseUrl(this.router.url);
         const primary = tree.root.children['primary'];
         const segments = primary?.segments.map((s) => s.path) ?? [];
@@ -414,6 +444,17 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
             void this.router.navigate(['/studies', response.study.uuid], { replaceUrl: true });
           }
         }
+        {
+          const segs = this.router.parseUrl(this.router.url.split('?')[0]).root.children['primary']?.segments.map((s) => s.path) ?? [];
+          if (
+            segs[0] === 'studies' &&
+            segs[1] === response.study.uuid &&
+            (segs[2] === 'details' || segs[2] === 'ai') &&
+            mode === 'participant'
+          ) {
+            void this.router.navigate(['/studies', response.study.uuid], { replaceUrl: true });
+          }
+        }
         this.loadBooks();
         this.loadStudyWorkspace(response.study.uuid, {
           selectFirstPlanOnOpenForParticipant:
@@ -421,6 +462,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
             !this.selectedPlanItemUuid() &&
             !this.isViewingStepRoute(response.study.uuid)
         });
+        this.refreshStudyAssignments(response.study);
       },
       error: () => {
         if (requestSeq !== this.openStudyRequestSeq) return;
@@ -440,8 +482,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
         title: this.editTitle().trim(),
         goal: this.editGoal().trim(),
         visibility: this.editVisibility()
-      },
-      this.studyMode()
+      }
     ).subscribe({
       next: (response) => {
         this.loading.set(false);
@@ -467,12 +508,11 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
     }
   ): void {
     const loadSeq = ++this.workspaceLoadSeq;
-    const rm = this.studyMode();
-    this.loadStudyVersesWorkspace(studyUuid, rm, loadSeq);
-    this.loadCommentariesWorkspace(studyUuid, rm, loadSeq);
-    this.loadQuestionsWorkspace(studyUuid, rm, loadSeq);
-    this.loadTasksWorkspace(studyUuid, rm, loadSeq);
-    this.studiesService.planItems(studyUuid, rm).subscribe((response) => {
+    this.loadStudyVersesWorkspace(studyUuid, loadSeq);
+    this.loadCommentariesWorkspace(studyUuid, loadSeq);
+    this.loadQuestionsWorkspace(studyUuid, loadSeq);
+    this.loadTasksWorkspace(studyUuid, loadSeq);
+    this.studiesService.planItems(studyUuid).subscribe((response) => {
       if (loadSeq !== this.workspaceLoadSeq) return;
       this.planItems.set(response.plan_items);
       const currentSelection = this.selectedPlanItemUuid();
@@ -509,8 +549,8 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
     });
   }
 
-  private loadStudyVersesWorkspace(studyUuid: string, mode: StudyMode, loadSeq: number): void {
-    this.studiesService.studyVerses(studyUuid, mode).subscribe((response) => {
+  private loadStudyVersesWorkspace(studyUuid: string, loadSeq: number): void {
+    this.studiesService.studyVerses(studyUuid).subscribe((response) => {
       if (loadSeq !== this.workspaceLoadSeq) return;
       this.studyVerses.set(response.verses);
       const drafts: Record<string, string> = {};
@@ -519,8 +559,8 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
     });
   }
 
-  private loadCommentariesWorkspace(studyUuid: string, mode: StudyMode, loadSeq: number): void {
-    this.studiesService.commentaries(studyUuid, mode).subscribe((response) => {
+  private loadCommentariesWorkspace(studyUuid: string, loadSeq: number): void {
+    this.studiesService.commentaries(studyUuid).subscribe((response) => {
       if (loadSeq !== this.workspaceLoadSeq) return;
       this.commentaries.set(response.commentaries);
       const drafts: Record<string, { title: string; body: string; prompt: string }> = {};
@@ -531,8 +571,8 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
     });
   }
 
-  private loadQuestionsWorkspace(studyUuid: string, mode: StudyMode, loadSeq: number): void {
-    this.studiesService.questions(studyUuid, mode).subscribe((response) => {
+  private loadQuestionsWorkspace(studyUuid: string, loadSeq: number): void {
+    this.studiesService.questions(studyUuid).subscribe((response) => {
       if (loadSeq !== this.workspaceLoadSeq) return;
       this.questions.set(response.questions);
       const drafts: Record<string, { prompt: string; question_type: string; guidance_notes: string }> = {};
@@ -544,8 +584,8 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
     });
   }
 
-  private loadTasksWorkspace(studyUuid: string, mode: StudyMode, loadSeq: number): void {
-    this.studiesService.tasks(studyUuid, mode).subscribe((response) => {
+  private loadTasksWorkspace(studyUuid: string, loadSeq: number): void {
+    this.studiesService.tasks(studyUuid).subscribe((response) => {
       if (loadSeq !== this.workspaceLoadSeq) return;
       this.tasks.set(response.tasks);
       const drafts: Record<string, { instruction: string; task_type: string; assignee_label: string }> = {};
@@ -662,8 +702,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
         {
           verse_uuid: verse.uuid,
           note: ''
-        },
-        this.studyMode()
+        }
       )
       .subscribe({
         next: () => {
@@ -683,7 +722,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
       body: this.commentaryBody().trim(),
       prompt: this.commentaryPrompt().trim(),
       context: {}
-    }, this.studyMode()).subscribe({
+    }).subscribe({
       next: () => {
         this.commentaryTitle.set('');
         this.commentaryBody.set('');
@@ -702,8 +741,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
     this.studiesService.aiGenerateCommentary(
       currentStudy.uuid,
       this.aiCommand().trim(),
-      this.commentaryPrompt().trim(),
-      this.studyMode()
+      this.commentaryPrompt().trim()
     ).subscribe((response) => {
       this.aiOutput.set(response.output ?? response.error ?? '');
       if (response.output) {
@@ -713,7 +751,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
           body: response.output,
           prompt: this.aiCommand().trim(),
           context: {}
-        }, this.studyMode()).subscribe({
+        }).subscribe({
           next: () => {
             this.toast.success('Saved.');
             this.loadStudyWorkspace(currentStudy.uuid);
@@ -731,7 +769,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
       prompt: this.questionPrompt().trim(),
       question_type: this.questionType(),
       guidance_notes: this.questionGuidance().trim()
-    }, this.studyMode()).subscribe({
+    }).subscribe({
       next: () => {
         this.questionPrompt.set('');
         this.questionGuidance.set('');
@@ -750,7 +788,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
       task_type: this.taskType(),
       status: 'open',
       assignee_label: this.taskAssignee().trim()
-    }, this.studyMode()).subscribe({
+    }).subscribe({
       next: () => {
         this.taskInstruction.set('');
         this.taskAssignee.set('');
@@ -764,7 +802,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
   updateTaskStatus(task: StudyTask, status: string): void {
     const currentStudy = this.study();
     if (!currentStudy) return;
-    this.studiesService.updateTask(currentStudy.uuid, task.uuid, { status }, this.studyMode()).subscribe({
+    this.studiesService.updateTask(currentStudy.uuid, task.uuid, { status }).subscribe({
       next: () => {
         this.toast.success('Saved.');
         this.loadStudyWorkspace(currentStudy.uuid);
@@ -783,7 +821,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
     const temp = current[index];
     current[index] = current[targetIndex];
     current[targetIndex] = temp;
-    this.studiesService.reorderQuestions(currentStudy.uuid, current.map((q) => q.uuid), this.studyMode()).subscribe({
+    this.studiesService.reorderQuestions(currentStudy.uuid, current.map((q) => q.uuid)).subscribe({
       next: (response) => {
         this.questions.set(response.questions);
         this.toast.success('Saved.');
@@ -802,7 +840,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
     const temp = current[index];
     current[index] = current[targetIndex];
     current[targetIndex] = temp;
-    this.studiesService.reorderTasks(currentStudy.uuid, current.map((t) => t.uuid), this.studyMode()).subscribe({
+    this.studiesService.reorderTasks(currentStudy.uuid, current.map((t) => t.uuid)).subscribe({
       next: (response) => {
         this.tasks.set(response.tasks);
         this.toast.success('Saved.');
@@ -814,7 +852,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
   loadAnswers(questionUuid: string, loadSeq?: number): void {
     const currentStudy = this.study();
     if (!currentStudy) return;
-    this.studiesService.answers(currentStudy.uuid, questionUuid, this.studyMode()).subscribe((response) => {
+    this.studiesService.answers(currentStudy.uuid, questionUuid).subscribe((response) => {
       if (loadSeq !== undefined && loadSeq !== this.workspaceLoadSeq) return;
       this.answersByQuestion.update((current) => ({
         ...current,
@@ -835,7 +873,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
     this.studiesService.createAnswer(currentStudy.uuid, questionUuid, {
       response: draft,
       visibility: 'study'
-    }, this.studyMode()).subscribe({
+    }).subscribe({
       next: () => {
         this.setAnswerDraft(questionUuid, '');
         this.toast.success('Saved.');
@@ -853,7 +891,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
       item_type: 'custom',
       notes: '',
       duration: this.defaultDurationForItemType('custom')
-    }, this.studyMode()).subscribe({
+    }).subscribe({
       next: (r) => {
         this.toast.success('Saved.');
         this.loadStudyWorkspace(st.uuid, {
@@ -880,7 +918,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
       item_type: itemType,
       notes: '',
       duration: this.defaultDurationForItemType(itemType)
-    }, this.studyMode()).subscribe({
+    }).subscribe({
       next: (r) => {
         this.toast.success('Saved.');
         this.loadStudyWorkspace(st.uuid, {
@@ -901,7 +939,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
     const temp = current[i];
     current[i] = current[j];
     current[j] = temp;
-    this.studiesService.reorderPlanItems(st.uuid, current.map((x) => x.uuid), this.studyMode()).subscribe({
+    this.studiesService.reorderPlanItems(st.uuid, current.map((x) => x.uuid)).subscribe({
       next: (r) => {
         this.planItems.set(r.plan_items);
         this.toast.success('Saved.');
@@ -916,7 +954,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
     if (!st) return;
     const items = [...this.planItems()];
     moveItemInArray(items, event.previousIndex, event.currentIndex);
-    this.studiesService.reorderPlanItems(st.uuid, items.map((x) => x.uuid), this.studyMode()).subscribe({
+    this.studiesService.reorderPlanItems(st.uuid, items.map((x) => x.uuid)).subscribe({
       next: (r) => {
         this.planItems.set(r.plan_items);
         this.toast.success('Saved.');
@@ -935,7 +973,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
   saveStudyVerseNote(sv: StudyVerse): void {
     const st = this.study();
     if (!st) return;
-    this.studiesService.updateStudyVerse(st.uuid, sv.uuid, { note: this.studyVerseNoteDrafts()[sv.uuid] ?? '' }, this.studyMode()).subscribe({
+    this.studiesService.updateStudyVerse(st.uuid, sv.uuid, { note: this.studyVerseNoteDrafts()[sv.uuid] ?? '' }).subscribe({
       next: () => {
         this.toast.success('Saved.');
         this.loadStudyWorkspace(st.uuid);
@@ -956,7 +994,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
     if (!st) return;
     const d = this.commentaryDrafts()[commentary.uuid];
     if (!d) return;
-    this.studiesService.updateCommentary(st.uuid, commentary.uuid, { title: d.title.trim(), body: d.body.trim(), prompt: d.prompt.trim() }, this.studyMode()).subscribe({
+    this.studiesService.updateCommentary(st.uuid, commentary.uuid, { title: d.title.trim(), body: d.body.trim(), prompt: d.prompt.trim() }).subscribe({
       next: () => {
         this.toast.success('Saved.');
         this.loadStudyWorkspace(st.uuid);
@@ -981,7 +1019,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
       prompt: d.prompt.trim(),
       question_type: d.question_type,
       guidance_notes: d.guidance_notes.trim()
-    }, this.studyMode()).subscribe({
+    }).subscribe({
       next: () => {
         this.toast.success('Saved.');
         this.loadStudyWorkspace(st.uuid);
@@ -1006,7 +1044,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
       instruction: d.instruction.trim(),
       task_type: d.task_type,
       assignee_label: d.assignee_label.trim()
-    }, this.studyMode()).subscribe({
+    }).subscribe({
       next: () => {
         this.toast.success('Saved.');
         this.loadStudyWorkspace(st.uuid);
@@ -1048,7 +1086,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
       notes: d.notes.trim(),
       lyrics: item.item_type === 'worship' ? d.lyrics.trim() : null,
       duration: this.durationPayloadFromInput(d.duration)
-    }, this.studyMode()).subscribe({
+    }).subscribe({
       next: () => {
         this.toast.success('Saved.');
         this.loadStudyWorkspace(st.uuid);
@@ -1072,7 +1110,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
     const current = this.selectedPlanItem();
     const next = this.planItemNavNext();
     if (!st || !current || !next || !this.session.isLoggedIn()) return;
-    this.studiesService.updatePlanItemState(st.uuid, current.uuid, 'complete', this.studyMode()).subscribe({
+    this.studiesService.updatePlanItemState(st.uuid, current.uuid, 'complete').subscribe({
       next: (r) => {
         const ms = r.plan_item.my_status;
         this.planItems.update((items) =>
@@ -1127,7 +1165,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
 
   private performDeleteEntireStudy(studyUuid: string): void {
     this.loading.set(true);
-    this.studiesService.destroy(studyUuid, this.studyMode()).subscribe({
+    this.studiesService.destroy(studyUuid).subscribe({
       next: () => {
         this.loading.set(false);
         this.toast.success('Study deleted.');
@@ -1149,14 +1187,17 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
   }
 
   canEditStructure(): boolean {
+    if (this.studyMode() === 'participant') return false;
     return this.study()?.capabilities.can_edit_structure ?? false;
   }
 
   canManageTasks(): boolean {
+    if (this.studyMode() === 'participant') return false;
     return this.study()?.capabilities.can_manage_tasks ?? false;
   }
 
   canReorderContent(): boolean {
+    if (this.studyMode() === 'participant') return false;
     return this.study()?.capabilities.can_reorder_content ?? false;
   }
 
@@ -1203,7 +1244,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
     const td = this.assistantTargetDurationMinutes();
     this.assistantRunSub?.unsubscribe();
     this.assistantRunSub = this.studiesService
-      .runStudyAssistantStream(st.uuid, msg, this.studyMode(), {
+      .runStudyAssistantStream(st.uuid, msg, {
         targetDurationMinutes: td != null && td > 0 ? td : null
       })
       .subscribe({
@@ -1372,7 +1413,6 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
     const st = this.study();
     if (!st) return EMPTY;
     const p = s.payload;
-    const rm = this.studyMode();
 
     if (s.type === 'add_worship') {
       return this.createPlanItemFromSuggestion$(st.uuid, s, { anchor: s.id }).pipe(
@@ -1395,7 +1435,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
               verse_text: p['verse_text'] != null ? String(p['verse_text']) : null,
               note: p['note'] != null ? String(p['note']) : ''
             };
-        pipe$ = this.studiesService.createStudyVerse(st.uuid, versePayload, rm).pipe(
+        pipe$ = this.studiesService.createStudyVerse(st.uuid, versePayload).pipe(
           switchMap((r) => this.createPlanItemFromSuggestion$(st.uuid, s, {
             anchor: s.id,
             resource_type: 'study_verse',
@@ -1414,8 +1454,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
               body: p['body'] != null ? String(p['body']) : null,
               prompt: p['prompt'] != null ? String(p['prompt']) : null,
               context: {}
-            },
-            rm
+            }
           )
           .pipe(
             switchMap((r) => this.createPlanItemFromSuggestion$(st.uuid, s, {
@@ -1433,8 +1472,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
               prompt: String(p['prompt'] ?? ''),
               question_type: String(p['question_type'] ?? 'discussion'),
               guidance_notes: p['guidance_notes'] != null ? String(p['guidance_notes']) : ''
-            },
-            rm
+            }
           )
           .pipe(
             switchMap((r) => this.createPlanItemFromSuggestion$(st.uuid, s, {
@@ -1453,8 +1491,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
               task_type: String(p['task_type'] ?? 'discussion'),
               status: String(p['status'] ?? 'open'),
               assignee_label: p['assignee_label'] != null ? String(p['assignee_label']) : null
-            },
-            rm
+            }
           )
           .pipe(
             switchMap((r) => this.createPlanItemFromSuggestion$(st.uuid, s, {
@@ -1512,8 +1549,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
         notes: s.summary,
         duration: this.normalizeDuration(s.duration) ?? this.defaultDurationForItemType(kind),
         ...extraFields
-      },
-      this.studyMode()
+      }
     );
   }
 
@@ -1582,7 +1618,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
     const cur = item.my_status ?? 'todo';
     const idx = StudyDetailComponent.PLAN_PROGRESS_ORDER.indexOf(cur);
     const next = StudyDetailComponent.PLAN_PROGRESS_ORDER[(idx + 1) % StudyDetailComponent.PLAN_PROGRESS_ORDER.length];
-    this.studiesService.updatePlanItemState(st.uuid, item.uuid, next, this.studyMode()).subscribe({
+    this.studiesService.updatePlanItemState(st.uuid, item.uuid, next).subscribe({
       next: (r) => {
         const ms = r.plan_item.my_status;
         this.planItems.update((items) =>
@@ -1610,7 +1646,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
     from(items)
       .pipe(
         concatMap((item) =>
-          this.studiesService.updatePlanItemState(st.uuid, item.uuid, status, this.studyMode()).pipe(
+          this.studiesService.updatePlanItemState(st.uuid, item.uuid, status).pipe(
             tap((r) => {
               const ms = r.plan_item.my_status;
               this.planItems.update((list) =>
@@ -1663,6 +1699,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
   }
 
   canDeleteContent(): boolean {
+    if (this.studyMode() === 'participant') return false;
     return this.study()?.capabilities.can_delete_content ?? false;
   }
 
@@ -1677,7 +1714,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
   }
 
   private performDeletePlanItem(studyUuid: string, planItemUuid: string): void {
-    this.studiesService.destroyPlanItem(studyUuid, planItemUuid, this.studyMode()).subscribe({
+    this.studiesService.destroyPlanItem(studyUuid, planItemUuid).subscribe({
       next: () => {
         if (this.selectedPlanItemUuid() === planItemUuid) {
           this.selectedPlanItemUuid.set('');
@@ -1704,7 +1741,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
   }
 
   private performDeleteCommentary(studyUuid: string, commentaryUuid: string): void {
-    this.studiesService.destroyCommentary(studyUuid, commentaryUuid, this.studyMode()).subscribe({
+    this.studiesService.destroyCommentary(studyUuid, commentaryUuid).subscribe({
       next: () => {
         this.toast.success('Deleted.');
         this.loadStudyWorkspace(studyUuid);
@@ -1728,7 +1765,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
   }
 
   private performDeleteStudyVerse(studyUuid: string, studyVerseUuid: string): void {
-    this.studiesService.destroyStudyVerse(studyUuid, studyVerseUuid, this.studyMode()).subscribe({
+    this.studiesService.destroyStudyVerse(studyUuid, studyVerseUuid).subscribe({
       next: () => {
         this.toast.success('Deleted.');
         this.loadStudyWorkspace(studyUuid);
@@ -1751,7 +1788,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
   }
 
   private performDeleteQuestion(studyUuid: string, questionUuid: string): void {
-    this.studiesService.destroyQuestion(studyUuid, questionUuid, this.studyMode()).subscribe({
+    this.studiesService.destroyQuestion(studyUuid, questionUuid).subscribe({
       next: () => {
         this.toast.success('Deleted.');
         this.loadStudyWorkspace(studyUuid);
@@ -1774,7 +1811,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
   }
 
   private performDeleteTask(studyUuid: string, taskUuid: string): void {
-    this.studiesService.destroyTask(studyUuid, taskUuid, this.studyMode()).subscribe({
+    this.studiesService.destroyTask(studyUuid, taskUuid).subscribe({
       next: () => {
         this.toast.success('Deleted.');
         this.loadStudyWorkspace(studyUuid);
@@ -1788,7 +1825,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
 
   deleteAnswer(questionUuid: string, answer: StudyAnswer): void {
     const st = this.study();
-    if (!st || this.studyMode() !== 'leader') return;
+    if (!st || !st.capabilities.can_delete_content || this.studyMode() === 'participant') return;
     this.openConfirmation(
       'Delete answer?',
       'Delete this answer?',
@@ -1797,7 +1834,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
   }
 
   private performDeleteAnswer(studyUuid: string, questionUuid: string, answerUuid: string): void {
-    this.studiesService.destroyAnswer(studyUuid, questionUuid, answerUuid, this.studyMode()).subscribe({
+    this.studiesService.destroyAnswer(studyUuid, questionUuid, answerUuid).subscribe({
       next: () => {
         this.toast.success('Deleted.');
         this.loadAnswers(questionUuid);
@@ -1805,6 +1842,96 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
       error: () => {
         this.error.set('Could not delete answer.');
         this.toast.danger('Could not delete answer.');
+      }
+    });
+  }
+
+  studyViewModeLabel(mode: StudyMode): string {
+    switch (mode) {
+      case 'leader':
+        return 'Leader';
+      case 'co-leader':
+        return 'Co-Leader';
+      case 'participant':
+        return 'Participant';
+    }
+  }
+
+  refreshStudyAssignments(st: Study): void {
+    const r = st.my_study_role;
+    if (r !== 'owner' && r !== 'co_leader' && r !== 'curator') {
+      this.studyAssignments.set([]);
+      return;
+    }
+    this.accessSectionLoading.set(true);
+    this.studiesService.listAssignments(st.uuid).subscribe({
+      next: (res) => {
+        this.accessSectionLoading.set(false);
+        this.studyAssignments.set(res.assignments);
+      },
+      error: () => {
+        this.accessSectionLoading.set(false);
+        this.studyAssignments.set([]);
+      }
+    });
+  }
+
+  addCoLeader(): void {
+    const st = this.study();
+    const raw = this.newCoLeaderInput().trim();
+    if (!st || !raw) return;
+    const looksLikeEmail = raw.includes('@');
+    this.accessSectionLoading.set(true);
+    this.studiesService
+      .createAssignment(st.uuid, looksLikeEmail ? { email: raw } : { username: raw })
+      .subscribe({
+        next: () => {
+          this.accessSectionLoading.set(false);
+          this.newCoLeaderInput.set('');
+          this.toast.success('Co-leader added.');
+          this.refreshStudyAssignments(st);
+        },
+        error: (err: unknown) => {
+          this.accessSectionLoading.set(false);
+          this.toastHttpError(err, 'Could not add co-leader.');
+        }
+      });
+  }
+
+  removeCoLeader(userId: string): void {
+    const st = this.study();
+    if (!st) return;
+    this.accessSectionLoading.set(true);
+    this.studiesService.destroyAssignment(st.uuid, userId).subscribe({
+      next: () => {
+        this.accessSectionLoading.set(false);
+        this.toast.success('Removed.');
+        this.refreshStudyAssignments(st);
+      },
+      error: (err: unknown) => {
+        this.accessSectionLoading.set(false);
+        this.toastHttpError(err, 'Could not remove co-leader.');
+      }
+    });
+  }
+
+  transferStudyOwnership(): void {
+    const st = this.study();
+    const uid = this.transferOwnerUserId().trim();
+    if (!st || !uid) return;
+    this.accessSectionLoading.set(true);
+    this.studiesService.transferOwner(st.uuid, uid).subscribe({
+      next: (res) => {
+        this.accessSectionLoading.set(false);
+        this.study.set(res.study);
+        this.transferOwnerUserId.set('');
+        this.studyMode.set(defaultStudyViewMode(res.study));
+        this.toast.success('Leadership transferred.');
+        this.openStudy(res.study.uuid);
+      },
+      error: (err: unknown) => {
+        this.accessSectionLoading.set(false);
+        this.toastHttpError(err, 'Could not transfer ownership.');
       }
     });
   }
