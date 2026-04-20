@@ -30,13 +30,12 @@ export interface Study {
   created_at?: string;
   updated_at?: string;
   ai_default_reference_bibles?: Record<string, unknown>;
-  selected_bible_uuids?: string[];
   total_duration_minutes?: number;
 }
 
 export interface StudyAssistantSuggestion {
   id: string;
-  type: 'add_verse' | 'add_commentary' | 'add_question' | 'add_task';
+  type: 'add_verse' | 'add_commentary' | 'add_question' | 'add_task' | 'add_worship';
   title: string;
   summary: string;
   payload: Record<string, unknown>;
@@ -48,7 +47,7 @@ export interface StudyAssistantSuggestion {
 export interface StudyPlanItem {
   uuid: string;
   title: string;
-  item_type: 'verse' | 'commentary' | 'question' | 'task' | 'custom';
+  item_type: 'verse' | 'commentary' | 'question' | 'task' | 'custom' | 'worship';
   notes: string | null;
   duration?: number | null;
   position: number;
@@ -65,6 +64,8 @@ export interface StudyAssistantSseMessage {
 
 export interface StudyVerse {
   uuid: string;
+  /** Canonical verse row in the Bible database; text is resolved server-side when set */
+  verse_uuid?: string | null;
   bible_uuid: string;
   book_uuid: string;
   chapter: number;

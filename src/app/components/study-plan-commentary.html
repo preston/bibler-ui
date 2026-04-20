@@ -10,7 +10,15 @@
       <div class="mb-2">
         <input class="form-control mb-2" [ngModel]="vm.commentaryTitle()" (ngModelChange)="vm.commentaryTitle.set($event)" placeholder="Commentary title" />
         <textarea class="form-control mb-2" rows="3" [ngModel]="vm.commentaryBody()" (ngModelChange)="vm.commentaryBody.set($event)" placeholder="Manual commentary"></textarea>
-        <button class="btn btn-outline-primary btn-sm" type="button" (click)="vm.createManualCommentary()">Save Commentary</button>
+        <button
+          class="btn btn-outline-primary btn-sm"
+          type="button"
+          (click)="vm.createManualCommentary()"
+          title="Save commentary"
+          aria-label="Save commentary"
+        >
+          <span class="bi bi-floppy" aria-hidden="true"></span>
+        </button>
       </div>
     }
     <div class="mb-2">
@@ -56,9 +64,25 @@
               </div>
               <div class="col-md-2">
                 <div class="d-flex flex-column gap-1">
-                  <button class="btn btn-sm btn-outline-primary w-100" type="button" (click)="vm.saveCommentary(commentary)">Save</button>
+                  <button
+                    class="btn btn-sm btn-outline-primary w-100"
+                    type="button"
+                    (click)="vm.saveCommentary(commentary)"
+                    title="Save"
+                    aria-label="Save commentary"
+                  >
+                    <span class="bi bi-floppy" aria-hidden="true"></span>
+                  </button>
                   @if (vm.canDeleteContent()) {
-                    <button class="btn btn-sm btn-outline-danger w-100" type="button" (click)="vm.deleteCommentary(commentary)">Delete</button>
+                    <button
+                      class="btn btn-sm btn-outline-danger w-100"
+                      type="button"
+                      (click)="vm.deleteCommentary(commentary)"
+                      title="Delete"
+                      aria-label="Delete commentary"
+                    >
+                      <span class="bi bi-trash" aria-hidden="true"></span>
+                    </button>
                   }
                 </div>
               </div>

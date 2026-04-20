@@ -6,16 +6,16 @@
         <div class="card-header"><strong>Create New Study</strong></div>
         <div class="card-body">
           @if (isSignedIn()) {
-            <div class="row g-2">
-              <div class="col-md-6">
+            <div class="row g-2 align-items-end">
+              <div class="col-12 col-md">
                 <input class="form-control" [ngModel]="createTitle()" (ngModelChange)="createTitle.set($event)" placeholder="Study title" autofocus>
               </div>
-              <div class="col-md-6">
+              <div class="col-12 col-md">
                 <input class="form-control" [ngModel]="createGoal()" (ngModelChange)="createGoal.set($event)" placeholder="Goal">
               </div>
-            </div>
-            <div class="mt-2">
-              <button class="btn btn-success" type="button" (click)="createStudy()" [disabled]="!canCreateStudy() || loading()">Create Study</button>
+              <div class="col-12 col-md-auto">
+                <button class="btn btn-success" type="button" (click)="createStudy()" [disabled]="!canCreateStudy() || loading()">Create Study</button>
+              </div>
             </div>
           } @else {
             <a class="btn btn-primary" routerLink="/login" [queryParams]="{ returnUrl: '/studies' }">Log in</a>

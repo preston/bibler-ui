@@ -40,7 +40,7 @@
                   <input type="checkbox" class="form-check-input" [checked]="r.curation" (change)="toggleFlag(r, 'curation', $any($event.target).checked)" />
                 </td>
                 <td>
-                  <button type="button" class="btn btn-outline-danger btn-sm" (click)="deleteRole(r)">Delete</button>
+                  <button type="button" class="btn btn-outline-danger btn-sm" (click)="requestDeleteRole(r)">Delete</button>
                 </td>
               </tr>
             }
@@ -85,3 +85,24 @@
     }
   </div>
 </div>
+
+@if (pendingDeleteRole(); as role) {
+  <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="deleteRoleModalTitle">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deleteRoleModalTitle">Delete role?</h5>
+          <button type="button" class="btn-close" aria-label="Close" (click)="cancelDeleteRole()"></button>
+        </div>
+        <div class="modal-body">
+          Delete role "{{ role.name }}"?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" (click)="cancelDeleteRole()">Cancel</button>
+          <button type="button" class="btn btn-danger" (click)="confirmDeleteRole()">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-backdrop fade show"></div>
+}

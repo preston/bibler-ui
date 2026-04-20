@@ -1,6 +1,6 @@
 // Author: Preston Lee
 
-import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { CommonModule } from '@angular/common';
@@ -67,6 +67,10 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
   selectedChapter = signal<number>(1);
 
   studyVerses = signal<StudyVerse[]>([]);
+  /** Book names by book UUID for saved verses (verses may use any bible; `books()` only lists the reader picker bible). */
+  studyVerseBookNamesByUuid = signal<Record<string, string>>({});
+  private bibleUuidsBookListFetched = new Set<string>();
+  private bibleUuidsBookListInFlight = new Set<string>();
   commentaries = signal<StudyCommentary[]>([]);
   questions = signal<StudyQuestion[]>([]);
   tasks = signal<StudyTask[]>([]);
@@ -98,8 +102,16 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
   answerDrafts = signal<Record<string, string>>({});
   error = signal('');
   loading = signal(false);
+  pendingConfirmation = signal<{
+    title: string;
+    message: string;
+    confirmLabel: string;
+    onConfirm: () => void;
+  } | null>(null);
 
   assistantMessage = signal('');
+  /** When set to a positive integer, server scales suggestion durations to sum to this many minutes. */
+  assistantTargetDurationMinutes = signal<number | null>(null);
   assistantSuggestions = signal<StudyAssistantSuggestion[]>([]);
   dismissedSuggestionIds = signal<Set<string>>(new Set());
   assistantLoading = signal(false);
@@ -108,13 +120,6 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
   assistantActivityPhase = signal('');
   /** Human-readable search summary after plan / DB search */
   assistantSearchSummary = signal('');
-  /** Truncated live model output during streaming rounds (not scripture; activity only) */
-  assistantStreamPreview = signal('');
-  selectedReferenceBibleUuids = signal<string[]>([]);
-  showReferenceBibleSelector = signal(false);
-  selectedStudyBibleUuids = signal<string[]>([]);
-  studyBibleFilter = signal('');
-  showStudyBibleDropdown = signal(false);
 
   private assistantRunSub: Subscription | undefined;
   private openStudyRequestSeq = 0;
@@ -126,6 +131,37 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
   });
 
   selectedPlanItem = computed(() => this.planItems().find((x) => x.uuid === this.selectedPlanItemUuid()) ?? null);
+
+  /** Previous step in plan order when viewing a plan item; null if none. */
+  readonly planItemNavPrevious = computed((): StudyPlanItem | null => {
+    const items = this.planItems();
+    const sel = this.selectedPlanItemUuid();
+    if (!sel) return null;
+    const idx = items.findIndex((x) => x.uuid === sel);
+    if (idx <= 0) return null;
+    return items[idx - 1] ?? null;
+  });
+
+  /** Next step in plan order when viewing a plan item; null if none. */
+  readonly planItemNavNext = computed((): StudyPlanItem | null => {
+    const items = this.planItems();
+    const sel = this.selectedPlanItemUuid();
+    if (!sel) return null;
+    const idx = items.findIndex((x) => x.uuid === sel);
+    if (idx < 0 || idx >= items.length - 1) return null;
+    return items[idx + 1] ?? null;
+  });
+
+  /** True when viewing a plan item and at least one of Previous/Next applies. */
+  readonly showPlanItemStepNav = computed(
+    () => this.selectedPlanItem() != null && (this.planItemNavPrevious() != null || this.planItemNavNext() != null)
+  );
+
+  /** `ngTemplateOutlet` context: margin above step content. */
+  readonly planItemStepNavContextTop = { marginClass: 'mb-3' };
+  /** `ngTemplateOutlet` context: margin below step content. */
+  readonly planItemStepNavContextBottom = { marginClass: 'mt-3' };
+
   readonly totalEstimatedMinutes = computed(() =>
     this.planItems().reduce((sum, item) => sum + (this.itemDisplayDuration(item) ?? 0), 0)
   );
@@ -163,24 +199,14 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
     if (rest[0] === 'step' && rest[2]) return rest[2] as StudyPlanItem['item_type'];
     return 'study';
   });
-  filteredStudyBibles = computed(() => {
-    const q = this.studyBibleFilter().trim().toLowerCase();
-    if (!q) return this.bibles();
-    return this.bibles().filter((b) =>
-      b.name.toLowerCase().includes(q) ||
-      b.uuid.toLowerCase().includes(q) ||
-      (b.language ?? '').toLowerCase().includes(q) ||
-      (b.abbreviation ?? '').toLowerCase().includes(q)
-    );
-  });
+  /** Bibles available in the reader: server AI defaults only (see study.ai_default_reference_bibles). */
   scopedBibles = computed(() => {
-    const uuids = new Set(this.selectedStudyBibleUuids());
-    if (uuids.size === 0) return this.bibles();
-    return this.bibles().filter((b) => uuids.has(b.uuid));
-  });
-  selectedStudyBiblePills = computed(() => {
-    const selected = new Set(this.selectedStudyBibleUuids());
-    return this.bibles().filter((b) => selected.has(b.uuid));
+    const st = this.study();
+    const all = this.bibles();
+    if (!st || all.length === 0) return all;
+    const uuids = new Set(this.aiDefaultBibleUuids(st));
+    if (uuids.size === 0) return all;
+    return all.filter((b) => uuids.has(b.uuid));
   });
 
   /** Details route / edit UI is for leaders and co-leaders only. */
@@ -194,7 +220,40 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
     private bibleService: BibleService,
     private bookService: BookService,
     private verseService: VerseService
-  ) {}
+  ) {
+    effect(() => {
+      const verses = this.studyVerses();
+      this.bibles();
+      if (verses.length === 0) return;
+      this.syncStudyVerseBookNameCache(verses);
+    });
+  }
+
+  private syncStudyVerseBookNameCache(verses: StudyVerse[]): void {
+    const uniqueBibleUuids = [...new Set(verses.map((v) => v.bible_uuid))];
+    for (const bibleUuid of uniqueBibleUuids) {
+      if (this.bibleUuidsBookListFetched.has(bibleUuid) || this.bibleUuidsBookListInFlight.has(bibleUuid)) continue;
+      const bible = this.bibles().find((b) => b.uuid === bibleUuid);
+      if (!bible) continue;
+      this.bibleUuidsBookListInFlight.add(bibleUuid);
+      this.bookService.index(bible).subscribe({
+        next: (books) => {
+          this.bibleUuidsBookListInFlight.delete(bibleUuid);
+          this.bibleUuidsBookListFetched.add(bibleUuid);
+          this.studyVerseBookNamesByUuid.update((prev) => {
+            const next = { ...prev };
+            for (const book of books) {
+              next[book.uuid] = book.name;
+            }
+            return next;
+          });
+        },
+        error: () => {
+          this.bibleUuidsBookListInFlight.delete(bibleUuid);
+        }
+      });
+    }
+  }
 
   private syncRouteSub?: Subscription;
 
@@ -281,10 +340,6 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
         this.loading.set(false);
         this.study.set(response.study);
         this.studyUuidInput.set(response.study.uuid);
-        this.selectedReferenceBibleUuids.set(this.defaultReferenceBibleUuids(response.study));
-        this.selectedStudyBibleUuids.set(
-          response.study.selected_bible_uuids?.length ? response.study.selected_bible_uuids : this.defaultReferenceBibleUuids(response.study)
-        );
         this.editTitle.set(response.study.title ?? '');
         this.editGoal.set(response.study.goal ?? '');
         this.editVisibility.set(response.study.visibility ?? 'private');
@@ -301,6 +356,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
             void this.router.navigate(['/studies', response.study.uuid], { replaceUrl: true });
           }
         }
+        this.loadBooks();
         this.loadStudyWorkspace(response.study.uuid, {
           selectFirstPlanOnOpenForParticipant: mode === 'participant'
         });
@@ -478,11 +534,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
       .createStudyVerse(
         currentStudy.uuid,
         {
-          bible_uuid: this.selectedBibleUuid(),
-          book_uuid: this.selectedBookUuid(),
-          chapter: this.selectedChapter(),
-          ordinal: verse.ordinal,
-          verse_text: verse.text,
+          verse_uuid: verse.uuid,
           note: ''
         },
         this.studyMode()
@@ -694,7 +746,8 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
       commentary: 'Commentary step',
       verse: 'Verse step',
       question: 'Discussion step',
-      task: 'Task step'
+      task: 'Task step',
+      worship: 'Worship step'
     };
     this.studiesService.createPlanItem(st.uuid, {
       title: titles[itemType],
@@ -887,47 +940,21 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
     void this.router.navigate(['/studies', st.uuid, 'step', item.uuid, item.item_type]);
   }
 
-  toggleStudyBible(uuid: string, checked: boolean): void {
-    const set = new Set(this.selectedStudyBibleUuids());
-    if (checked) set.add(uuid);
-    else set.delete(uuid);
-    const next = Array.from(set);
-    this.selectedStudyBibleUuids.set(next);
-    this.selectedReferenceBibleUuids.set(next);
-    this.loadBooks();
-    // Keep filtering usable for all roles, but only persist for roles
-    // that can edit study structure.
-    if (this.canEditStructure()) {
-      this.saveStudyBibleSelection();
-    }
-  }
-
-  removeStudyBible(uuid: string): void {
-    this.toggleStudyBible(uuid, false);
-  }
-
-  openStudyBibleDropdown(): void {
-    this.showStudyBibleDropdown.set(true);
-  }
-
-  closeStudyBibleDropdown(): void {
-    this.showStudyBibleDropdown.set(false);
-  }
-
-  saveStudyBibleSelection(): void {
+  /** Mark the open plan step complete, then go to the next step (requires sign-in). */
+  completeCurrentPlanItemAndGoToNext(): void {
     const st = this.study();
-    if (!st) return;
-    this.studiesService.update(st.uuid, {
-      metadata: { selected_bible_uuids: this.selectedStudyBibleUuids() }
-    }, this.studyMode()).subscribe({
+    const current = this.selectedPlanItem();
+    const next = this.planItemNavNext();
+    if (!st || !current || !next || !this.session.isLoggedIn()) return;
+    this.studiesService.updatePlanItemState(st.uuid, current.uuid, 'complete', this.studyMode()).subscribe({
       next: (r) => {
-        this.study.set(r.study);
-        this.toast.success('Saved.');
+        const ms = r.plan_item.my_status;
+        this.planItems.update((items) =>
+          items.map((i) => (i.uuid === current.uuid ? { ...i, my_status: ms ?? 'complete' } : i))
+        );
+        this.openPlanItem(next);
       },
-      error: () => {
-        this.error.set('Could not save selected study Bibles.');
-        this.toast.danger('Could not save selected study Bibles.');
-      }
+      error: () => this.toast.danger('Could not update progress.')
     });
   }
 
@@ -945,9 +972,36 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
   deleteEntireStudy(): void {
     const st = this.study();
     if (!st || !this.canDeleteStudy()) return;
-    if (!confirm('Delete this study and all of its content? This cannot be undone.')) return;
+    this.openConfirmation(
+      'Delete study?',
+      'Delete this study and all of its content? This cannot be undone.',
+      () => this.performDeleteEntireStudy(st.uuid)
+    );
+  }
+
+  cancelConfirmation(): void {
+    this.pendingConfirmation.set(null);
+  }
+
+  confirmPendingAction(): void {
+    const pending = this.pendingConfirmation();
+    if (!pending) return;
+    this.pendingConfirmation.set(null);
+    pending.onConfirm();
+  }
+
+  private openConfirmation(
+    title: string,
+    message: string,
+    onConfirm: () => void,
+    confirmLabel = 'Delete'
+  ): void {
+    this.pendingConfirmation.set({ title, message, confirmLabel, onConfirm });
+  }
+
+  private performDeleteEntireStudy(studyUuid: string): void {
     this.loading.set(true);
-    this.studiesService.destroy(st.uuid, this.studyMode()).subscribe({
+    this.studiesService.destroy(studyUuid, this.studyMode()).subscribe({
       next: () => {
         this.loading.set(false);
         this.toast.success('Study deleted.');
@@ -961,18 +1015,11 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
     });
   }
 
-  private defaultReferenceBibleUuids(study: Study): string[] {
+  /** UUIDs from server `ai_default_reference_bibles` (system AI Bibles for this deployment). */
+  private aiDefaultBibleUuids(study: Study): string[] {
     const refs = (study.ai_default_reference_bibles ?? {}) as Record<string, unknown>;
     const values = Object.values(refs).filter((v): v is Record<string, unknown> => !!v && typeof v === 'object');
-    const uuids = values.map((v) => String(v['uuid'] ?? '')).filter((s) => !!s);
-    return [...new Set(uuids)];
-  }
-
-  toggleReferenceBible(uuid: string, checked: boolean): void {
-    const set = new Set(this.selectedReferenceBibleUuids());
-    if (checked) set.add(uuid);
-    else set.delete(uuid);
-    this.selectedReferenceBibleUuids.set(Array.from(set));
+    return [...new Set(values.map((v) => String(v['uuid'] ?? '')).filter((s) => !!s))];
   }
 
   canEditStructure(): boolean {
@@ -996,6 +1043,19 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
     this.assistantLoading.set(false);
   }
 
+  setAssistantTargetDurationMinutes(value: number | string | null): void {
+    if (value === '' || value === null || value === undefined) {
+      this.assistantTargetDurationMinutes.set(null);
+      return;
+    }
+    const n = typeof value === 'number' ? value : Number(value);
+    if (!Number.isFinite(n) || n <= 0) {
+      this.assistantTargetDurationMinutes.set(null);
+      return;
+    }
+    this.assistantTargetDurationMinutes.set(Math.floor(n));
+  }
+
   runStudyAssistant(): void {
     const st = this.study();
     if (!st) {
@@ -1012,12 +1072,13 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
     this.dismissedSuggestionIds.set(new Set());
     this.assistantActivityPhase.set('Starting…');
     this.assistantSearchSummary.set('');
-    this.assistantStreamPreview.set('');
 
-    const referenceBibleUuids = this.selectedReferenceBibleUuids();
+    const td = this.assistantTargetDurationMinutes();
     this.assistantRunSub?.unsubscribe();
     this.assistantRunSub = this.studiesService
-      .runStudyAssistantStream(st.uuid, msg, this.studyMode(), referenceBibleUuids)
+      .runStudyAssistantStream(st.uuid, msg, this.studyMode(), {
+        targetDurationMinutes: td != null && td > 0 ? td : null
+      })
       .subscribe({
         next: (ev) => this.onAssistantSse(ev),
         error: (err: Error) => {
@@ -1070,21 +1131,11 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
             (parts.length ? ` — ${parts.join(', ')}` : '') +
             errSuffix
         );
-        this.assistantStreamPreview.set('');
-        break;
-      }
-      case 'llm_delta': {
-        const round = ev.data['round'] as string;
-        const content = (ev.data['content'] as string) ?? '';
-        const label = round === 'b' ? 'Drafting suggestions' : 'Planning search terms';
-        const snippet = content.length > 1500 ? '…' + content.slice(-1500) : content;
-        this.assistantStreamPreview.set(`${label} (live output, not verified text):\n${snippet}`);
         break;
       }
       case 'complete': {
         const raw = ev.data['suggestions'];
         this.assistantSuggestions.set(this.normalizeAssistantSuggestions(raw));
-        this.assistantStreamPreview.set('');
         this.assistantActivityPhase.set('Suggestions ready.');
         break;
       }
@@ -1166,66 +1217,92 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
     if (!st) return EMPTY;
     const p = s.payload;
     const rm = this.studyMode();
-    let create$: Observable<unknown>;
+
+    if (s.type === 'add_worship') {
+      return this.createPlanItemFromSuggestion$(st.uuid, s, this.worshipPayloadMetadata(p)).pipe(
+        tap(() => this.dismissSuggestion(s.id)),
+        map(() => void 0)
+      );
+    }
+
+    let pipe$: Observable<{ plan_item: StudyPlanItem }>;
     switch (s.type) {
-      case 'add_verse':
-        create$ = this.studiesService.createStudyVerse(
-          st.uuid,
-          {
-            bible_uuid: String(p['bible_uuid'] ?? ''),
-            book_uuid: String(p['book_uuid'] ?? ''),
-            chapter: Number(p['chapter'] ?? 0),
-            ordinal: Number(p['ordinal'] ?? 0),
-            verse_text: p['verse_text'] != null ? String(p['verse_text']) : null,
-            note: p['note'] != null ? String(p['note']) : ''
-          },
-          rm
+      case 'add_verse': {
+        const vu = p['verse_uuid'] != null ? String(p['verse_uuid']).trim() : '';
+        const versePayload: Partial<StudyVerse> = vu
+          ? { verse_uuid: vu, note: p['note'] != null ? String(p['note']) : '' }
+          : {
+              bible_uuid: String(p['bible_uuid'] ?? ''),
+              book_uuid: String(p['book_uuid'] ?? ''),
+              chapter: Number(p['chapter'] ?? 0),
+              ordinal: Number(p['ordinal'] ?? 0),
+              verse_text: p['verse_text'] != null ? String(p['verse_text']) : null,
+              note: p['note'] != null ? String(p['note']) : ''
+            };
+        pipe$ = this.studiesService.createStudyVerse(st.uuid, versePayload, rm).pipe(
+          switchMap((r) =>
+            this.createPlanItemFromSuggestion$(st.uuid, s, { study_verse_uuid: r.verse.uuid })
+          )
         );
         break;
+      }
       case 'add_commentary':
-        create$ = this.studiesService.createCommentary(
-          st.uuid,
-          {
-            source_type: p['source_type'] === 'ai' ? 'ai' : 'manual',
-            title: String(p['title'] ?? 'Suggestion'),
-            body: p['body'] != null ? String(p['body']) : null,
-            prompt: p['prompt'] != null ? String(p['prompt']) : null,
-            context: {}
-          },
-          rm
-        );
+        pipe$ = this.studiesService
+          .createCommentary(
+            st.uuid,
+            {
+              source_type: p['source_type'] === 'ai' ? 'ai' : 'manual',
+              title: String(p['title'] ?? 'Suggestion'),
+              body: p['body'] != null ? String(p['body']) : null,
+              prompt: p['prompt'] != null ? String(p['prompt']) : null,
+              context: {}
+            },
+            rm
+          )
+          .pipe(switchMap(() => this.createPlanItemFromSuggestion$(st.uuid, s)));
         break;
       case 'add_question':
-        create$ = this.studiesService.createQuestion(
-          st.uuid,
-          {
-            prompt: String(p['prompt'] ?? ''),
-            question_type: String(p['question_type'] ?? 'discussion'),
-            guidance_notes: p['guidance_notes'] != null ? String(p['guidance_notes']) : ''
-          },
-          rm
-        );
+        pipe$ = this.studiesService
+          .createQuestion(
+            st.uuid,
+            {
+              prompt: String(p['prompt'] ?? ''),
+              question_type: String(p['question_type'] ?? 'discussion'),
+              guidance_notes: p['guidance_notes'] != null ? String(p['guidance_notes']) : ''
+            },
+            rm
+          )
+          .pipe(switchMap(() => this.createPlanItemFromSuggestion$(st.uuid, s)));
         break;
       case 'add_task':
-        create$ = this.studiesService.createTask(
-          st.uuid,
-          {
-            instruction: String(p['instruction'] ?? ''),
-            task_type: String(p['task_type'] ?? 'discussion'),
-            status: String(p['status'] ?? 'open'),
-            assignee_label: p['assignee_label'] != null ? String(p['assignee_label']) : null
-          },
-          rm
-        );
+        pipe$ = this.studiesService
+          .createTask(
+            st.uuid,
+            {
+              instruction: String(p['instruction'] ?? ''),
+              task_type: String(p['task_type'] ?? 'discussion'),
+              status: String(p['status'] ?? 'open'),
+              assignee_label: p['assignee_label'] != null ? String(p['assignee_label']) : null
+            },
+            rm
+          )
+          .pipe(switchMap(() => this.createPlanItemFromSuggestion$(st.uuid, s)));
         break;
       default:
         return EMPTY;
     }
-    return create$.pipe(
-      switchMap(() => this.createPlanItemFromSuggestion$(st.uuid, s)),
+
+    return pipe$.pipe(
       tap(() => this.dismissSuggestion(s.id)),
       map(() => void 0)
     );
+  }
+
+  private worshipPayloadMetadata(p: Record<string, unknown>): Record<string, unknown> {
+    const meta: Record<string, unknown> = {};
+    if (p['resource_url'] != null) meta['resource_url'] = String(p['resource_url']);
+    if (p['worship_format'] != null) meta['worship_format'] = String(p['worship_format']);
+    return meta;
   }
 
   applySuggestion(s: StudyAssistantSuggestion): void {
@@ -1244,21 +1321,27 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
     });
   }
 
-  private createPlanItemFromSuggestion$(studyUuid: string, s: StudyAssistantSuggestion) {
+  private createPlanItemFromSuggestion$(
+    studyUuid: string,
+    s: StudyAssistantSuggestion,
+    extraMetadata: Record<string, unknown> = {}
+  ): Observable<{ plan_item: StudyPlanItem }> {
     const typeMap: Record<StudyAssistantSuggestion['type'], StudyPlanItem['item_type']> = {
       add_verse: 'verse',
       add_commentary: 'commentary',
       add_question: 'question',
-      add_task: 'task'
+      add_task: 'task',
+      add_worship: 'worship'
     };
+    const kind = typeMap[s.type] || 'custom';
     return this.studiesService.createPlanItem(
       studyUuid,
       {
         title: s.title || 'Study step',
-        item_type: typeMap[s.type] || 'custom',
+        item_type: kind,
         notes: s.summary,
-        duration: this.normalizeDuration(s.duration) ?? this.defaultDurationForItemType(typeMap[s.type] || 'custom'),
-        metadata: { suggestion_id: s.id }
+        duration: this.normalizeDuration(s.duration) ?? this.defaultDurationForItemType(kind),
+        metadata: { suggestion_id: s.id, ...extraMetadata }
       },
       this.studyMode()
     );
@@ -1358,9 +1441,20 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
     });
   }
 
+  readerDeepLinkForStudyVerse(sv: StudyVerse): string {
+    const params = new URLSearchParams({
+      bible: sv.bible_uuid,
+      book: sv.book_uuid,
+      chapter: String(sv.chapter),
+      verse: String(sv.ordinal)
+    });
+    return `/reader?${params.toString()}`;
+  }
+
   studyVerseBookLabel(sv: StudyVerse): string {
-    const name = this.books().find((b) => b.uuid === sv.book_uuid)?.name;
-    return name ?? '';
+    return (
+      this.studyVerseBookNamesByUuid()[sv.book_uuid] ?? this.books().find((b) => b.uuid === sv.book_uuid)?.name ?? ''
+    );
   }
 
   canDeleteContent(): boolean {
@@ -1370,15 +1464,22 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
   deletePlanItem(item: StudyPlanItem): void {
     const st = this.study();
     if (!st || !this.canDeleteContent()) return;
-    if (!confirm(`Remove plan step “${item.title}”?`)) return;
-    this.studiesService.destroyPlanItem(st.uuid, item.uuid, this.studyMode()).subscribe({
+    this.openConfirmation(
+      'Remove plan step?',
+      `Remove plan step "${item.title}"?`,
+      () => this.performDeletePlanItem(st.uuid, item.uuid)
+    );
+  }
+
+  private performDeletePlanItem(studyUuid: string, planItemUuid: string): void {
+    this.studiesService.destroyPlanItem(studyUuid, planItemUuid, this.studyMode()).subscribe({
       next: () => {
-        if (this.selectedPlanItemUuid() === item.uuid) {
+        if (this.selectedPlanItemUuid() === planItemUuid) {
           this.selectedPlanItemUuid.set('');
-          void this.router.navigate(['/studies', st.uuid]);
+          void this.router.navigate(['/studies', studyUuid]);
         }
         this.toast.success('Deleted.');
-        this.loadStudyWorkspace(st.uuid);
+        this.loadStudyWorkspace(studyUuid);
       },
       error: () => {
         this.error.set('Could not delete plan step.');
@@ -1390,11 +1491,18 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
   deleteCommentary(c: StudyCommentary): void {
     const st = this.study();
     if (!st || !this.canDeleteContent()) return;
-    if (!confirm(`Delete commentary “${c.title}”?`)) return;
-    this.studiesService.destroyCommentary(st.uuid, c.uuid, this.studyMode()).subscribe({
+    this.openConfirmation(
+      'Delete commentary?',
+      `Delete commentary "${c.title}"?`,
+      () => this.performDeleteCommentary(st.uuid, c.uuid)
+    );
+  }
+
+  private performDeleteCommentary(studyUuid: string, commentaryUuid: string): void {
+    this.studiesService.destroyCommentary(studyUuid, commentaryUuid, this.studyMode()).subscribe({
       next: () => {
         this.toast.success('Deleted.');
-        this.loadStudyWorkspace(st.uuid);
+        this.loadStudyWorkspace(studyUuid);
       },
       error: () => {
         this.error.set('Could not delete commentary.');
@@ -1406,11 +1514,19 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
   deleteStudyVerse(sv: StudyVerse): void {
     const st = this.study();
     if (!st || !this.canDeleteContent()) return;
-    if (!confirm('Remove this saved verse?')) return;
-    this.studiesService.destroyStudyVerse(st.uuid, sv.uuid, this.studyMode()).subscribe({
+    this.openConfirmation(
+      'Remove saved verse?',
+      'Remove this saved verse?',
+      () => this.performDeleteStudyVerse(st.uuid, sv.uuid),
+      'Remove'
+    );
+  }
+
+  private performDeleteStudyVerse(studyUuid: string, studyVerseUuid: string): void {
+    this.studiesService.destroyStudyVerse(studyUuid, studyVerseUuid, this.studyMode()).subscribe({
       next: () => {
         this.toast.success('Deleted.');
-        this.loadStudyWorkspace(st.uuid);
+        this.loadStudyWorkspace(studyUuid);
       },
       error: () => {
         this.error.set('Could not delete verse.');
@@ -1422,11 +1538,18 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
   deleteQuestion(q: StudyQuestion): void {
     const st = this.study();
     if (!st || !this.canDeleteContent()) return;
-    if (!confirm('Delete this question and its answers?')) return;
-    this.studiesService.destroyQuestion(st.uuid, q.uuid, this.studyMode()).subscribe({
+    this.openConfirmation(
+      'Delete question?',
+      'Delete this question and its answers?',
+      () => this.performDeleteQuestion(st.uuid, q.uuid)
+    );
+  }
+
+  private performDeleteQuestion(studyUuid: string, questionUuid: string): void {
+    this.studiesService.destroyQuestion(studyUuid, questionUuid, this.studyMode()).subscribe({
       next: () => {
         this.toast.success('Deleted.');
-        this.loadStudyWorkspace(st.uuid);
+        this.loadStudyWorkspace(studyUuid);
       },
       error: () => {
         this.error.set('Could not delete question.');
@@ -1438,11 +1561,18 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
   deleteTask(t: StudyTask): void {
     const st = this.study();
     if (!st || !this.canDeleteContent()) return;
-    if (!confirm('Delete this task?')) return;
-    this.studiesService.destroyTask(st.uuid, t.uuid, this.studyMode()).subscribe({
+    this.openConfirmation(
+      'Delete task?',
+      'Delete this task?',
+      () => this.performDeleteTask(st.uuid, t.uuid)
+    );
+  }
+
+  private performDeleteTask(studyUuid: string, taskUuid: string): void {
+    this.studiesService.destroyTask(studyUuid, taskUuid, this.studyMode()).subscribe({
       next: () => {
         this.toast.success('Deleted.');
-        this.loadStudyWorkspace(st.uuid);
+        this.loadStudyWorkspace(studyUuid);
       },
       error: () => {
         this.error.set('Could not delete task.');
@@ -1454,8 +1584,15 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
   deleteAnswer(questionUuid: string, answer: StudyAnswer): void {
     const st = this.study();
     if (!st || this.studyMode() !== 'leader') return;
-    if (!confirm('Delete this answer?')) return;
-    this.studiesService.destroyAnswer(st.uuid, questionUuid, answer.uuid, this.studyMode()).subscribe({
+    this.openConfirmation(
+      'Delete answer?',
+      'Delete this answer?',
+      () => this.performDeleteAnswer(st.uuid, questionUuid, answer.uuid)
+    );
+  }
+
+  private performDeleteAnswer(studyUuid: string, questionUuid: string, answerUuid: string): void {
+    this.studiesService.destroyAnswer(studyUuid, questionUuid, answerUuid, this.studyMode()).subscribe({
       next: () => {
         this.toast.success('Deleted.');
         this.loadAnswers(questionUuid);
@@ -1500,6 +1637,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
     if (itemType === 'question') return 7;
     if (itemType === 'commentary') return 5;
     if (itemType === 'task') return 5;
+    if (itemType === 'worship') return 5;
     return 5;
   }
 }

@@ -12,34 +12,37 @@
         <div class="card sticky-top" style="top: 1rem;">
           <div class="card-header">
             <div class="d-flex align-items-start gap-2 mb-2">
-              <div class="fw-semibold text-truncate flex-grow-1 min-w-0" [attr.title]="study()!.title">{{ study()!.title }}</div>
-              @if (showStudyDetailsEdit()) {
-                <div class="d-flex align-items-start gap-1 flex-shrink-0">
-                  <a
-                    routerLink="details"
-                    class="btn btn-sm btn-outline-secondary"
-                    routerLinkActive="active"
-                    title="Details &amp; references"
-                    aria-label="Open study details and references"
-                  >
-                    <span class="bi bi-pencil-square" aria-hidden="true"></span>
-                  </a>
-                  <a
-                    routerLink="ai"
-                    class="btn btn-sm btn-outline-secondary"
-                    routerLinkActive="active"
-                    title="Study AI assistant"
-                    aria-label="Open study AI assistant"
-                  >
-                    <span class="bi bi-stars" aria-hidden="true"></span>
-                  </a>
-                </div>
-              }
+              <div class="min-w-0 flex-grow-1 d-flex align-items-start gap-2">
+                <div class="fw-semibold text-truncate min-w-0" [attr.title]="study()!.title">{{ study()!.title }}</div>
+                @if (showStudyDetailsEdit()) {
+                  <div class="d-flex align-items-start gap-1 flex-shrink-0">
+                    <a
+                      routerLink="details"
+                      class="btn btn-sm btn-outline-secondary"
+                      routerLinkActive="active"
+                      title="Details &amp; references"
+                      aria-label="Open study details and references"
+                    >
+                      <span class="bi bi-pencil-square" aria-hidden="true"></span>
+                    </a>
+                    <a
+                      routerLink="ai"
+                      class="btn btn-sm btn-outline-secondary"
+                      routerLinkActive="active"
+                      title="Study AI assistant"
+                      aria-label="Open study AI assistant"
+                    >
+                      <span class="bi bi-stars" aria-hidden="true"></span>
+                    </a>
+                  </div>
+                }
+              </div>
+              <button class="btn btn-sm btn-outline-secondary flex-shrink-0" type="button" (click)="closeStudy()">Close Study</button>
             </div>
             @if (study()!.goal?.trim()) {
               <p class="small text-muted mb-2 mb-md-3">{{ study()!.goal }}</p>
             }
-            <div class="d-flex flex-wrap align-items-center gap-2 justify-content-end">
+            <div class="d-flex flex-wrap align-items-center gap-2">
               <label class="visually-hidden" for="study_mode_sidebar">Study mode</label>
               <select
                 id="study_mode_sidebar"
@@ -52,27 +55,27 @@
                 <option value="co-leader">Co-Leader</option>
                 <option value="participant">Participant</option>
               </select>
-              <button class="btn btn-sm btn-outline-secondary" type="button" (click)="closeStudy()">Close Study</button>
             </div>
           </div>
           <div class="card-body p-2">
             <div class="px-1 mb-2">
               <strong class="small d-block">Plan</strong>
               @if (canEditStructure()) {
-                <p class="small text-muted mb-2 mb-md-1">
+                <!-- <p class="small text-muted mb-2 mb-md-1">
                   Add steps here, or open the <strong>AI assistant</strong> (stars icon next to the title) for suggestions in the main panel.
-                </p>
+                </p> -->
                 <div class="d-flex flex-wrap gap-1 mb-2">
                   <button class="btn btn-sm btn-outline-primary" type="button" (click)="createPlanItemOfType('custom')">+ Custom</button>
                   <button class="btn btn-sm btn-outline-primary" type="button" (click)="createPlanItemOfType('commentary')">+ Commentary</button>
                   <button class="btn btn-sm btn-outline-primary" type="button" (click)="createPlanItemOfType('verse')">+ Verse</button>
                   <button class="btn btn-sm btn-outline-primary" type="button" (click)="createPlanItemOfType('question')">+ Question</button>
                   <button class="btn btn-sm btn-outline-primary" type="button" (click)="createPlanItemOfType('task')">+ Task</button>
+                  <button class="btn btn-sm btn-outline-primary" type="button" (click)="createPlanItemOfType('worship')">+ Worship</button>
                 </div>
               }
               @if (canEditStructure() && planItems().length === 0) {
                 <div class="border border-2 border-dashed rounded p-2 mb-2 small text-muted text-center">
-                  No steps yet. Add one above, or open the <strong>AI assistant</strong> (stars icon) to generate suggestions.
+                  No steps yet. Add some, or open the <strong>AI assistant</strong> (stars icon) to generate suggestions.
                 </div>
               }
             </div>
@@ -182,8 +185,74 @@
       </div>
 
       <div class="col-lg-8 col-xl-9">
+        @if (showPlanItemStepNav()) {
+          <ng-container *ngTemplateOutlet="planItemStepNav; context: planItemStepNavContextTop" />
+        }
         <router-outlet></router-outlet>
+        @if (showPlanItemStepNav()) {
+          <ng-container *ngTemplateOutlet="planItemStepNav; context: planItemStepNavContextBottom" />
+        }
+
+        <ng-template #planItemStepNav let-marginClass="marginClass">
+          <div class="d-flex justify-content-between align-items-center gap-2" [ngClass]="marginClass">
+            <div>
+              @if (planItemNavPrevious(); as prev) {
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary"
+                  (click)="openPlanItem(prev)"
+                  aria-label="Previous plan step"
+                >
+                  Previous
+                </button>
+              }
+            </div>
+            <div class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
+              @if (planItemNavNext(); as next) {
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary"
+                  (click)="openPlanItem(next)"
+                  aria-label="Next plan step"
+                >
+                  Next
+                </button>
+                @if (session.isLoggedIn()) {
+                  <button
+                    type="button"
+                    class="btn btn-primary"
+                    (click)="completeCurrentPlanItemAndGoToNext()"
+                    aria-label="Mark this step complete and go to the next step"
+                  >
+                    Complete &amp; Next
+                  </button>
+                }
+              }
+            </div>
+          </div>
+        </ng-template>
       </div>
     </div>
   }
 </div>
+
+@if (pendingConfirmation(); as pending) {
+  <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="studyConfirmModalTitle">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="studyConfirmModalTitle">{{ pending.title }}</h5>
+          <button type="button" class="btn-close" aria-label="Close" (click)="cancelConfirmation()"></button>
+        </div>
+        <div class="modal-body">
+          {{ pending.message }}
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" (click)="cancelConfirmation()">Cancel</button>
+          <button type="button" class="btn btn-danger" (click)="confirmPendingAction()">{{ pending.confirmLabel }}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-backdrop fade show"></div>
+}

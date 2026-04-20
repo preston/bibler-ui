@@ -38,46 +38,7 @@
       <div class="small text-success mb-2">{{vm.copyFeedback()}}</div>
     }
 
-    <div class="mb-2">
-      <div class="d-flex flex-wrap gap-1 mb-1">
-        @for (b of vm.selectedStudyBiblePills(); track b.uuid) {
-          <span class="badge rounded-pill bg-secondary d-inline-flex align-items-center gap-1 py-1 ps-2 pe-1">
-            <span class="text-truncate" style="max-width: 10rem;">{{b.abbreviation || b.name || b.uuid}}</span>
-            <button
-              type="button"
-              class="btn-close btn-close-white flex-shrink-0"
-              style="transform: scale(0.65);"
-              aria-label="Remove Bible from shared reference list"
-              (click)="vm.removeStudyBible(b.uuid)"></button>
-          </span>
-        }
-      </div>
-      <div class="position-relative" data-study-bible-dropdown-region>
-        <div class="input-group input-group-sm">
-          <input
-            class="form-control"
-            [ngModel]="vm.studyBibleFilter()"
-            (ngModelChange)="vm.studyBibleFilter.set($event); vm.openStudyBibleDropdown()"
-            (focus)="vm.openStudyBibleDropdown()"
-            placeholder="Add Reference Bibles"
-            aria-label="Search Bibles to add as shared references">
-          <button class="btn btn-outline-secondary" type="button" (click)="vm.showStudyBibleDropdown() ? vm.closeStudyBibleDropdown() : vm.openStudyBibleDropdown()">Select</button>
-        </div>
-        @if (vm.showStudyBibleDropdown()) {
-          <div class="position-absolute start-0 end-0 mt-1 border rounded bg-white p-2 small shadow-sm" style="z-index: 1030; max-height: 12rem; overflow: auto;">
-            @for (b of vm.filteredStudyBibles(); track b.uuid) {
-              <div class="form-check">
-                <input class="form-check-input" type="checkbox" [id]="'study_bible_' + b.uuid" [checked]="vm.selectedStudyBibleUuids().includes(b.uuid)" (change)="vm.toggleStudyBible(b.uuid, $any($event.target).checked)">
-                <label class="form-check-label" [for]="'study_bible_' + b.uuid">{{b.name}} ({{b.language || 'n/a'}})</label>
-              </div>
-            }
-            <div class="text-end mt-1">
-              <button class="btn btn-sm btn-outline-secondary" type="button" (click)="vm.closeStudyBibleDropdown()">Done</button>
-            </div>
-          </div>
-        }
-      </div>
-    </div>
+    <p class="small text-muted mb-0">Verse reader and the Study AI assistant use your organization's default AI Bibles (configured on the server).</p>
 
     @if (vm.canDeleteStudy()) {
       <div class="border-top border-light pt-3 mt-3">

@@ -1,11 +1,9 @@
 @if (vm.selectedPlanItem(); as item) {
-  <div class="card mb-3">
-    <div class="card-header d-flex justify-content-end align-items-center">
-      <span class="badge bg-secondary">{{ item.item_type }}</span>
-    </div>
-    <div class="card-body">
-      @if (vm.canEditStructure()) {
-        <div class="row g-2 mb-2">
+  @if (vm.canEditStructure()) {
+    <div class="card mb-3 bg-success">
+      <div class="card-header"><strong>Plan item</strong></div>
+      <div class="card-body">
+        <div class="row g-2">
           <div class="col-md-6">
             <label class="form-label small mb-0" [attr.for]="'plan_item_title_' + item.uuid">Title</label>
             <input
@@ -15,20 +13,7 @@
               (ngModelChange)="vm.setPlanItemDraft(item.uuid, 'title', $event)"
               placeholder="Title"
             />
-          </div>
-          <div class="col-md-6">
-            <label class="form-label small mb-0" [attr.for]="'plan_item_notes_' + item.uuid">Notes</label>
-            <textarea
-              class="form-control form-control-sm"
-              rows="4"
-              [id]="'plan_item_notes_' + item.uuid"
-              [ngModel]="vm.planItemDrafts()[item.uuid]?.notes ?? (item.notes ?? '')"
-              (ngModelChange)="vm.setPlanItemDraft(item.uuid, 'notes', $event)"
-              placeholder="Notes"
-            ></textarea>
-          </div>
-          <div class="col-md-4">
-            <label class="form-label small mb-0" [attr.for]="'plan_item_duration_' + item.uuid">Duration (minutes)</label>
+            <label class="form-label small mb-0 mt-2" [attr.for]="'plan_item_duration_' + item.uuid">Duration (minutes)</label>
             <input
               type="number"
               min="0"
@@ -41,16 +26,45 @@
             />
             <div class="form-text">Use 0 or blank for unspecified.</div>
           </div>
+          <div class="col-md-6">
+            <label class="form-label small mb-0" [attr.for]="'plan_item_notes_' + item.uuid">Notes</label>
+            <textarea
+              class="form-control form-control-sm"
+              rows="4"
+              [id]="'plan_item_notes_' + item.uuid"
+              [ngModel]="vm.planItemDrafts()[item.uuid]?.notes ?? (item.notes ?? '')"
+              (ngModelChange)="vm.setPlanItemDraft(item.uuid, 'notes', $event)"
+              placeholder="Notes"
+            ></textarea>
+            <div class="mt-2 d-flex justify-content-end">
+              <div class="btn-group btn-group-sm">
+                <button
+                  class="btn btn-outline-primary"
+                  type="button"
+                  (click)="vm.savePlanItem(item)"
+                  title="Save"
+                  aria-label="Save plan item"
+                >
+                  <span class="bi bi-floppy" aria-hidden="true"></span>
+                </button>
+                @if (vm.canDeleteContent()) {
+                  <button
+                    class="btn btn-outline-danger"
+                    type="button"
+                    (click)="vm.deletePlanItem(item)"
+                    title="Delete"
+                    aria-label="Delete plan item"
+                  >
+                    <span class="bi bi-trash" aria-hidden="true"></span>
+                  </button>
+                }
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="btn-group btn-group-sm">
-          <button class="btn btn-outline-primary" type="button" (click)="vm.savePlanItem(item)">Save</button>
-          @if (vm.canDeleteContent()) {
-            <button class="btn btn-outline-danger" type="button" (click)="vm.deletePlanItem(item)">Delete</button>
-          }
-        </div>
-      } @else {
-        <div class="small text-muted">{{ item.notes }}</div>
-      }
+      </div>
     </div>
-  </div>
+  } @else {
+    <div class="small text-muted">{{ item.notes }}</div>
+  }
 }

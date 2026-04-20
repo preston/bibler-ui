@@ -236,9 +236,14 @@ export class StudiesService {
     studyUuid: string,
     message: string,
     studyMode: StudyMode,
-    referenceBibleUuids?: string[]
+    options?: { targetDurationMinutes?: number | null }
   ): Observable<StudyAssistantSseMessage> {
     const url = `${this.biblerService.getUrl()}/studies/${studyUuid}/ai/assistant`;
+    const td = options?.targetDurationMinutes;
+    const body: Record<string, unknown> = { message, stream: true };
+    if (td != null && td > 0) {
+      body['target_duration_minutes'] = Math.floor(td);
+    }
     return new Observable<StudyAssistantSseMessage>((subscriber) => {
       const ac = new AbortController();
       const headers: Record<string, string> = {
@@ -254,7 +259,7 @@ export class StudiesService {
           const res = await fetch(url, {
             method: 'POST',
             headers,
-            body: JSON.stringify({ message, stream: true, reference_bible_uuids: referenceBibleUuids }),
+            body: JSON.stringify(body),
             signal: ac.signal
           });
 

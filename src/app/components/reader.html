@@ -76,7 +76,7 @@
                 </thead>
                 <tbody>
                     @for (v of highlightedVerses(); track v.ordinal) {
-                        <tr>
+                        <tr [attr.id]="'reader-verse-' + v.ordinal" [class.table-warning]="targetVerseOrdinal() === v.ordinal">
                             <td>{{v.ordinal}}</td>
                             <!-- <td highlight [highlightText]="search.text">{{v.text}}</td> -->
                             <td [innerHTML]="v.highlightedText"></td>

@@ -1,29 +1,33 @@
 @if (showStepEditor()) {
-  <study-plan-item-editor />
+<study-plan-item-editor />
 }
 
 <div id="study-verses-section" class="card mb-3">
-  <div class="card-header"><strong>Saved verses</strong></div>
+  <div class="card-header"><strong>Verses</strong></div>
   <div class="card-body">
+    @if (vm.studyMode() !== 'participant') {
     <div class="row g-2 mb-2">
       <div class="col-md-4">
-        <select class="form-select" [ngModel]="vm.selectedBibleUuid()" (ngModelChange)="vm.selectedBibleUuid.set($event); vm.loadBooks()">
+        <select class="form-select" [ngModel]="vm.selectedBibleUuid()"
+          (ngModelChange)="vm.selectedBibleUuid.set($event); vm.loadBooks()">
           @for (b of vm.scopedBibles(); track b.uuid) {
-            <option [value]="b.uuid">{{ b.name }}</option>
+          <option [value]="b.uuid">{{ b.name }}</option>
           }
         </select>
       </div>
       <div class="col-md-4">
-        <select class="form-select" [ngModel]="vm.selectedBookUuid()" (ngModelChange)="vm.selectedBookUuid.set($event); vm.loadChapters()">
+        <select class="form-select" [ngModel]="vm.selectedBookUuid()"
+          (ngModelChange)="vm.selectedBookUuid.set($event); vm.loadChapters()">
           @for (b of vm.books(); track b.uuid) {
-            <option [value]="b.uuid">{{ b.name }}</option>
+          <option [value]="b.uuid">{{ b.name }}</option>
           }
         </select>
       </div>
       <div class="col-md-4">
-        <select class="form-select" [ngModel]="vm.selectedChapter()" (ngModelChange)="vm.selectedChapter.set($event); vm.loadVerses()">
+        <select class="form-select" [ngModel]="vm.selectedChapter()"
+          (ngModelChange)="vm.selectedChapter.set($event); vm.loadVerses()">
           @for (c of vm.chapters(); track c) {
-            <option [value]="c">{{ c }}</option>
+          <option [value]="c">{{ c }}</option>
           }
         </select>
       </div>
@@ -39,53 +43,75 @@
         </thead>
         <tbody>
           @for (v of vm.verses(); track v.ordinal) {
-            <tr>
-              <td>{{ v.ordinal }}</td>
-              <td>{{ v.text }}</td>
-              <td><button class="btn btn-sm btn-outline-primary" type="button" (click)="vm.addStudyVerseFromReader(v)">Add</button></td>
-            </tr>
+          <tr>
+            <td>{{ v.ordinal }}</td>
+            <td>{{ v.text }}</td>
+            <td><button class="btn btn-sm btn-outline-primary" type="button"
+                (click)="vm.addStudyVerseFromReader(v)">Add</button></td>
+          </tr>
           }
         </tbody>
       </table>
     </div>
     <hr />
+    }
     <ul class="list-group">
       @for (sv of vm.studyVerses(); track sv.uuid) {
-        <li class="list-group-item">
-          <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
-            <div>
-              <span class="fw-medium">{{ vm.studyVerseBookLabel(sv) || '—' }}</span>
-              <span class="text-muted"> {{ sv.chapter }}:{{ sv.ordinal }}</span>
-              @if (sv.verse_text) {
-                <div class="small mt-1">{{ sv.verse_text }}</div>
-              }
-            </div>
-            <button type="button" class="btn btn-sm btn-outline-secondary flex-shrink-0" (click)="vm.copyId(sv.book_uuid, 'Book ID')" title="Copy book ID" aria-label="Copy book ID to clipboard">
-              <span class="bi bi-clipboard" aria-hidden="true"></span>
-            </button>
-          </div>
-          @if (vm.canEditStructure()) {
-            <div class="mt-1">
-              <label class="form-label small mb-0" [attr.for]="'sv_note_' + sv.uuid">Note</label>
-              <textarea
-                class="form-control form-control-sm"
-                rows="2"
-                [id]="'sv_note_' + sv.uuid"
-                [ngModel]="vm.studyVerseNoteDrafts()[sv.uuid]"
-                (ngModelChange)="vm.setStudyVerseNoteDraft(sv.uuid, $event)"
-                placeholder="Note"
-              ></textarea>
-              <div class="btn-group btn-group-sm mt-1">
-                <button class="btn btn-outline-primary" type="button" (click)="vm.saveStudyVerseNote(sv)">Save</button>
-                @if (vm.canDeleteContent()) {
-                  <button class="btn btn-outline-danger" type="button" (click)="vm.deleteStudyVerse(sv)">Delete</button>
-                }
-              </div>
-            </div>
-          } @else if (sv.note) {
-            <div class="small text-muted">{{ sv.note }}</div>
+      <li class="list-group-item">
+        <div class="min-w-0">
+          @if (sv.verse_text) {
+            <div class="mb-1">{{ sv.verse_text }}</div>
           }
-        </li>
+          <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <div class="small text-muted min-w-0">
+              <span class="fw-medium text-body">{{ vm.studyVerseBookLabel(sv) || '—' }}</span>
+              <span> {{ sv.chapter }}:{{ sv.ordinal }}</span>
+            </div>
+            <a
+              class="btn btn-sm btn-outline-secondary flex-shrink-0 align-self-center"
+              [attr.href]="vm.readerDeepLinkForStudyVerse(sv)"
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Open verse in Reader"
+              aria-label="Open verse in Reader in a new tab"
+            >
+              <span class="bi bi-box-arrow-up-right" aria-hidden="true"></span>
+            </a>
+          </div>
+        </div>
+        @if (vm.canEditStructure()) {
+        <div class="mt-1">
+          <label class="form-label small mb-0" [attr.for]="'sv_note_' + sv.uuid">Note</label>
+          <textarea class="form-control form-control-sm" rows="2" [id]="'sv_note_' + sv.uuid"
+            [ngModel]="vm.studyVerseNoteDrafts()[sv.uuid]" (ngModelChange)="vm.setStudyVerseNoteDraft(sv.uuid, $event)"
+            placeholder="Note"></textarea>
+          <div class="btn-group btn-group-sm mt-1">
+            <button
+              class="btn btn-outline-primary"
+              type="button"
+              (click)="vm.saveStudyVerseNote(sv)"
+              title="Save"
+              aria-label="Save verse note"
+            >
+              <span class="bi bi-floppy" aria-hidden="true"></span>
+            </button>
+            @if (vm.canDeleteContent()) {
+            <button
+              class="btn btn-outline-danger"
+              type="button"
+              (click)="vm.deleteStudyVerse(sv)"
+              title="Delete"
+              aria-label="Delete verse"
+            >
+              <span class="bi bi-trash" aria-hidden="true"></span>
+            </button>
+            }
+          </div>
+        </div>
+        } @else if (sv.note) {
+        <div class="small text-muted">{{ sv.note }}</div>
+        }
+      </li>
       }
     </ul>
   </div>

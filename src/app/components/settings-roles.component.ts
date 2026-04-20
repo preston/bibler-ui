@@ -16,6 +16,7 @@ export class SettingsRolesComponent implements OnInit {
   private toast = inject(ToastService);
 
   roles = signal<SessionRole[]>([]);
+  pendingDeleteRole = signal<SessionRole | null>(null);
   error = signal('');
   loading = signal(false);
 
@@ -85,8 +86,18 @@ export class SettingsRolesComponent implements OnInit {
     });
   }
 
-  deleteRole(role: SessionRole): void {
-    if (!confirm(`Delete role "${role.name}"?`)) return;
+  requestDeleteRole(role: SessionRole): void {
+    this.pendingDeleteRole.set(role);
+  }
+
+  cancelDeleteRole(): void {
+    this.pendingDeleteRole.set(null);
+  }
+
+  confirmDeleteRole(): void {
+    const role = this.pendingDeleteRole();
+    if (!role) return;
+    this.pendingDeleteRole.set(null);
     this.rbac.deleteRole(role.id).subscribe({
       next: () => {
         this.toast.success('Deleted.');

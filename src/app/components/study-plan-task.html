@@ -65,9 +65,25 @@
               </div>
               <div class="col-md-3">
                 <div class="d-flex flex-column gap-1">
-                  <button class="btn btn-sm btn-outline-primary w-100" type="button" (click)="vm.saveTask(task)">Save</button>
+                  <button
+                    class="btn btn-sm btn-outline-primary w-100"
+                    type="button"
+                    (click)="vm.saveTask(task)"
+                    title="Save"
+                    aria-label="Save task"
+                  >
+                    <span class="bi bi-floppy" aria-hidden="true"></span>
+                  </button>
                   @if (vm.canDeleteContent()) {
-                    <button class="btn btn-sm btn-outline-danger w-100" type="button" (click)="vm.deleteTask(task)">Delete</button>
+                    <button
+                      class="btn btn-sm btn-outline-danger w-100"
+                      type="button"
+                      (click)="vm.deleteTask(task)"
+                      title="Delete"
+                      aria-label="Delete task"
+                    >
+                      <span class="bi bi-trash" aria-hidden="true"></span>
+                    </button>
                   }
                 </div>
               </div>
@@ -82,12 +98,38 @@
             </div>
           }
           <div class="mt-2">
-            <div class="btn-group btn-group-sm">
-              <button class="btn btn-outline-secondary" type="button" (click)="vm.updateTaskStatus(task, 'open')">Open</button>
-              <button class="btn btn-outline-secondary" type="button" (click)="vm.updateTaskStatus(task, 'in_progress')">In Progress</button>
-              <button class="btn btn-outline-success" type="button" (click)="vm.updateTaskStatus(task, 'completed')">Complete</button>
+            <div class="btn-group btn-group-sm" role="group" aria-label="Task status">
+              <button
+                type="button"
+                class="btn btn-outline-secondary"
+                [class.active]="isTaskStatusSegment(task, 'open')"
+                [class.fw-semibold]="isTaskStatusSegment(task, 'open')"
+                [attr.aria-pressed]="isTaskStatusSegment(task, 'open')"
+                (click)="vm.updateTaskStatus(task, 'open')"
+              >
+                Open
+              </button>
+              <button
+                type="button"
+                class="btn btn-outline-secondary"
+                [class.active]="isTaskStatusSegment(task, 'in_progress')"
+                [class.fw-semibold]="isTaskStatusSegment(task, 'in_progress')"
+                [attr.aria-pressed]="isTaskStatusSegment(task, 'in_progress')"
+                (click)="vm.updateTaskStatus(task, 'in_progress')"
+              >
+                In Progress
+              </button>
+              <button
+                type="button"
+                class="btn btn-outline-secondary"
+                [class.active]="isTaskStatusSegment(task, 'completed')"
+                [class.fw-semibold]="isTaskStatusSegment(task, 'completed')"
+                [attr.aria-pressed]="isTaskStatusSegment(task, 'completed')"
+                (click)="vm.updateTaskStatus(task, 'completed')"
+              >
+                Complete
+              </button>
             </div>
-            <span class="badge bg-dark ms-2">{{ task.status }}</span>
           </div>
         </div>
       }
