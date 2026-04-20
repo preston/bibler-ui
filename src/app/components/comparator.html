@@ -124,7 +124,7 @@
                     </thead>
                     <tbody>
                         @for (row of comparisonRows(); track row.ordinal) {
-                            <tr>
+                            <tr [attr.id]="'comparator-verse-' + row.ordinal" [class.table-warning]="targetVerseOrdinal() === row.ordinal">
                                 <td class="fw-semibold">{{row.ordinal}}</td>
                                 <td [innerHTML]="row.primaryText"></td>
                                 <td [innerHTML]="row.secondaryText"></td>

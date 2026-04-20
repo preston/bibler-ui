@@ -39,6 +39,14 @@ import {
   providers: [{ provide: STUDY_DETAIL_API, useExisting: StudyDetailComponent }]
 })
 export class StudyDetailComponent implements OnInit, OnDestroy {
+  private readonly allowedSuggestionTypes: StudyAssistantSuggestion['type'][] = [
+    'add_verse',
+    'add_commentary',
+    'add_question',
+    'add_task',
+    'add_worship'
+  ];
+
   private readonly studiesUiState = inject(StudiesUiStateService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
@@ -1276,8 +1284,15 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
   private normalizeAssistantSuggestions(raw: unknown): StudyAssistantSuggestion[] {
     const list = this.extractSuggestionArray(raw);
     if (list.length === 0) return [];
-    const mapped = list.map((item, index) => {
+    let droppedTypeCount = 0;
+    const mapped: StudyAssistantSuggestion[] = [];
+    list.forEach((item, index) => {
       const o = item as Record<string, unknown>;
+      const normalizedType = this.normalizeSuggestionType(o['type']);
+      if (!normalizedType) {
+        droppedTypeCount += 1;
+        return;
+      }
       const ordRaw = o['order'];
       const order =
         typeof ordRaw === 'number' && !Number.isNaN(ordRaw)
@@ -1285,17 +1300,40 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
           : typeof ordRaw === 'string' && ordRaw.trim() !== ''
             ? Number(ordRaw)
             : index;
-      return {
+      mapped.push({
         id: String(o['id'] ?? ''),
-        type: o['type'] as StudyAssistantSuggestion['type'],
+        type: normalizedType,
         title: String(o['title'] ?? ''),
         summary: String(o['summary'] ?? ''),
         payload: (o['payload'] as Record<string, unknown>) ?? {},
         duration: this.normalizeDuration(o['duration'] ?? (o['payload'] as Record<string, unknown> | undefined)?.['duration']),
         order: Number.isFinite(order) ? order : index
-      };
+      });
     });
+    if (droppedTypeCount > 0) {
+      this.toast.danger(
+        `${droppedTypeCount} suggestion${droppedTypeCount === 1 ? '' : 's'} used unsupported type(s) and were ignored.`
+      );
+    }
     return mapped.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  }
+
+  private normalizeSuggestionType(raw: unknown): StudyAssistantSuggestion['type'] | null {
+    const token = String(raw ?? '').trim().toLowerCase().replace(/-/g, '_').replace(/\s+/g, '_');
+    const aliases: Record<string, StudyAssistantSuggestion['type']> = {
+      break: 'add_task',
+      rest: 'add_task',
+      pause: 'add_task',
+      discussion: 'add_question',
+      verse: 'add_verse',
+      commentary: 'add_commentary',
+      question: 'add_question',
+      task: 'add_task',
+      create: 'add_task',
+      worship: 'add_worship'
+    };
+    const mapped = (aliases[token] ?? token) as StudyAssistantSuggestion['type'];
+    return this.allowedSuggestionTypes.includes(mapped) ? mapped : null;
   }
 
   private extractSuggestionArray(raw: unknown): unknown[] {
@@ -1460,6 +1498,7 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
           .pipe(switchMap(() => this.createPlanItemFromSuggestion$(st.uuid, s)));
         break;
       default:
+        this.toast.danger(`Unsupported suggestion type "${s.type}" was ignored.`);
         return EMPTY;
     }
 
@@ -1645,6 +1684,16 @@ export class StudyDetailComponent implements OnInit, OnDestroy {
       verse: String(sv.ordinal)
     });
     return `/reader?${params.toString()}`;
+  }
+
+  comparatorDeepLinkForStudyVerse(sv: StudyVerse): string {
+    const params = new URLSearchParams({
+      bible: sv.bible_uuid,
+      book: sv.book_uuid,
+      chapter: String(sv.chapter),
+      verse: String(sv.ordinal)
+    });
+    return `/comparator?${params.toString()}`;
   }
 
   studyVerseBookLabel(sv: StudyVerse): string {

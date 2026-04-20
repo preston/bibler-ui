@@ -1,6 +1,8 @@
 // Author: Preston Lee
 
-import { Component, signal, computed, effect, ChangeDetectionStrategy, OnDestroy } from '@angular/core';
+import { Component, signal, computed, effect, ChangeDetectionStrategy, OnDestroy, inject } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BookBasedComponent } from './bookBased.component';
 import { ComparatorAiCommentaryRequest, ComparatorAiSseMessage, ComparatorAiVerseCommentary, Verse } from '../models/verse';
 import { Bible } from '../models/bible';
@@ -16,8 +18,14 @@ import { Subscription } from 'rxjs';
     changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ComparatorComponent extends BookBasedComponent {
+    private route = inject(ActivatedRoute);
     private aiRunSub: Subscription | undefined;
     private defaultsApplied = false;
+    targetVerseOrdinal = signal<number | null>(null);
+    private pendingBibleUuid = signal<string | null>(null);
+    private pendingBookUuid = signal<string | null>(null);
+    private pendingChapter = signal<number | null>(null);
+    private applyingDeepLink = false;
 
     selectedBibleSecondaryUuid = signal<string | null>(null);
     secondaryBible = computed(() => {
@@ -115,6 +123,15 @@ export class ComparatorComponent extends BookBasedComponent {
     constructor() {
         super();
 
+        this.route.queryParamMap
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe((params) => this.applyDeepLinkParams(
+                params.get('bible'),
+                params.get('book'),
+                params.get('chapter'),
+                params.get('verse')
+            ));
+
         effect((onCleanup) => {
             const bibleSecondary = this.secondaryBible();
             if (bibleSecondary) {
@@ -186,6 +203,22 @@ export class ComparatorComponent extends BookBasedComponent {
             this.chapter();
             this.resetAiCommentaryState();
         });
+
+        effect(() => {
+            this.bibles();
+            this.books();
+            this.chapters();
+            this.applyPendingSelections();
+        });
+
+        effect(() => {
+            const target = this.targetVerseOrdinal();
+            this.versesPrimary();
+            if (!target) return;
+            queueMicrotask(() => {
+                document.getElementById(`comparator-verse-${target}`)?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            });
+        });
     }
 
     override afterBibleLoad() {
@@ -203,6 +236,8 @@ export class ComparatorComponent extends BookBasedComponent {
         if (!this.selectedBibleSecondaryUuid()) {
             this.selectBibleSecondary(defaultSecondary.uuid);
         }
+
+        this.applyPendingSelections();
     }
 
     selectChapterString(s: string) {
@@ -211,6 +246,7 @@ export class ComparatorComponent extends BookBasedComponent {
 
     selectChapter(n: number) {
         this.chapter.set(n);
+        this.clearDeepLinkTargetForManualNavigation();
         const bible = this.bible();
         const book = this.book();
         if (bible && book && n !== null) {
@@ -226,6 +262,16 @@ export class ComparatorComponent extends BookBasedComponent {
         if (uuid) {
             this.selectedBookSecondaryUuid.set(uuid);
         }
+    }
+
+    override selectBible(uuid: string) {
+        super.selectBible(uuid);
+        this.clearDeepLinkTargetForManualNavigation();
+    }
+
+    override selectBook(uuid: string) {
+        super.selectBook(uuid);
+        this.clearDeepLinkTargetForManualNavigation();
     }
 
     selectBibleSecondary(uuid: string) {
@@ -399,6 +445,65 @@ export class ComparatorComponent extends BookBasedComponent {
         this.aiCommentaryError.set('');
         this.aiCommentaryStatus.set('');
         this.aiCommentaryByOrdinal.set({});
+    }
+
+    private applyDeepLinkParams(
+        bibleUuid: string | null,
+        bookUuid: string | null,
+        chapterRaw: string | null,
+        verseRaw: string | null
+    ): void {
+        this.applyingDeepLink = true;
+        this.pendingBibleUuid.set(bibleUuid && bibleUuid.trim() ? bibleUuid : null);
+        this.pendingBookUuid.set(bookUuid && bookUuid.trim() ? bookUuid : null);
+        this.pendingChapter.set(this.parsePositiveInt(chapterRaw));
+        this.targetVerseOrdinal.set(this.parsePositiveInt(verseRaw));
+        this.applyPendingSelections();
+        this.applyingDeepLink = false;
+    }
+
+    private parsePositiveInt(raw: string | null): number | null {
+        if (!raw) return null;
+        const parsed = Number(raw);
+        return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+    }
+
+    private applyPendingSelections(): void {
+        const pendingBibleUuid = this.pendingBibleUuid();
+        if (pendingBibleUuid && this.bibles().some((b) => b.uuid === pendingBibleUuid)) {
+            if (this.selectedBibleUuid() !== pendingBibleUuid) {
+                this.selectBible(pendingBibleUuid);
+            }
+            this.pendingBibleUuid.set(null);
+        }
+
+        const pendingBookUuid = this.pendingBookUuid();
+        if (pendingBookUuid && this.books().some((b) => b.uuid === pendingBookUuid)) {
+            if (this.selectedBookUuid() !== pendingBookUuid) {
+                this.selectBook(pendingBookUuid);
+            }
+            this.pendingBookUuid.set(null);
+        }
+
+        const pendingChapter = this.pendingChapter();
+        if (pendingChapter !== null && this.chapters().includes(pendingChapter)) {
+            if (this.chapter() !== pendingChapter) {
+                this.selectChapter(pendingChapter);
+            }
+            this.pendingChapter.set(null);
+        }
+    }
+
+    private clearDeepLinkTargetForManualNavigation(): void {
+        if (!this.applyingDeepLink && !this.hasPendingDeepLinkSelection()) {
+            this.targetVerseOrdinal.set(null);
+        }
+    }
+
+    private hasPendingDeepLinkSelection(): boolean {
+        return this.pendingBibleUuid() !== null
+            || this.pendingBookUuid() !== null
+            || this.pendingChapter() !== null;
     }
 
     private adjacentBook(offset: -1 | 1): Book | null {

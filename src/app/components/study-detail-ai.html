@@ -9,7 +9,7 @@
   <div class="card-body">
     <div class="mb-2">
       <label class="form-label small mb-0" for="assistant_message">Instructions to assistant</label>
-      <textarea id="assistant_message" class="form-control" rows="2" [ngModel]="vm.assistantMessage()" (ngModelChange)="vm.assistantMessage.set($event)" placeholder="What would you like to create? Be specific and detailed."></textarea>
+      <textarea id="assistant_message" class="form-control" rows="8" [ngModel]="vm.assistantMessage()" (ngModelChange)="vm.assistantMessage.set($event)" placeholder="What would you like to create? Be specific and detailed."></textarea>
     </div>
     <div class="mb-2">
       <label class="form-label small mb-0" for="assistant_target_duration">Optional target duration (minutes)</label>

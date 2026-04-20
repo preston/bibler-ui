@@ -24,6 +24,7 @@ import { SettingsStudiesComponent } from './components/settings-studies.componen
 import { SettingsRolesComponent } from './components/settings-roles.component';
 import { SettingsUsersComponent } from './components/settings-users.component';
 import { LoginComponent } from './components/login.component';
+import { LandingComponent } from './components/landing.component';
 import {
   guestOnlyRoute,
   requireAccessRoute,
@@ -34,7 +35,7 @@ import {
 } from './guards/auth.guards';
 
 const routes: Routes = [
-    { path: '', redirectTo: '/studies', pathMatch: 'full' },
+    { path: '', component: LandingComponent, pathMatch: 'full' },
     { path: 'login', component: LoginComponent, canActivate: [guestOnlyRoute] },
     { path: 'studies', component: StudiesListComponent },
     {
